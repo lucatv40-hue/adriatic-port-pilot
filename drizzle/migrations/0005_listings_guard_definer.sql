@@ -1,0 +1,1 @@
+ALTER FUNCTION public.listings_guard() SECURITY DEFINER;

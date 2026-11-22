@@ -24,7 +24,12 @@ export const Route = createFileRoute("/api/public/jobs/weather-alerts")({
         const { pushToUsers } = await import("@/lib/push.server");
         const { emailUsers } = await import("@/lib/alert-email.server");
         let notified = 0;
+        const { serverPaymentsEnv } = await import("@/lib/stripe.server");
+        const { access } = await import("@/lib/plans");
+        const env = serverPaymentsEnv();
         for (const p of prefs ?? []) {
+          const { data: pl } = await supabaseAdmin.rpc("plans_for", { _uid: p.user_id, _env: env });
+          if (!access((pl ?? []) as string[]).skipper) continue;
           if (p.last_weather_alert_at && p.last_weather_alert_at > since) continue;
           const hit = p.zones.map((z) => ({ z, f: fc.get(z as never) })).find(({ f }) => f && weatherExceeds({ wind_kn: Number(p.wind_kn), wave_m: Number(p.wave_m) }, f));
           if (!hit?.f) continue;

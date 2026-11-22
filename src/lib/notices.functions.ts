@@ -36,11 +36,17 @@ export const saveNotice = createServerFn({ method: "POST" })
     if (error || !ins) throw new Error(error?.message ?? "Inserimento fallito");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prefs } = await supabaseAdmin.from("alert_prefs").select("user_id,push_enabled,email_enabled").contains("zones", [row.zone]);
+    const { serverPaymentsEnv } = await import("./stripe.server");
+    const { access } = await import("./plans");
+    const env = serverPaymentsEnv();
+    const allowed = new Set<string>();
+    for (const p of prefs ?? []) { const { data: pl } = await supabaseAdmin.rpc("plans_for", { _uid: p.user_id, _env: env }); if (access((pl ?? []) as string[]).skipper) allowed.add(p.user_id); }
+    const eligible = (prefs ?? []).filter((p) => allowed.has(p.user_id));
     const msg = { title: `Nuovo avviso: ${row.zone}`, body: row.title, url: "/avvisi" };
     const { pushToUsers } = await import("./push.server");
     const { emailUsers } = await import("./alert-email.server");
-    const notified = await pushToUsers(supabaseAdmin, (prefs ?? []).filter((p) => p.push_enabled).map((p) => p.user_id), msg)
-      + await emailUsers(supabaseAdmin, (prefs ?? []).filter((p) => p.email_enabled).map((p) => p.user_id), { ...msg, body: row.body ? `${row.title}\n\n${row.body}` : row.title }, `notice-${ins.id}`);
+    const notified = await pushToUsers(supabaseAdmin, eligible.filter((p) => p.push_enabled).map((p) => p.user_id), msg)
+      + await emailUsers(supabaseAdmin, eligible.filter((p) => p.email_enabled).map((p) => p.user_id), { ...msg, body: row.body ? `${row.title}\n\n${row.body}` : row.title }, `notice-${ins.id}`);
     await supabaseAdmin.from("notices").update({ notified_at: new Date().toISOString() }).eq("id", ins.id);
     return { id: ins.id, notified };
   });

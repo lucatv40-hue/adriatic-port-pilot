@@ -1,3 +1,5 @@
+import { usePlan } from "@/lib/usePlan";
+import { Upgrade } from "@/components/Upgrade";
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo, useState } from "react";
@@ -63,6 +65,13 @@ function PointCard({ p, i, total, t }: { p: PointForecast; i: number; total: num
 }
 
 function Plan() {
+  const plan = usePlan();
+  if (plan.loading) return <p className="p-4 text-muted-foreground">Caricamento…</p>;
+  if (!plan.skipper) return <div className="mx-auto max-w-xl p-4"><Upgrade plan="Skipper" feature="Pianifica la tratta" /></div>;
+  return <PlanInner />;
+}
+
+function PlanInner() {
   const [from, setFrom] = useState<string | null>(null);
   const [to, setTo] = useState<string | null>(null);
   const { t, save } = useThresholds();

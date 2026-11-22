@@ -1,3 +1,5 @@
+import { usePlan } from "@/lib/usePlan";
+import { Upgrade } from "@/components/Upgrade";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -16,6 +18,7 @@ export const Route = createFileRoute("/barca")({
 
 function BoatPage() {
   const { user, boat, onlyFit, setOnlyFit, save, loading } = useBoat();
+  const plan = usePlan();
   const [f, setF] = useState({ name: "", length: "", beam: "", draft: "" });
   const [busy, setBusy] = useState(false);
   useEffect(() => { if (boat) setF({ name: boat.name ?? "", length: String(boat.length), beam: String(boat.beam), draft: String(boat.draft) }); }, [boat]);
@@ -27,6 +30,15 @@ function BoatPage() {
       <h1 className="font-display text-3xl">La tua barca</h1>
       <p className="text-muted-foreground">Accedi per salvare il profilo barca nel tuo account e vedere i porti adatti.</p>
       <Button asChild size="lg" className="w-full"><Link to="/auth">Accedi o registrati</Link></Button>
+    </div>
+  );
+
+  if (!plan.loading && !plan.skipper) return (
+    <div className="mx-auto max-w-xl space-y-3 p-4">
+      <Upgrade plan="Skipper" feature="Profilo barca" />
+      <Button asChild variant="outline" className="w-full"><Link to="/abbonamento">Il tuo abbonamento</Link></Button>
+      <Button asChild variant="outline" className="w-full"><Link to="/gestore">Sei un gestore di marina o cantiere? Area gestori</Link></Button>
+      <Button type="button" variant="ghost" className="w-full" onClick={() => supabase.auth.signOut()}>Esci</Button>
     </div>
   );
 
@@ -54,6 +66,7 @@ function BoatPage() {
       <label className="flex items-center justify-between rounded-xl border bg-card p-3 font-bold">Mostra solo porti adatti alla mia barca<Switch checked={onlyFit} onCheckedChange={setOnlyFit} /></label>
       <Button type="submit" size="lg" className="w-full" disabled={busy}>Salva</Button>
       <Button asChild type="button" variant="outline" className="w-full"><Link to="/gestore">Sei un gestore di marina o cantiere? Area gestori</Link></Button>
+      <Button asChild type="button" variant="outline" className="w-full"><Link to="/abbonamento">Il tuo abbonamento</Link></Button>
       <Button type="button" variant="ghost" className="w-full" onClick={() => supabase.auth.signOut()}><LogOut /> Esci ({user.email})</Button>
     </form>
   );

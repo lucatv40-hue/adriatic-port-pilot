@@ -22,6 +22,27 @@
       "when": 1795386901733,
       "tag": "0002_listings_gestori",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795387809868,
+      "tag": "0003_subscriptions_plans",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795387974239,
+      "tag": "0004_listings_require_gestore_plan",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795387981190,
+      "tag": "0005_listings_guard_definer",
+      "breakpoints": true
     }
   ]
 }

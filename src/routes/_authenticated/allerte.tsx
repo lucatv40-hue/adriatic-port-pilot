@@ -1,3 +1,5 @@
+import { usePlan } from "@/lib/usePlan";
+import { Upgrade } from "@/components/Upgrade";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -18,6 +20,13 @@ export const Route = createFileRoute("/_authenticated/allerte")({
 const toBytes = (b64: string) => { const s = atob(b64.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (b64.length % 4)) % 4)); return Uint8Array.from(s, (c) => c.charCodeAt(0)); };
 
 function Alerts() {
+  const plan = usePlan();
+  if (plan.loading) return <p className="p-4 text-muted-foreground">Caricamento…</p>;
+  if (!plan.skipper) return <div className="mx-auto max-w-xl p-4"><Upgrade plan="Skipper" feature="Allerte personalizzate" /></div>;
+  return <AlertsInner />;
+}
+
+function AlertsInner() {
   const vapid = useServerFn(getVapidPublicKey), test = useServerFn(sendTestPush);
   const [uid, setUid] = useState<string | null>(null);
   const [p, setP] = useState({ zones: [] as string[], wind_kn: 20, wave_m: 1.5, email_enabled: true, push_enabled: true });

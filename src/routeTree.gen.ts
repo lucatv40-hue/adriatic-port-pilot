@@ -14,14 +14,18 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AvvisiRouteImport } from './routes/avvisi'
 import { Route as BarcaRouteImport } from './routes/barca'
+import { Route as PrezziRouteImport } from './routes/prezzi'
 import { Route as TariffeRouteImport } from './routes/tariffe'
 import { Route as TrattaRouteImport } from './routes/tratta'
+import { Route as AuthenticatedAbbonamentoRouteImport } from './routes/_authenticated/abbonamento'
 import { Route as AuthenticatedAllerteRouteImport } from './routes/_authenticated/allerte'
 import { Route as AuthenticatedGestoreRouteImport } from './routes/_authenticated/gestore'
+import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
 import { Route as PortoIdRouteImport } from './routes/porto/$id'
 import { Route as AuthenticatedAdminAvvisiRouteImport } from './routes/_authenticated/admin.avvisi'
 import { Route as AuthenticatedAdminGestoriRouteImport } from './routes/_authenticated/admin.gestori'
 import { Route as ApiPublicJobsWeatherAlertsRouteImport } from './routes/api/public/jobs/weather-alerts'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
@@ -48,6 +52,11 @@ const BarcaRoute = BarcaRouteImport.update({
   path: '/barca',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrezziRoute = PrezziRouteImport.update({
+  id: '/prezzi',
+  path: '/prezzi',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TariffeRoute = TariffeRouteImport.update({
   id: '/tariffe',
   path: '/tariffe',
@@ -58,6 +67,12 @@ const TrattaRoute = TrattaRouteImport.update({
   path: '/tratta',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAbbonamentoRoute =
+  AuthenticatedAbbonamentoRouteImport.update({
+    id: '/abbonamento',
+    path: '/abbonamento',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAllerteRoute = AuthenticatedAllerteRouteImport.update({
   id: '/allerte',
   path: '/allerte',
@@ -67,6 +82,11 @@ const AuthenticatedGestoreRoute = AuthenticatedGestoreRouteImport.update({
   id: '/gestore',
   path: '/gestore',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
+  id: '/checkout/return',
+  path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PortoIdRoute = PortoIdRouteImport.update({
   id: '/porto/$id',
@@ -91,6 +111,12 @@ const ApiPublicJobsWeatherAlertsRoute =
     path: '/api/public/jobs/weather-alerts',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -103,14 +129,18 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
+  '/prezzi': typeof PrezziRoute
   '/tariffe': typeof TariffeRoute
   '/tratta': typeof TrattaRoute
+  '/abbonamento': typeof AuthenticatedAbbonamentoRoute
   '/allerte': typeof AuthenticatedAllerteRoute
   '/gestore': typeof AuthenticatedGestoreRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/porto/$id': typeof PortoIdRoute
   '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/admin/gestori': typeof AuthenticatedAdminGestoriRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
@@ -118,14 +148,18 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
+  '/prezzi': typeof PrezziRoute
   '/tariffe': typeof TariffeRoute
   '/tratta': typeof TrattaRoute
+  '/abbonamento': typeof AuthenticatedAbbonamentoRoute
   '/allerte': typeof AuthenticatedAllerteRoute
   '/gestore': typeof AuthenticatedGestoreRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/porto/$id': typeof PortoIdRoute
   '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/admin/gestori': typeof AuthenticatedAdminGestoriRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
@@ -135,14 +169,18 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
+  '/prezzi': typeof PrezziRoute
   '/tariffe': typeof TariffeRoute
   '/tratta': typeof TrattaRoute
+  '/_authenticated/abbonamento': typeof AuthenticatedAbbonamentoRoute
   '/_authenticated/allerte': typeof AuthenticatedAllerteRoute
   '/_authenticated/gestore': typeof AuthenticatedGestoreRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/porto/$id': typeof PortoIdRoute
   '/_authenticated/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/_authenticated/admin/gestori': typeof AuthenticatedAdminGestoriRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
@@ -152,14 +190,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/avvisi'
     | '/barca'
+    | '/prezzi'
     | '/tariffe'
     | '/tratta'
+    | '/abbonamento'
     | '/allerte'
     | '/gestore'
+    | '/checkout/return'
     | '/porto/$id'
     | '/admin/avvisi'
     | '/admin/gestori'
     | '/api/public/jobs/weather-alerts'
+    | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -167,14 +209,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/avvisi'
     | '/barca'
+    | '/prezzi'
     | '/tariffe'
     | '/tratta'
+    | '/abbonamento'
     | '/allerte'
     | '/gestore'
+    | '/checkout/return'
     | '/porto/$id'
     | '/admin/avvisi'
     | '/admin/gestori'
     | '/api/public/jobs/weather-alerts'
+    | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   id:
     | '__root__'
@@ -183,14 +229,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/avvisi'
     | '/barca'
+    | '/prezzi'
     | '/tariffe'
     | '/tratta'
+    | '/_authenticated/abbonamento'
     | '/_authenticated/allerte'
     | '/_authenticated/gestore'
+    | '/checkout/return'
     | '/porto/$id'
     | '/_authenticated/admin/avvisi'
     | '/_authenticated/admin/gestori'
     | '/api/public/jobs/weather-alerts'
+    | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
@@ -200,10 +250,13 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   AvvisiRoute: typeof AvvisiRoute
   BarcaRoute: typeof BarcaRoute
+  PrezziRoute: typeof PrezziRoute
   TariffeRoute: typeof TariffeRoute
   TrattaRoute: typeof TrattaRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
   PortoIdRoute: typeof PortoIdRoute
   ApiPublicJobsWeatherAlertsRoute: typeof ApiPublicJobsWeatherAlertsRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -244,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BarcaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prezzi': {
+      id: '/prezzi'
+      path: '/prezzi'
+      fullPath: '/prezzi'
+      preLoaderRoute: typeof PrezziRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tariffe': {
       id: '/tariffe'
       path: '/tariffe'
@@ -258,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrattaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/abbonamento': {
+      id: '/_authenticated/abbonamento'
+      path: '/abbonamento'
+      fullPath: '/abbonamento'
+      preLoaderRoute: typeof AuthenticatedAbbonamentoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/allerte': {
       id: '/_authenticated/allerte'
       path: '/allerte'
@@ -271,6 +338,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/gestore'
       preLoaderRoute: typeof AuthenticatedGestoreRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/checkout/return': {
+      id: '/checkout/return'
+      path: '/checkout/return'
+      fullPath: '/checkout/return'
+      preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/porto/$id': {
       id: '/porto/$id'
@@ -300,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsWeatherAlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -311,6 +392,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAbbonamentoRoute: typeof AuthenticatedAbbonamentoRoute
   AuthenticatedAllerteRoute: typeof AuthenticatedAllerteRoute
   AuthenticatedGestoreRoute: typeof AuthenticatedGestoreRoute
   AuthenticatedAdminAvvisiRoute: typeof AuthenticatedAdminAvvisiRoute
@@ -318,6 +400,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAbbonamentoRoute: AuthenticatedAbbonamentoRoute,
   AuthenticatedAllerteRoute: AuthenticatedAllerteRoute,
   AuthenticatedGestoreRoute: AuthenticatedGestoreRoute,
   AuthenticatedAdminAvvisiRoute: AuthenticatedAdminAvvisiRoute,
@@ -333,10 +416,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   AvvisiRoute: AvvisiRoute,
   BarcaRoute: BarcaRoute,
+  PrezziRoute: PrezziRoute,
   TariffeRoute: TariffeRoute,
   TrattaRoute: TrattaRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
   PortoIdRoute: PortoIdRoute,
   ApiPublicJobsWeatherAlertsRoute: ApiPublicJobsWeatherAlertsRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport

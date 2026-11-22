@@ -1,3 +1,5 @@
+import { usePlan } from "@/lib/usePlan";
+import { Upgrade } from "@/components/Upgrade";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -68,6 +70,7 @@ function ClaimForm({ onDone }: { onDone: () => void }) {
 }
 
 function ListingCard({ l, onChange }: { l: Listing; onChange: () => void }) {
+  const plan = usePlan();
   const [f, setF] = useState(l);
   const [urls, setUrls] = useState<string[]>([]);
   useEffect(() => { void signPhotos(f.photos).then(setUrls); }, [f.photos]);
@@ -96,7 +99,8 @@ function ListingCard({ l, onChange }: { l: Listing; onChange: () => void }) {
     <section className="space-y-4 rounded-2xl border bg-card p-4">
       <div className="flex items-start justify-between gap-2"><div><p className="text-xs font-bold uppercase text-muted-foreground">{l.kind} · {l.town}</p><h2 className="font-display text-2xl">{l.name}</h2></div>{status}</div>
       {l.status === "pending" && <p className="text-sm text-muted-foreground">L'amministratore sta verificando la richiesta.</p>}
-      {l.status === "approved" && <>
+      {l.status === "approved" && !plan.loading && !plan.gestore && <Upgrade plan="Gestore" feature="Modifica scheda e statistiche" />}
+      {l.status === "approved" && plan.gestore && <>
         <div className="grid grid-cols-2 gap-2 text-center">
           <div className="rounded-xl bg-muted p-3"><Eye className="mx-auto h-5 w-5 text-primary" /><p className="text-2xl font-bold">{stats.data?.views ?? "–"}</p><p className="text-xs text-muted-foreground">visualizzazioni</p></div>
           <div className="rounded-xl bg-muted p-3"><PhoneCall className="mx-auto h-5 w-5 text-primary" /><p className="text-2xl font-bold">{stats.data?.contacts ?? "–"}</p><p className="text-xs text-muted-foreground">contatti</p></div>
