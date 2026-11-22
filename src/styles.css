@@ -158,6 +158,8 @@
 .port-pin span { transform: rotate(45deg); font-size:12px; font-weight:700; color: var(--color-primary-foreground); }
 .port-pin.ok { background: var(--color-primary); }
 .port-pin.warn { background: var(--color-destructive); }
+.port-pin.depth { background: var(--color-warning); }
+.port-pin.size { background: var(--color-muted-foreground); opacity: .75; }
 .port-cluster { display:grid; place-items:center; width:40px; height:40px; border-radius:9999px; background: var(--color-primary); color: var(--color-primary-foreground); font-weight:700; border:3px solid var(--color-card); box-shadow: var(--shadow-float); }
 .me-dot { fill: var(--color-accent); fill-opacity: 1; stroke: var(--color-card); }
 .leaflet-marker-icon, .marker-cluster { will-change: transform; }

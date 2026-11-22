@@ -3,7 +3,8 @@ import { lazy, Suspense, useDeferredValue, useMemo, useState } from "react";
 import { SlidersHorizontal, Search, X } from "lucide-react";
 import { PortSheet, SERVICE_ICON } from "@/components/PortSheet";
 import { Input } from "@/components/ui/input";
-import { PORTS, REGIONS, SERVICES, checkFit, getPort, type Region, type Service } from "@/lib/ports";
+import { Switch } from "@/components/ui/switch";
+import { PORTS, REGIONS, SERVICES, fitLevel, getPort, type FitLevel, type Region, type Service } from "@/lib/ports";
 import { useBoat } from "@/lib/boat";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { boat, mode } = useBoat();
+  const { boat, onlyFit, setOnlyFit } = useBoat();
   const [region, setRegion] = useState<Region | "tutte">("tutte");
   const [maxRate, setMaxRate] = useState(130);
   const [services, setServices] = useState<Service[]>([]);
@@ -35,20 +36,21 @@ function Index() {
   const [query, setQuery] = useState("");
   const dq = useDeferredValue(query);
 
-  const { list, warn } = useMemo(() => {
-    const warn = new Set<string>();
+  const { list, levels } = useMemo(() => {
+    const levels = new Map<string, FitLevel>();
     const q = dq.trim().toLowerCase();
     const list = PORTS.filter((p) => {
       if (q && !`${p.name} ${p.town}`.toLowerCase().includes(q)) return false;
       if (region !== "tutte" && p.region !== region) return false;
       if (p.rateHigh > maxRate) return false;
       if (!services.every((s) => p.services.includes(s))) return false;
-      const fit = checkFit(p, boat);
-      if (!fit.ok) { if (mode === "nascondi") return false; warn.add(p.id); }
+      const lv = fitLevel(p, boat);
+      if (lv !== "ok" && onlyFit) return false;
+      levels.set(p.id, lv);
       return true;
     });
-    return { list, warn };
-  }, [region, maxRate, services, boat, mode, dq]);
+    return { list, levels };
+  }, [region, maxRate, services, boat, onlyFit, dq]);
 
   const port = selected ? getPort(selected) : undefined;
   const activeFilters = (region !== "tutte" ? 1 : 0) + (maxRate < 130 ? 1 : 0) + services.length;
@@ -57,7 +59,7 @@ function Index() {
     <div className="relative h-[calc(100dvh-8.5rem)]">
       <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
         <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <PortMap ports={list} warn={warn} onSelect={setSelected} />
+          <PortMap ports={list} levels={levels} onSelect={setSelected} />
         </Suspense>
       </ClientOnly>
 
@@ -76,6 +78,7 @@ function Index() {
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
           <Button size="sm" onClick={() => setOpen(true)} className="shrink-0 rounded-full shadow-float"><SlidersHorizontal /> Filtri{activeFilters ? ` (${activeFilters})` : ""}</Button>
+          {boat && <Button size="sm" variant={onlyFit ? "default" : "outline"} className="shrink-0 rounded-full shadow-float" onClick={() => setOnlyFit(!onlyFit)}>Solo adatti</Button>}
           {(["tutte", ...REGIONS] as const).map((r) => (
             <Button key={r} size="sm" variant={region === r ? "default" : "outline"} className="shrink-0 rounded-full shadow-float" onClick={() => setRegion(r)}>{r === "tutte" ? `Tutte (${list.length})` : r}</Button>
           ))}
@@ -109,6 +112,7 @@ function Index() {
                 ))}
               </div>
             </div>
+            {boat && <label className="flex items-center justify-between rounded-xl border p-3 font-bold">Mostra solo porti adatti a {boat.name || "la mia barca"}<Switch checked={onlyFit} onCheckedChange={setOnlyFit} /></label>}
             {!boat && <p className="text-sm text-muted-foreground">Imposta il <Link to="/barca" className="font-bold text-primary underline">profilo barca</Link> per vedere solo i porti adatti.</p>}
           </div>
         </SheetContent>

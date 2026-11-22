@@ -6,3 +6,9 @@ describe("adattabilità porto", () => {
   it("accetta se rientra in fondale e dimensioni", () => { expect(checkFit(lido, { length: 10, beam: 3, draft: 1.5 }).ok).toBe(true); });
   it("scarta se troppo lunga", () => { expect(checkFit(lido, { length: 15, beam: 3, draft: 1 }).ok).toBe(false); });
 });
+import { fitLevel } from "@/lib/ports";
+describe("colore porto", () => {
+  it("arancione se solo il fondale non basta", () => expect(fitLevel(lido, { length: 10, beam: 3, draft: 1.8 })).toBe("depth"));
+  it("grigio se la barca non entra, anche con fondale scarso", () => expect(fitLevel(lido, { length: 15, beam: 3, draft: 2 })).toBe("size"));
+  it("ok se adatto", () => expect(fitLevel(lido, { length: 10, beam: 3, draft: 1 })).toBe("ok"));
+});

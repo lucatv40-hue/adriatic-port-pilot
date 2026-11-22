@@ -5,9 +5,9 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import { Layers, LocateFixed } from "lucide-react";
 import { toast } from "sonner";
-import type { Port } from "@/lib/ports";
+import type { Port, FitLevel } from "@/lib/ports";
 
-export default function PortMap({ ports, warn, onSelect }: { ports: Port[]; warn: Set<string>; onSelect: (id: string) => void }) {
+export default function PortMap({ ports, levels, onSelect }: { ports: Port[]; levels: Map<string, FitLevel>; onSelect: (id: string) => void }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const cluster = useRef<L.MarkerClusterGroup | null>(null);
@@ -33,11 +33,11 @@ export default function PortMap({ ports, warn, onSelect }: { ports: Port[]; warn
     const g = cluster.current; if (!g) return;
     g.clearLayers();
     g.addLayers(ports.map((p) => {
-      const w = warn.has(p.id);
-      const icon = L.divIcon({ className: "", html: `<div class="port-pin ${w ? "warn" : "ok"}"><span>${w ? "!" : p.kind[0]}</span></div>`, iconSize: [30, 30], iconAnchor: [15, 30] });
+      const lv = levels.get(p.id) ?? "ok";
+      const icon = L.divIcon({ className: "", html: `<div class="port-pin ${lv}"><span>${lv === "ok" ? p.kind[0] : "!"}</span></div>`, iconSize: [30, 30], iconAnchor: [15, 30] });
       return L.marker([p.lat, p.lon], { icon, title: p.name }).on("click", () => sel.current(p.id));
     }));
-  }, [ports, warn]);
+  }, [ports, levels]);
 
   const toggleSea = () => {
     const m = map.current, s = sea.current; if (!m || !s) return;

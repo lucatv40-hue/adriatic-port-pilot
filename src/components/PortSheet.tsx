@@ -3,7 +3,7 @@ import { Droplets, Plug, Fuel, Wifi, ShowerHead, Construction, Utensils, Wrench,
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { checkFit, type Port, type Service, type Boat } from "@/lib/ports";
+import { checkFit, fitLevel, type Port, type Service, type Boat } from "@/lib/ports";
 import marina from "@/assets/port-marina.jpg";
 import porto from "@/assets/port-porto.jpg";
 import ormeggio from "@/assets/port-ormeggio.jpg";
@@ -24,7 +24,7 @@ export function PortSheet({ port, boat, onClose }: { port: Port | undefined; boa
             <DrawerDescription asChild><Badge variant="outline" className="mt-1 border-warning text-warning"><Info className="h-3 w-3" /> Dati da verificare</Badge></DrawerDescription>
             {boat && fit && (fit.ok
               ? <p className="mt-3 flex items-center gap-2 rounded-xl bg-success/15 p-3 text-sm font-bold text-success"><CheckCircle2 className="h-5 w-5" /> Adatto alla tua barca</p>
-              : <p className="mt-3 flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-sm font-bold text-destructive"><AlertTriangle className="h-5 w-5" /> {fit.reasons.join(" · ")}</p>)}
+              : <p className={`mt-3 flex items-center gap-2 rounded-xl p-3 text-sm font-bold ${fitLevel(port, boat) === "size" ? "bg-muted text-muted-foreground" : "bg-warning/15 text-warning"}`}><AlertTriangle className="h-5 w-5" /> {fit.reasons.join(" · ")}</p>)}
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl bg-muted p-2"><p className="text-xs text-muted-foreground">Fondale</p><p className="text-lg font-bold">{port.depth} m</p></div>
               <div className="rounded-xl bg-muted p-2"><p className="text-xs text-muted-foreground">Bassa st.</p><p className="text-lg font-bold">€{port.rateLow}</p></div>

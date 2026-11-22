@@ -28,7 +28,7 @@ export const PORTS: Port[] = [
 ];
 export const getPort = (id: string) => PORTS.find((p) => p.id === id);
 
-export interface Boat { length: number; beam: number; draft: number }
+export interface Boat { name?: string; length: number; beam: number; draft: number }
 export type Fit = { ok: boolean; reasons: string[] };
 export function checkFit(p: Port, b: Boat | null): Fit {
   if (!b) return { ok: true, reasons: [] };
@@ -37,6 +37,15 @@ export function checkFit(p: Port, b: Boat | null): Fit {
   if (b.length > p.maxLength) r.push(`Lunghezza max ${p.maxLength} m`);
   if (b.beam > p.maxBeam) r.push(`Larghezza max ${p.maxBeam} m`);
   return { ok: r.length === 0, reasons: r };
+}
+
+/** "size": la barca non entra (grigio) · "depth": fondale insufficiente (arancione) · "ok" */
+export type FitLevel = "ok" | "depth" | "size";
+export function fitLevel(p: Port, b: Boat | null): FitLevel {
+  if (!b) return "ok";
+  if (b.length > p.maxLength || b.beam > p.maxBeam) return "size";
+  if (b.draft + 0.5 > p.depth) return "depth";
+  return "ok";
 }
 
 export interface Notice { id: string; title: string; zone: Region; until: string; text: string; source: string }
