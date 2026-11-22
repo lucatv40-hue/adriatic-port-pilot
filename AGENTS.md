@@ -30,6 +30,10 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- App-shell offline support uses vite-plugin-pwa generateSW with one preview-safe registration wrapper; push-only workers stay separate, and auth/API/payment responses are never cached.
+- PWA output targets the TanStack client directory; public navigations use NetworkFirst with a failure-only precacheFallback, never an always-on navigation fallback.
+- Favorites are public port snapshots stored on the device; the offline fallback uses bundled Leaflet and cached visited tiles, never fresh-weather claims or private account data.
+- Consent uses the unchanged built-in purpose module and pre-tag defaults; all analytics choices flow through saveChoices so they reach Consent Mode.
 - Port seed data and boat-fit logic (`checkFit`, `fitLevel`: size=grey beats depth=orange) live in `src/lib/ports.ts` (pure, tested); map, list, port page and tests share them.
 - Boat profile is stored per user in the `boats` table (RLS own-row); `useBoat` reads it, the "only suitable" toggle stays in localStorage.
 - Leaflet is only loaded via `React.lazy` behind `<ClientOnly>` (it touches `window` at import).

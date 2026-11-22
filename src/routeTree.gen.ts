@@ -14,8 +14,12 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AvvisiRouteImport } from './routes/avvisi'
 import { Route as BarcaRouteImport } from './routes/barca'
+import { Route as CookieRouteImport } from './routes/cookie'
+import { Route as PreferitiRouteImport } from './routes/preferiti'
 import { Route as PrezziRouteImport } from './routes/prezzi'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TariffeRouteImport } from './routes/tariffe'
+import { Route as TerminiRouteImport } from './routes/termini'
 import { Route as TrattaRouteImport } from './routes/tratta'
 import { Route as AuthenticatedAbbonamentoRouteImport } from './routes/_authenticated/abbonamento'
 import { Route as AuthenticatedAllerteRouteImport } from './routes/_authenticated/allerte'
@@ -52,14 +56,34 @@ const BarcaRoute = BarcaRouteImport.update({
   path: '/barca',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CookieRoute = CookieRouteImport.update({
+  id: '/cookie',
+  path: '/cookie',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreferitiRoute = PreferitiRouteImport.update({
+  id: '/preferiti',
+  path: '/preferiti',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrezziRoute = PrezziRouteImport.update({
   id: '/prezzi',
   path: '/prezzi',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TariffeRoute = TariffeRouteImport.update({
   id: '/tariffe',
   path: '/tariffe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TerminiRoute = TerminiRouteImport.update({
+  id: '/termini',
+  path: '/termini',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrattaRoute = TrattaRouteImport.update({
@@ -129,8 +153,12 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
+  '/cookie': typeof CookieRoute
+  '/preferiti': typeof PreferitiRoute
   '/prezzi': typeof PrezziRoute
+  '/privacy': typeof PrivacyRoute
   '/tariffe': typeof TariffeRoute
+  '/termini': typeof TerminiRoute
   '/tratta': typeof TrattaRoute
   '/abbonamento': typeof AuthenticatedAbbonamentoRoute
   '/allerte': typeof AuthenticatedAllerteRoute
@@ -148,8 +176,12 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
+  '/cookie': typeof CookieRoute
+  '/preferiti': typeof PreferitiRoute
   '/prezzi': typeof PrezziRoute
+  '/privacy': typeof PrivacyRoute
   '/tariffe': typeof TariffeRoute
+  '/termini': typeof TerminiRoute
   '/tratta': typeof TrattaRoute
   '/abbonamento': typeof AuthenticatedAbbonamentoRoute
   '/allerte': typeof AuthenticatedAllerteRoute
@@ -169,8 +201,12 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
+  '/cookie': typeof CookieRoute
+  '/preferiti': typeof PreferitiRoute
   '/prezzi': typeof PrezziRoute
+  '/privacy': typeof PrivacyRoute
   '/tariffe': typeof TariffeRoute
+  '/termini': typeof TerminiRoute
   '/tratta': typeof TrattaRoute
   '/_authenticated/abbonamento': typeof AuthenticatedAbbonamentoRoute
   '/_authenticated/allerte': typeof AuthenticatedAllerteRoute
@@ -190,8 +226,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/avvisi'
     | '/barca'
+    | '/cookie'
+    | '/preferiti'
     | '/prezzi'
+    | '/privacy'
     | '/tariffe'
+    | '/termini'
     | '/tratta'
     | '/abbonamento'
     | '/allerte'
@@ -209,8 +249,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/avvisi'
     | '/barca'
+    | '/cookie'
+    | '/preferiti'
     | '/prezzi'
+    | '/privacy'
     | '/tariffe'
+    | '/termini'
     | '/tratta'
     | '/abbonamento'
     | '/allerte'
@@ -229,8 +273,12 @@ export interface FileRouteTypes {
     | '/auth'
     | '/avvisi'
     | '/barca'
+    | '/cookie'
+    | '/preferiti'
     | '/prezzi'
+    | '/privacy'
     | '/tariffe'
+    | '/termini'
     | '/tratta'
     | '/_authenticated/abbonamento'
     | '/_authenticated/allerte'
@@ -250,8 +298,12 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   AvvisiRoute: typeof AvvisiRoute
   BarcaRoute: typeof BarcaRoute
+  CookieRoute: typeof CookieRoute
+  PreferitiRoute: typeof PreferitiRoute
   PrezziRoute: typeof PrezziRoute
+  PrivacyRoute: typeof PrivacyRoute
   TariffeRoute: typeof TariffeRoute
+  TerminiRoute: typeof TerminiRoute
   TrattaRoute: typeof TrattaRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   PortoIdRoute: typeof PortoIdRoute
@@ -297,6 +349,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BarcaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cookie': {
+      id: '/cookie'
+      path: '/cookie'
+      fullPath: '/cookie'
+      preLoaderRoute: typeof CookieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preferiti': {
+      id: '/preferiti'
+      path: '/preferiti'
+      fullPath: '/preferiti'
+      preLoaderRoute: typeof PreferitiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/prezzi': {
       id: '/prezzi'
       path: '/prezzi'
@@ -304,11 +370,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrezziRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tariffe': {
       id: '/tariffe'
       path: '/tariffe'
       fullPath: '/tariffe'
       preLoaderRoute: typeof TariffeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termini': {
+      id: '/termini'
+      path: '/termini'
+      fullPath: '/termini'
+      preLoaderRoute: typeof TerminiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tratta': {
@@ -416,8 +496,12 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   AvvisiRoute: AvvisiRoute,
   BarcaRoute: BarcaRoute,
+  CookieRoute: CookieRoute,
+  PreferitiRoute: PreferitiRoute,
   PrezziRoute: PrezziRoute,
+  PrivacyRoute: PrivacyRoute,
   TariffeRoute: TariffeRoute,
+  TerminiRoute: TerminiRoute,
   TrattaRoute: TrattaRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   PortoIdRoute: PortoIdRoute,

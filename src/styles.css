@@ -63,6 +63,7 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
   --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
   --font-display: "DM Serif Display", Georgia, serif;
@@ -94,8 +95,9 @@
   --accent-foreground: oklch(0.18 0.06 255);
   --destructive: oklch(0.58 0.22 27);
   --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.6 0.14 160);
-  --warning: oklch(0.75 0.16 70);
+  --success: oklch(0.42 0.1 160);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.47 0.13 55);
   --border: oklch(0.89 0.02 245);
   --input: oklch(0.89 0.02 245);
   --ring: oklch(0.55 0.12 240);
@@ -127,6 +129,7 @@
   --destructive: oklch(0.68 0.19 25);
   --destructive-foreground: oklch(0.99 0 0);
   --success: oklch(0.72 0.14 160);
+  --success-foreground: oklch(0.16 0.04 258);
   --warning: oklch(0.8 0.15 75);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 16%);
@@ -168,3 +171,10 @@
 .notice-zone { fill: var(--color-warning); fill-opacity: .2; stroke: var(--color-warning); stroke-width: 2; }
 .notice-zone.focus { fill: var(--color-destructive); stroke: var(--color-destructive); fill-opacity: .3; }
 .notice-dot { fill: var(--color-warning); fill-opacity: 1; stroke: var(--color-card); }
+html { letter-spacing: 0; }
+button, a, input, label { touch-action: manipulation; }
+.legal-copy h2 { margin-top: 1.75rem; margin-bottom: .5rem; font-size: 1.25rem; font-weight: 700; }
+.legal-copy p { margin-bottom: .8rem; line-height: 1.7; }
+.legal-copy a { color: var(--primary); text-decoration: underline; overflow-wrap: anywhere; }
+.port-pin.depth span { color: var(--card); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

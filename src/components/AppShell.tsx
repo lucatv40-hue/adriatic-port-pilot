@@ -2,6 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { Anchor, Map, Navigation, Ship, Table2, Moon, Sun, Megaphone } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import { AppUtilities } from "@/components/AppUtilities";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 const NAV = [
   { to: "/", key: "map", icon: Map },
@@ -22,20 +25,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   const toggle = () => { const d = !dark; setDark(d); localStorage.setItem("ra-theme", d ? "dark" : "light"); };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-[1000] flex items-center justify-between bg-sea px-4 py-3 text-primary-foreground dark:text-foreground">
+    <div className="flex h-dvh flex-col bg-background text-foreground">
+      <PaymentTestModeBanner />
+      <header className="relative z-[1000] flex shrink-0 items-center justify-between bg-sea px-4 py-3 text-primary-foreground dark:text-foreground">
         <Link to="/" className="flex items-center gap-2">
           <Anchor className="h-5 w-5" />
-          <span className="font-display text-xl tracking-wide">Rotta Adriatica</span>
+           <span className="font-display text-lg sm:text-xl">Rotta Adriatica</span>
         </Link>
         <div className="flex items-center gap-1">
-        <Link to="/prezzi" className="rounded-full border border-current/40 px-3 py-1 text-sm font-bold">Piani</Link>
-        <button onClick={toggle} aria-label="Cambia tema" className="rounded-full p-2 hover:bg-background/10">
+        <Button asChild variant="ghost" className="hidden sm:inline-flex"><Link to="/prezzi">Piani</Link></Button>
+        <Button variant="ghost" size="icon" onClick={toggle} title="Cambia tema" aria-label="Cambia tema" className="rounded-full hover:bg-background/10">
           {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </button>
+        </Button>
+        <AppUtilities />
         </div>
       </header>
-      <main className="flex-1 pb-20">{children}</main>
+      <main className="min-h-0 flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))]">{children}</main>
       <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-5 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
         {NAV.map(({ to, key, icon: Icon }) => (
           <Link key={to} to={to} activeOptions={{ exact: to === "/" }}

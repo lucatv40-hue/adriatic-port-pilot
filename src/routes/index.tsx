@@ -1,6 +1,6 @@
 import { createFileRoute, Link, ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useDeferredValue, useMemo, useState } from "react";
-import { SlidersHorizontal, Search, X } from "lucide-react";
+import { SlidersHorizontal, Search, X, Heart } from "lucide-react";
 import { PortSheet, SERVICE_ICON } from "@/components/PortSheet";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -56,7 +56,7 @@ function Index() {
   const activeFilters = (region !== "tutte" ? 1 : 0) + (maxRate < 130 ? 1 : 0) + services.length;
 
   return (
-    <div className="relative h-[calc(100dvh-8.5rem)]">
+    <div className="relative h-full min-h-0">
       <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
         <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}>
           <PortMap ports={list} levels={levels} onSelect={setSelected} />
@@ -68,7 +68,7 @@ function Index() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cerca porto o località" aria-label="Cerca porto"
             className="h-12 rounded-full bg-card pl-10 pr-10 text-base shadow-float" />
-          {query && <button onClick={() => setQuery("")} aria-label="Cancella" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="h-5 w-5" /></button>}
+          {query && <Button size="icon" variant="ghost" onClick={() => setQuery("")} aria-label="Cancella" className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="h-5 w-5" /></Button>}
           {query && list.length > 0 && (
             <ul className="absolute inset-x-0 top-14 max-h-64 overflow-y-auto rounded-2xl border bg-card shadow-float">
               {list.slice(0, 6).map((p) => (
@@ -86,6 +86,7 @@ function Index() {
       </div>
 
       <PortSheet port={port} boat={boat} onClose={() => setSelected(null)} />
+      <Button asChild size="icon" variant="outline" className="absolute bottom-6 left-3 z-[500] h-12 w-12 rounded-full bg-card shadow-float"><Link to="/preferiti" title="Porti preferiti" aria-label="Porti preferiti"><Heart /></Link></Button>
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="bottom" className="z-[1100] max-h-[85dvh] overflow-y-auto rounded-t-2xl">

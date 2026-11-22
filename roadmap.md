@@ -2,6 +2,12 @@
 - [x] Mappa: cluster, OpenSeaMap, posizione, ricerca, scheda dal basso
 - [x] Tratta: tocco su 2 porti, rotta su mappa, 5 punti, 48h grafico, soglie in rosso, "non disponibile"
 - [x] Avvisi + admin, allerte con push
-- [ ] Email delle allerte (serve dominio dell'utente)
-- [ ] Area gestori, Stripe (prezzi Gestore/Flotta da chiedere)
+- [x] Collegamento email delle allerte al dominio indicato
+- [x] Area gestori e piani Stripe
 - [x] Profilo barca nell'account, porti arancioni/grigi, interruttore solo adatti
+- [x] Installazione, icone e schermata di avvio
+- [x] Mappa visitata e preferiti offline
+- [x] Privacy, Cookie, Termini e consenso
+- [x] Inseriti ragione sociale italythroughtime.world ed email giacomail@yahoo.it
+- [ ] Completare indirizzo legale (in attesa della risposta del proprietario)
+- [x] Verifica velocità locale, contrasto chiaro/scuro e uso mobile; offline verificato in ambiente isolato

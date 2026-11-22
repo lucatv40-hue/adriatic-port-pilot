@@ -11,10 +11,11 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { AppShell } from "@/components/AppShell";
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { ConsentBanner } from "@/components/ConsentBanner";
+import consentDefaults from "@/lib/consent-defaults.js?raw";
 
 function NotFoundComponent() {
   return (
@@ -78,6 +79,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
+    scripts: [{ children: consentDefaults }],
     // Replace these placeholders with the app's name and description when first building the app.
     // Each content route, / included, must still set its own head(). Never add og:image or
     // twitter:image here: every page without its own would inherit the root's preview image.
@@ -87,6 +89,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Rotta Adriatica" },
       { name: "description", content: "Porti, meteo marino e avvisi per navigare in Alto Adriatico." },
       { name: "theme-color", content: "#0b2545" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "Rotta Adriatica" },
       { property: "og:title", content: "Rotta Adriatica" },
       { property: "og:description", content: "Porti, meteo marino e avvisi per navigare in Alto Adriatico." },
       { property: "og:type", content: "website" },
@@ -97,9 +102,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/icon.svg", type: "image/svg+xml" },
-      { rel: "apple-touch-icon", href: "/icon.svg" },
+      { rel: "icon", href: "/icon-64.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/icon-180.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
+      ...[
+        [750, 1334, 375, 667, 2], [828, 1792, 414, 896, 2], [1170, 2532, 390, 844, 3],
+        [1179, 2556, 393, 852, 3], [1290, 2796, 430, 932, 3], [1536, 2048, 768, 1024, 2], [2048, 2732, 1024, 1366, 2],
+      ].map(([w, h, dw, dh, scale]) => ({ rel: "apple-touch-startup-image", href: `/splash-${w}x${h}.png`, media: `(device-width: ${dw}px) and (device-height: ${dh}px) and (-webkit-device-pixel-ratio: ${scale}) and (orientation: portrait)` })),
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=DM+Serif+Display&display=swap" },
     ],
@@ -130,11 +139,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <PaymentTestModeBanner />
       <AppShell>
         <Outlet />
       </AppShell>
       <Toaster />
+      <ConsentBanner />
     </QueryClientProvider>
   );
 }

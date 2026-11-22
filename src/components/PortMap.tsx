@@ -6,6 +6,8 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import { Layers, LocateFixed } from "lucide-react";
 import { toast } from "sonner";
 import type { Port, FitLevel } from "@/lib/ports";
+import { MAP_VIEW_KEY } from "@/lib/offline";
+import { Button } from "@/components/ui/button";
 
 export default function PortMap({ ports, levels, onSelect }: { ports: Port[]; levels: Map<string, FitLevel>; onSelect: (id: string) => void }) {
   const el = useRef<HTMLDivElement>(null);
@@ -19,6 +21,11 @@ export default function PortMap({ ports, levels, onSelect }: { ports: Port[]; le
   useEffect(() => {
     if (!el.current || map.current) return;
     const m = L.map(el.current, { zoomControl: false, preferCanvas: true }).setView([45.3, 13.1], 8);
+    try {
+      const view = JSON.parse(localStorage.getItem(MAP_VIEW_KEY) ?? "null");
+      if (view && Number.isFinite(view.lat) && Number.isFinite(view.lon) && Number.isFinite(view.zoom)) m.setView([view.lat, view.lon], Math.min(18, Math.max(3, view.zoom)));
+    } catch { /* Default Adriatic view. */ }
+    m.on("moveend", () => { const center = m.getCenter(); try { localStorage.setItem(MAP_VIEW_KEY, JSON.stringify({ lat: center.lat, lon: center.lng, zoom: m.getZoom() })); } catch { /* Storage unavailable. */ } });
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap contributors" }).addTo(m);
     sea.current = L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png", { maxZoom: 18, className: "seamark", attribution: "© OpenSeaMap" }).addTo(m);
     cluster.current = L.markerClusterGroup({
@@ -63,9 +70,9 @@ export default function PortMap({ ports, levels, onSelect }: { ports: Port[]; le
     <div className="relative h-full w-full">
       <div ref={el} className="h-full w-full" />
       <div className="absolute bottom-6 right-3 z-[500] flex flex-col gap-2">
-        <button onClick={toggleSea} aria-label="Livello OpenSeaMap" aria-pressed={seaOn}
-          className={`grid h-12 w-12 place-items-center rounded-full shadow-float ${seaOn ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}><Layers /></button>
-        <button onClick={locate} aria-label="La mia posizione" className="grid h-12 w-12 place-items-center rounded-full bg-card text-foreground shadow-float"><LocateFixed /></button>
+        <Button size="icon" onClick={toggleSea} title="Livello OpenSeaMap" aria-label="Livello OpenSeaMap" aria-pressed={seaOn}
+          className={`h-12 w-12 rounded-full shadow-float ${seaOn ? "bg-primary text-primary-foreground" : "bg-card text-foreground"}`}><Layers /></Button>
+        <Button size="icon" onClick={locate} title="La mia posizione" aria-label="La mia posizione" className="h-12 w-12 rounded-full bg-card text-foreground shadow-float"><LocateFixed /></Button>
       </div>
     </div>
   );

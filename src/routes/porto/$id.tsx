@@ -7,6 +7,8 @@ import { approvedListingsQuery, applyListing, logListingEvent, signPhotos, SEASO
 import { useBoat } from "@/lib/boat";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { FavoriteButton } from "@/components/FavoriteButton";
+import { PHOTO } from "@/components/PortSheet";
 
 export const Route = createFileRoute("/porto/$id")({
   loader: ({ params }) => { const port = getPort(params.id); if (!port) throw notFound(); return { port }; },
@@ -62,6 +64,7 @@ function PortPage() {
         <div className="flex flex-wrap gap-2">{p.services.map((s) => <Badge key={s} variant="secondary" className="capitalize">{s}</Badge>)}</div>
       </section>
       <section className="grid gap-2">
+        <FavoriteButton port={p} photo={PHOTO[p.kind]} />
         <Button asChild size="lg"><a onClick={contact} href={`tel:${p.phone.replace(/\s/g, "")}`}><Phone /> {p.phone}</a></Button>
         <Button asChild size="lg" variant="outline"><a onClick={contact} href={`mailto:${p.email}`}><Mail /> {p.email}</a></Button>
         <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground"><Radio className="h-4 w-4" /> VHF canale {p.vhf}</p>

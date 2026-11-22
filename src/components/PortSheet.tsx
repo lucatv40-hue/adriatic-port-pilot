@@ -6,6 +6,7 @@ import { Droplets, Plug, Fuel, Wifi, ShowerHead, Construction, Utensils, Wrench,
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { checkFit, fitLevel, type Port, type Service, type Boat } from "@/lib/ports";
 import marina from "@/assets/port-marina.jpg";
 import porto from "@/assets/port-porto.jpg";
@@ -53,6 +54,7 @@ export function PortSheet({ port: base, boat, onClose }: { port: Port | undefine
               <Button asChild size="lg"><a onClick={contact} href={`tel:${port.phone.replace(/\s/g, "")}`}><Phone /> Chiama</a></Button>
               <Button asChild size="lg" variant="outline"><a onClick={contact} href={`mailto:${port.email}`}><Mail /> Email</a></Button>
             </div>
+            <div className="mt-2"><FavoriteButton port={port} photo={PHOTO[port.kind]} /></div>
             {listing?.website && <Button asChild variant="outline" className="mt-2 w-full"><a onClick={contact} href={listing.website} target="_blank" rel="noreferrer"><Globe /> Sito web</a></Button>}
             <p className="mt-2 flex items-center justify-center gap-1.5 text-sm text-muted-foreground"><Radio className="h-4 w-4" /> VHF {port.vhf}</p>
             <Button asChild variant="ghost" className="mt-1 w-full"><Link to="/porto/$id" params={{ id: port.id }}>Pagina del porto <ChevronRight /></Link></Button>
