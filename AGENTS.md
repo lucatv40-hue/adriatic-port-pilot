@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Listing-photo storage reads are owner-scoped; public photo signing first verifies approved listing membership and uploader prefix through public RLS, then issues five-minute links.
 - App-shell offline support uses vite-plugin-pwa generateSW with one preview-safe registration wrapper; push-only workers stay separate, and auth/API/payment responses are never cached.
 - PWA output targets the TanStack client directory; public navigations use NetworkFirst with a failure-only precacheFallback, never an always-on navigation fallback.
 - Favorites are public port snapshots stored on the device; the offline fallback uses bundled Leaflet and cached visited tiles, never fresh-weather claims or private account data.

@@ -43,6 +43,13 @@
       "when": 1795387981190,
       "tag": "0005_listings_guard_definer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795390723986,
+      "tag": "0006_restrict_listing_photo_reads_to_owner",
+      "breakpoints": true
     }
   ]
 }

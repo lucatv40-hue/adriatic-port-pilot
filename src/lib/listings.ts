@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Port } from "./ports";
+import { signApprovedPhotos } from "./listings.functions";
 
 export type Season = "bassa" | "media" | "alta";
 export const SEASONS: Season[] = ["bassa", "media", "alta"];
@@ -39,7 +40,13 @@ export const approvedListingsQuery = queryOptions({
 export async function signPhotos(paths: string[]): Promise<string[]> {
   if (!paths.length) return [];
   const { data } = await supabase.storage.from("listing-photos").createSignedUrls(paths, 3600);
-  return (data ?? []).map((d) => d.signedUrl).filter((u): u is string => !!u);
+  const signed = new Map((data ?? []).flatMap((d) => d.signedUrl ? [[d.path ?? "", d.signedUrl] as const] : []));
+  const missing = paths.filter((path) => !signed.has(path));
+  if (missing.length) {
+    const published = await signApprovedPhotos({ data: { paths: missing } }).catch(() => []);
+    for (const photo of published) signed.set(photo.path, photo.url);
+  }
+  return paths.flatMap((path) => { const url = signed.get(path); return url ? [url] : []; });
 }
 
 export function logListingEvent(id: string, kind: "view" | "contact") {

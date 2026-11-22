@@ -1,6 +1,38 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+import { approvedPhotoPaths } from "@/lib/listing-photo-access";
+
+/** Public signing is restricted to photos explicitly published by their owner. */
+export const signApprovedPhotos = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ paths: z.array(z.string().min(1).max(1024)).max(100) }).parse(d))
+  .handler(async ({ data }) => {
+    if (!data.paths.length) return [];
+    const url = process.env['SUPABASE_URL'];
+    const key = process.env['SUPABASE_PUBLISHABLE_KEY'] ?? process.env['SUPABASE_ANON_KEY'];
+    if (!url || !key) throw new Error("Foto non disponibili");
+    const publicClient = createClient<Database>(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { fetch: (input, init) => {
+        const headers = new Headers(init?.headers);
+        if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) headers.delete("Authorization");
+        headers.set("apikey", key);
+        return fetch(input, { ...init, headers });
+      } },
+    });
+    const { data: listings, error } = await publicClient.from("listings")
+      .select("owner_id,photos,status").eq("status", "approved").overlaps("photos", data.paths);
+    if (error) throw new Error("Foto non disponibili");
+    const allowed = approvedPhotoPaths(data.paths, listings ?? []);
+    if (!allowed.length) return [];
+    // Privileged storage signing only after public RLS and owner/path verification.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: signed, error: signingError } = await supabaseAdmin.storage.from("listing-photos").createSignedUrls(allowed, 300);
+    if (signingError) throw new Error("Foto non disponibili");
+    return (signed ?? []).flatMap((photo) => photo.signedUrl ? [{ path: photo.path ?? "", url: photo.signedUrl }] : []);
+  });
 
 /** Admin: approva o rifiuta una richiesta; approvando assegna il ruolo gestore. */
 export const reviewListing = createServerFn({ method: "POST" })

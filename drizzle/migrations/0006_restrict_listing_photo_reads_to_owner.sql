@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "listing photos public read" ON storage.objects;
+CREATE POLICY "listing photos own read" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'listing-photos' AND owner_id = (SELECT auth.uid()::text));
