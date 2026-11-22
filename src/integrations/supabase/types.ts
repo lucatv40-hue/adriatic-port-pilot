@@ -74,6 +74,95 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_events: {
+        Row: {
+          created_at: string
+          id: number
+          kind: string
+          listing_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          kind: string
+          listing_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          kind?: string
+          listing_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listings: {
+        Row: {
+          availability: string
+          created_at: string
+          description: string
+          email: string
+          id: string
+          kind: string
+          name: string
+          owner_id: string
+          phone: string
+          photos: string[]
+          port_id: string | null
+          rates: Json
+          request_note: string
+          status: string
+          town: string
+          updated_at: string
+          website: string
+        }
+        Insert: {
+          availability?: string
+          created_at?: string
+          description?: string
+          email?: string
+          id?: string
+          kind?: string
+          name?: string
+          owner_id: string
+          phone?: string
+          photos?: string[]
+          port_id?: string | null
+          rates?: Json
+          request_note?: string
+          status?: string
+          town?: string
+          updated_at?: string
+          website?: string
+        }
+        Update: {
+          availability?: string
+          created_at?: string
+          description?: string
+          email?: string
+          id?: string
+          kind?: string
+          name?: string
+          owner_id?: string
+          phone?: string
+          photos?: string[]
+          port_id?: string | null
+          rates?: Json
+          request_note?: string
+          status?: string
+          town?: string
+          updated_at?: string
+          website?: string
+        }
+        Relationships: []
+      }
       notices: {
         Row: {
           body: string
@@ -172,6 +261,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_listing_event: {
+        Args: { _kind: string; _listing_id: string }
+        Returns: undefined
       }
     }
     Enums: {

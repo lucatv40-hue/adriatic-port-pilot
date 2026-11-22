@@ -1,6 +1,9 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Phone, Mail, Radio, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Radio, AlertTriangle, CheckCircle2, Info, BadgeCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { checkFit, getPort } from "@/lib/ports";
+import { approvedListingsQuery, applyListing, logListingEvent, signPhotos, SEASONS } from "@/lib/listings";
 import { useBoat } from "@/lib/boat";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +19,13 @@ export const Route = createFileRoute("/porto/$id")({
 });
 
 function PortPage() {
-  const { port: p } = Route.useLoaderData();
+  const { port: base } = Route.useLoaderData();
+  const { data: listings } = useQuery(approvedListingsQuery);
+  const listing = listings?.find((l) => l.port_id === base.id);
+  const p = applyListing(base, listing);
+  const [photos, setPhotos] = useState<string[]>([]);
+  useEffect(() => { if (listing) { logListingEvent(listing.id, "view"); void signPhotos(listing.photos).then(setPhotos); } }, [listing?.id]);
+  const contact = () => { if (listing) logListingEvent(listing.id, "contact"); };
   const { boat } = useBoat();
   const fit = checkFit(p, boat);
   const row = (k: string, v: string) => (<div className="flex justify-between border-b py-2.5"><span className="text-muted-foreground">{k}</span><span className="font-bold">{v}</span></div>);
@@ -26,8 +35,19 @@ function PortPage() {
       <div>
         <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{p.kind} · {p.town} · {p.region}</p>
         <h1 className="font-display text-4xl">{p.name}</h1>
-        <Badge variant="outline" className="mt-2 border-warning text-warning"><Info className="h-3 w-3" /> Dati di esempio da verificare</Badge>
+        {p.verified
+          ? <Badge className="mt-2 bg-success text-success-foreground"><BadgeCheck className="h-3 w-3" /> Verificato dal gestore</Badge>
+          : <Badge variant="outline" className="mt-2 border-warning text-warning"><Info className="h-3 w-3" /> Dati di esempio da verificare</Badge>}
+        {listing?.description && <p className="mt-3">{listing.description}</p>}
       </div>
+      {photos.length > 0 && <div className="flex snap-x gap-2 overflow-x-auto">{photos.map((u) => <img key={u} src={u} alt={p.name} loading="lazy" className="aspect-[4/3] w-4/5 shrink-0 snap-center rounded-xl object-cover" />)}</div>}
+      {listing && listing.rates.length > 0 && (
+        <section className="rounded-2xl border bg-card p-4">
+          <h2 className="mb-2 font-display text-xl">Tariffe per stagione</h2>
+          <table className="w-full text-sm"><thead><tr className="text-left text-muted-foreground"><th className="py-1">Lunghezza</th>{SEASONS.map((s) => <th key={s} className="capitalize">{s}</th>)}</tr></thead>
+            <tbody>{[...new Set(listing.rates.map((r) => `${r.minLen}-${r.maxLen}`))].map((k) => (
+              <tr key={k} className="border-t"><td className="py-2 font-bold">{k.replace("-", "–")} m</td>{SEASONS.map((s) => { const r = listing.rates.find((x) => x.season === s && `${x.minLen}-${x.maxLen}` === k); return <td key={s}>{r ? `€${r.price}` : "–"}</td>; })}</tr>))}</tbody></table>
+        </section>)}
       {boat && (fit.ok
         ? <p className="flex items-center gap-2 rounded-xl bg-success/15 p-3 font-bold text-success"><CheckCircle2 className="h-5 w-5" /> Adatto alla tua barca</p>
         : <div className="rounded-xl bg-destructive/10 p-3 text-destructive"><p className="flex items-center gap-2 font-bold"><AlertTriangle className="h-5 w-5" /> Non adatto alla tua barca</p><ul className="ml-7 list-disc text-sm">{fit.reasons.map((r) => <li key={r}>{r}</li>)}</ul></div>)}
@@ -42,8 +62,8 @@ function PortPage() {
         <div className="flex flex-wrap gap-2">{p.services.map((s) => <Badge key={s} variant="secondary" className="capitalize">{s}</Badge>)}</div>
       </section>
       <section className="grid gap-2">
-        <Button asChild size="lg"><a href={`tel:${p.phone.replace(/\s/g, "")}`}><Phone /> {p.phone}</a></Button>
-        <Button asChild size="lg" variant="outline"><a href={`mailto:${p.email}`}><Mail /> {p.email}</a></Button>
+        <Button asChild size="lg"><a onClick={contact} href={`tel:${p.phone.replace(/\s/g, "")}`}><Phone /> {p.phone}</a></Button>
+        <Button asChild size="lg" variant="outline"><a onClick={contact} href={`mailto:${p.email}`}><Mail /> {p.email}</a></Button>
         <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground"><Radio className="h-4 w-4" /> VHF canale {p.vhf}</p>
       </section>
     </div>

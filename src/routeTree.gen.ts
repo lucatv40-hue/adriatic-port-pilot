@@ -17,8 +17,10 @@ import { Route as BarcaRouteImport } from './routes/barca'
 import { Route as TariffeRouteImport } from './routes/tariffe'
 import { Route as TrattaRouteImport } from './routes/tratta'
 import { Route as AuthenticatedAllerteRouteImport } from './routes/_authenticated/allerte'
+import { Route as AuthenticatedGestoreRouteImport } from './routes/_authenticated/gestore'
 import { Route as PortoIdRouteImport } from './routes/porto/$id'
 import { Route as AuthenticatedAdminAvvisiRouteImport } from './routes/_authenticated/admin.avvisi'
+import { Route as AuthenticatedAdminGestoriRouteImport } from './routes/_authenticated/admin.gestori'
 import { Route as ApiPublicJobsWeatherAlertsRouteImport } from './routes/api/public/jobs/weather-alerts'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
@@ -61,6 +63,11 @@ const AuthenticatedAllerteRoute = AuthenticatedAllerteRouteImport.update({
   path: '/allerte',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedGestoreRoute = AuthenticatedGestoreRouteImport.update({
+  id: '/gestore',
+  path: '/gestore',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const PortoIdRoute = PortoIdRouteImport.update({
   id: '/porto/$id',
   path: '/porto/$id',
@@ -70,6 +77,12 @@ const AuthenticatedAdminAvvisiRoute =
   AuthenticatedAdminAvvisiRouteImport.update({
     id: '/admin/avvisi',
     path: '/admin/avvisi',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminGestoriRoute =
+  AuthenticatedAdminGestoriRouteImport.update({
+    id: '/admin/gestori',
+    path: '/admin/gestori',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const ApiPublicJobsWeatherAlertsRoute =
@@ -93,8 +106,10 @@ export interface FileRoutesByFullPath {
   '/tariffe': typeof TariffeRoute
   '/tratta': typeof TrattaRoute
   '/allerte': typeof AuthenticatedAllerteRoute
+  '/gestore': typeof AuthenticatedGestoreRoute
   '/porto/$id': typeof PortoIdRoute
   '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
+  '/admin/gestori': typeof AuthenticatedAdminGestoriRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -106,8 +121,10 @@ export interface FileRoutesByTo {
   '/tariffe': typeof TariffeRoute
   '/tratta': typeof TrattaRoute
   '/allerte': typeof AuthenticatedAllerteRoute
+  '/gestore': typeof AuthenticatedGestoreRoute
   '/porto/$id': typeof PortoIdRoute
   '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
+  '/admin/gestori': typeof AuthenticatedAdminGestoriRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -121,8 +138,10 @@ export interface FileRoutesById {
   '/tariffe': typeof TariffeRoute
   '/tratta': typeof TrattaRoute
   '/_authenticated/allerte': typeof AuthenticatedAllerteRoute
+  '/_authenticated/gestore': typeof AuthenticatedGestoreRoute
   '/porto/$id': typeof PortoIdRoute
   '/_authenticated/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
+  '/_authenticated/admin/gestori': typeof AuthenticatedAdminGestoriRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -136,8 +155,10 @@ export interface FileRouteTypes {
     | '/tariffe'
     | '/tratta'
     | '/allerte'
+    | '/gestore'
     | '/porto/$id'
     | '/admin/avvisi'
+    | '/admin/gestori'
     | '/api/public/jobs/weather-alerts'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -149,8 +170,10 @@ export interface FileRouteTypes {
     | '/tariffe'
     | '/tratta'
     | '/allerte'
+    | '/gestore'
     | '/porto/$id'
     | '/admin/avvisi'
+    | '/admin/gestori'
     | '/api/public/jobs/weather-alerts'
     | '/lovable/email/transactional/preview'
   id:
@@ -163,8 +186,10 @@ export interface FileRouteTypes {
     | '/tariffe'
     | '/tratta'
     | '/_authenticated/allerte'
+    | '/_authenticated/gestore'
     | '/porto/$id'
     | '/_authenticated/admin/avvisi'
+    | '/_authenticated/admin/gestori'
     | '/api/public/jobs/weather-alerts'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -240,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAllerteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/gestore': {
+      id: '/_authenticated/gestore'
+      path: '/gestore'
+      fullPath: '/gestore'
+      preLoaderRoute: typeof AuthenticatedGestoreRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/porto/$id': {
       id: '/porto/$id'
       path: '/porto/$id'
@@ -252,6 +284,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/avvisi'
       fullPath: '/admin/avvisi'
       preLoaderRoute: typeof AuthenticatedAdminAvvisiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/gestori': {
+      id: '/_authenticated/admin/gestori'
+      path: '/admin/gestori'
+      fullPath: '/admin/gestori'
+      preLoaderRoute: typeof AuthenticatedAdminGestoriRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/jobs/weather-alerts': {
@@ -273,12 +312,16 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAllerteRoute: typeof AuthenticatedAllerteRoute
+  AuthenticatedGestoreRoute: typeof AuthenticatedGestoreRoute
   AuthenticatedAdminAvvisiRoute: typeof AuthenticatedAdminAvvisiRoute
+  AuthenticatedAdminGestoriRoute: typeof AuthenticatedAdminGestoriRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAllerteRoute: AuthenticatedAllerteRoute,
+  AuthenticatedGestoreRoute: AuthenticatedGestoreRoute,
   AuthenticatedAdminAvvisiRoute: AuthenticatedAdminAvvisiRoute,
+  AuthenticatedAdminGestoriRoute: AuthenticatedAdminGestoriRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

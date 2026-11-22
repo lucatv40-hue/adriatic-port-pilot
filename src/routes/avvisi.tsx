@@ -67,6 +67,7 @@ function Notices() {
           );
         })}
         <Link to="/admin/avvisi" className="flex items-center justify-center gap-1 pt-2 text-xs text-muted-foreground"><Settings2 className="h-3 w-3" /> Pannello admin</Link>
+        <Link to="/admin/gestori" className="flex items-center justify-center gap-1 text-xs text-muted-foreground"><Settings2 className="h-3 w-3" /> Richieste gestori</Link>
       </div>
     </div>
   );

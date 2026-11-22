@@ -53,6 +53,7 @@ function BoatPage() {
       </div>
       <label className="flex items-center justify-between rounded-xl border bg-card p-3 font-bold">Mostra solo porti adatti alla mia barca<Switch checked={onlyFit} onCheckedChange={setOnlyFit} /></label>
       <Button type="submit" size="lg" className="w-full" disabled={busy}>Salva</Button>
+      <Button asChild type="button" variant="outline" className="w-full"><Link to="/gestore">Sei un gestore di marina o cantiere? Area gestori</Link></Button>
       <Button type="button" variant="ghost" className="w-full" onClick={() => supabase.auth.signOut()}><LogOut /> Esci ({user.email})</Button>
     </form>
   );
