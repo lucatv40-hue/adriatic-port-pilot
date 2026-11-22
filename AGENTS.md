@@ -30,7 +30,8 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
-- Port seed data and boat-fit logic live in `src/lib/ports.ts` (pure, tested); keep fit rules there so map, port page and tests share them.
+- Port seed data and boat-fit logic (`checkFit`, `fitLevel`: size=grey beats depth=orange) live in `src/lib/ports.ts` (pure, tested); map, list, port page and tests share them.
+- Boat profile is stored per user in the `boats` table (RLS own-row); `useBoat` reads it, the "only suitable" toggle stays in localStorage.
 - Leaflet is only loaded via `React.lazy` behind `<ClientOnly>` (it touches `window` at import).
 - Weather comes from keyless Open-Meteo forecast + marine APIs fetched client-side.
 - Forecast parsing (`src/lib/weather.ts`) never throws: missing values become null and the UI shows "non disponibile"; threshold check lives in `src/lib/thresholds.ts`.
