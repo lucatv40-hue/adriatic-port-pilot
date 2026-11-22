@@ -2,7 +2,9 @@ import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { Wind, Waves, RotateCcw, Navigation2 } from "lucide-react";
-import { getPort, NOTICES } from "@/lib/ports";
+import { getPort } from "@/lib/ports";
+import { noticesQuery } from "@/lib/notices";
+import { isNoticeActive } from "@/lib/zones";
 import { fetchRouteForecast, samplePoints, maxOf, compass, type PointForecast } from "@/lib/weather";
 import { useThresholds, isOver } from "@/lib/thresholds";
 import { Button } from "@/components/ui/button";
@@ -69,7 +71,8 @@ function Plan() {
   const q = useQuery({ queryKey: ["route48", from, to], queryFn: () => fetchRouteForecast(points), enabled: points.length === 5, staleTime: 15 * 60_000 });
   const pick = (id: string) => { if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
   const dist = a && b ? Math.round(Math.hypot((b.lat - a.lat) * 60, (b.lon - a.lon) * 60 * Math.cos((a.lat * Math.PI) / 180))) : 0;
-  const notices = a && b ? NOTICES.filter((n) => n.zone === a.region || n.zone === b.region) : [];
+  const nq = useQuery(noticesQuery);
+  const notices = a && b ? (nq.data ?? []).filter((n) => isNoticeActive(n.valid_until) && (n.zone === a.region || n.zone === b.region)) : [];
 
   return (
     <div className="mx-auto max-w-xl">
@@ -93,8 +96,8 @@ function Plan() {
         {q.isLoading && <p className="text-muted-foreground">Carico previsioni…</p>}
         {q.data?.map((p, i) => <PointCard key={i} p={p} i={i} total={q.data.length} t={t} />)}
         {notices.map((n) => (
-          <div key={n.id} className="rounded-xl border-l-4 border-warning bg-card p-3 text-sm"><p className="font-bold">{n.title}</p><p className="text-muted-foreground">{n.text}</p>
-            <a href={n.source} target="_blank" rel="noreferrer" className="font-bold text-primary">Fonte ufficiale</a></div>
+          <div key={n.id} className="rounded-xl border-l-4 border-warning bg-card p-3 text-sm"><p className="font-bold">{n.title}</p><p className="text-muted-foreground">{n.body}</p>
+            <a href={n.source_url} target="_blank" rel="noreferrer" className="font-bold text-primary">Fonte ufficiale</a></div>
         ))}
         {!a && <Button variant="outline" className="w-full" onClick={() => { setFrom("certosa"); setTo("sangiusto"); }}>Esempio: Venezia → Trieste</Button>}
         <p className="text-xs text-muted-foreground">Dati Open-Meteo. Non sostituisce i bollettini ufficiali.</p>

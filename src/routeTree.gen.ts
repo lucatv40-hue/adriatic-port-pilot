@@ -10,20 +10,34 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AvvisiRouteImport } from './routes/avvisi'
 import { Route as BarcaRouteImport } from './routes/barca'
 import { Route as TariffeRouteImport } from './routes/tariffe'
 import { Route as TrattaRouteImport } from './routes/tratta'
+import { Route as AuthenticatedAllerteRouteImport } from './routes/_authenticated/allerte'
 import { Route as PortoIdRouteImport } from './routes/porto/$id'
+import { Route as AuthenticatedAdminAvvisiRouteImport } from './routes/_authenticated/admin.avvisi'
+import { Route as ApiPublicJobsWeatherAlertsRouteImport } from './routes/api/public/jobs/weather-alerts'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AvvisiRoute = AvvisiRouteImport.update({
+  id: '/avvisi',
+  path: '/avvisi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BarcaRoute = BarcaRouteImport.update({
@@ -41,59 +55,117 @@ const TrattaRoute = TrattaRouteImport.update({
   path: '/tratta',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAllerteRoute = AuthenticatedAllerteRouteImport.update({
+  id: '/allerte',
+  path: '/allerte',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const PortoIdRoute = PortoIdRouteImport.update({
   id: '/porto/$id',
   path: '/porto/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminAvvisiRoute =
+  AuthenticatedAdminAvvisiRouteImport.update({
+    id: '/admin/avvisi',
+    path: '/admin/avvisi',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicJobsWeatherAlertsRoute =
+  ApiPublicJobsWeatherAlertsRouteImport.update({
+    id: '/api/public/jobs/weather-alerts',
+    path: '/api/public/jobs/weather-alerts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
   '/tariffe': typeof TariffeRoute
   '/tratta': typeof TrattaRoute
+  '/allerte': typeof AuthenticatedAllerteRoute
   '/porto/$id': typeof PortoIdRoute
+  '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
+  '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
   '/tariffe': typeof TariffeRoute
   '/tratta': typeof TrattaRoute
+  '/allerte': typeof AuthenticatedAllerteRoute
   '/porto/$id': typeof PortoIdRoute
+  '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
+  '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
   '/tariffe': typeof TariffeRoute
   '/tratta': typeof TrattaRoute
+  '/_authenticated/allerte': typeof AuthenticatedAllerteRoute
   '/porto/$id': typeof PortoIdRoute
+  '/_authenticated/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
+  '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/barca' | '/tariffe' | '/tratta' | '/porto/$id'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/barca' | '/tariffe' | '/tratta' | '/porto/$id'
-  id:
-    | '__root__'
+  fullPaths:
     | '/'
     | '/auth'
+    | '/avvisi'
     | '/barca'
     | '/tariffe'
     | '/tratta'
+    | '/allerte'
     | '/porto/$id'
+    | '/admin/avvisi'
+    | '/api/public/jobs/weather-alerts'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/auth'
+    | '/avvisi'
+    | '/barca'
+    | '/tariffe'
+    | '/tratta'
+    | '/allerte'
+    | '/porto/$id'
+    | '/admin/avvisi'
+    | '/api/public/jobs/weather-alerts'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/avvisi'
+    | '/barca'
+    | '/tariffe'
+    | '/tratta'
+    | '/_authenticated/allerte'
+    | '/porto/$id'
+    | '/_authenticated/admin/avvisi'
+    | '/api/public/jobs/weather-alerts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  AvvisiRoute: typeof AvvisiRoute
   BarcaRoute: typeof BarcaRoute
   TariffeRoute: typeof TariffeRoute
   TrattaRoute: typeof TrattaRoute
   PortoIdRoute: typeof PortoIdRoute
+  ApiPublicJobsWeatherAlertsRoute: typeof ApiPublicJobsWeatherAlertsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -105,11 +177,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/avvisi': {
+      id: '/avvisi'
+      path: '/avvisi'
+      fullPath: '/avvisi'
+      preLoaderRoute: typeof AvvisiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/barca': {
@@ -133,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrattaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/allerte': {
+      id: '/_authenticated/allerte'
+      path: '/allerte'
+      fullPath: '/allerte'
+      preLoaderRoute: typeof AuthenticatedAllerteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/porto/$id': {
       id: '/porto/$id'
       path: '/porto/$id'
@@ -140,16 +233,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/avvisi': {
+      id: '/_authenticated/admin/avvisi'
+      path: '/admin/avvisi'
+      fullPath: '/admin/avvisi'
+      preLoaderRoute: typeof AuthenticatedAdminAvvisiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/jobs/weather-alerts': {
+      id: '/api/public/jobs/weather-alerts'
+      path: '/api/public/jobs/weather-alerts'
+      fullPath: '/api/public/jobs/weather-alerts'
+      preLoaderRoute: typeof ApiPublicJobsWeatherAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAllerteRoute: typeof AuthenticatedAllerteRoute
+  AuthenticatedAdminAvvisiRoute: typeof AuthenticatedAdminAvvisiRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAllerteRoute: AuthenticatedAllerteRoute,
+  AuthenticatedAdminAvvisiRoute: AuthenticatedAdminAvvisiRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  AvvisiRoute: AvvisiRoute,
   BarcaRoute: BarcaRoute,
   TariffeRoute: TariffeRoute,
   TrattaRoute: TrattaRoute,
   PortoIdRoute: PortoIdRoute,
+  ApiPublicJobsWeatherAlertsRoute: ApiPublicJobsWeatherAlertsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
