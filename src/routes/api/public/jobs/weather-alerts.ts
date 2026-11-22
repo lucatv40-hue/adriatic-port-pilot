@@ -20,15 +20,18 @@ export const Route = createFileRoute("/api/public/jobs/weather-alerts")({
         const fc = new Map(ZONES.map((z, i) => [z.id, { wind: max(W[i]?.hourly?.wind_speed_10m), gust: max(W[i]?.hourly?.wind_gusts_10m), wave: max(M[i]?.hourly?.wave_height) }]));
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const since = new Date(Date.now() - 12 * 3600_000).toISOString();
-        const { data: prefs } = await supabaseAdmin.from("alert_prefs").select("user_id,zones,wind_kn,wave_m,last_weather_alert_at").eq("push_enabled", true);
+        const { data: prefs } = await supabaseAdmin.from("alert_prefs").select("user_id,zones,wind_kn,wave_m,last_weather_alert_at,push_enabled,email_enabled").or("push_enabled.eq.true,email_enabled.eq.true");
         const { pushToUsers } = await import("@/lib/push.server");
+        const { emailUsers } = await import("@/lib/alert-email.server");
         let notified = 0;
         for (const p of prefs ?? []) {
           if (p.last_weather_alert_at && p.last_weather_alert_at > since) continue;
           const hit = p.zones.map((z) => ({ z, f: fc.get(z as never) })).find(({ f }) => f && weatherExceeds({ wind_kn: Number(p.wind_kn), wave_m: Number(p.wave_m) }, f));
           if (!hit?.f) continue;
           const parts = [hit.f.wind !== null ? `vento ${Math.round(hit.f.wind)} kn` : null, hit.f.wave !== null ? `onda ${hit.f.wave.toFixed(1)} m` : null].filter(Boolean).join(", ");
-          notified += await pushToUsers(supabaseAdmin, [p.user_id], { title: `Meteo sopra soglia – ${hit.z}`, body: `Prossime 12 ore: ${parts}`, url: "/tratta" });
+          const msg = { title: `Meteo sopra soglia – ${hit.z}`, body: `Prossime 12 ore: ${parts}`, url: "/tratta" };
+          if (p.push_enabled) notified += await pushToUsers(supabaseAdmin, [p.user_id], msg);
+          if (p.email_enabled) notified += await emailUsers(supabaseAdmin, [p.user_id], msg, `meteo-${new Date().toISOString().slice(0, 13)}`);
           await supabaseAdmin.from("alert_prefs").update({ last_weather_alert_at: new Date().toISOString() }).eq("user_id", p.user_id);
         }
         return Response.json({ ok: true, notified });

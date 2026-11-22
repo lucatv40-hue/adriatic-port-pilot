@@ -20,6 +20,7 @@ import { Route as AuthenticatedAllerteRouteImport } from './routes/_authenticate
 import { Route as PortoIdRouteImport } from './routes/porto/$id'
 import { Route as AuthenticatedAdminAvvisiRouteImport } from './routes/_authenticated/admin.avvisi'
 import { Route as ApiPublicJobsWeatherAlertsRouteImport } from './routes/api/public/jobs/weather-alerts'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -77,6 +78,12 @@ const ApiPublicJobsWeatherAlertsRoute =
     path: '/api/public/jobs/weather-alerts',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/porto/$id': typeof PortoIdRoute
   '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -101,6 +109,7 @@ export interface FileRoutesByTo {
   '/porto/$id': typeof PortoIdRoute
   '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,6 +124,7 @@ export interface FileRoutesById {
   '/porto/$id': typeof PortoIdRoute
   '/_authenticated/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/porto/$id'
     | '/admin/avvisi'
     | '/api/public/jobs/weather-alerts'
+    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/porto/$id'
     | '/admin/avvisi'
     | '/api/public/jobs/weather-alerts'
+    | '/lovable/email/transactional/preview'
   id:
     | '__root__'
     | '/'
@@ -154,6 +166,7 @@ export interface FileRouteTypes {
     | '/porto/$id'
     | '/_authenticated/admin/avvisi'
     | '/api/public/jobs/weather-alerts'
+    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -166,6 +179,7 @@ export interface RootRouteChildren {
   TrattaRoute: typeof TrattaRoute
   PortoIdRoute: typeof PortoIdRoute
   ApiPublicJobsWeatherAlertsRoute: typeof ApiPublicJobsWeatherAlertsRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -247,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsWeatherAlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -273,6 +294,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrattaRoute: TrattaRoute,
   PortoIdRoute: PortoIdRoute,
   ApiPublicJobsWeatherAlertsRoute: ApiPublicJobsWeatherAlertsRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
