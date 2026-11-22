@@ -33,3 +33,4 @@ use the editor.
 - Port seed data and boat-fit logic live in `src/lib/ports.ts` (pure, tested); keep fit rules there so map, port page and tests share them.
 - Leaflet is only loaded via `React.lazy` behind `<ClientOnly>` (it touches `window` at import).
 - Weather comes from keyless Open-Meteo forecast + marine APIs fetched client-side.
+- Forecast parsing (`src/lib/weather.ts`) never throws: missing values become null and the UI shows "non disponibile"; threshold check lives in `src/lib/thresholds.ts`.
