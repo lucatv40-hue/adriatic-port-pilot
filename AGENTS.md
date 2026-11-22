@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Port seed data and boat-fit logic live in `src/lib/ports.ts` (pure, tested); keep fit rules there so map, port page and tests share them.
+- Leaflet is only loaded via `React.lazy` behind `<ClientOnly>` (it touches `window` at import).
+- Weather comes from keyless Open-Meteo forecast + marine APIs fetched client-side.

@@ -10,33 +10,73 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BarcaRouteImport } from './routes/barca'
+import { Route as TariffeRouteImport } from './routes/tariffe'
+import { Route as TrattaRouteImport } from './routes/tratta'
+import { Route as PortoIdRouteImport } from './routes/porto/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BarcaRoute = BarcaRouteImport.update({
+  id: '/barca',
+  path: '/barca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TariffeRoute = TariffeRouteImport.update({
+  id: '/tariffe',
+  path: '/tariffe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrattaRoute = TrattaRouteImport.update({
+  id: '/tratta',
+  path: '/tratta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortoIdRoute = PortoIdRouteImport.update({
+  id: '/porto/$id',
+  path: '/porto/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/barca': typeof BarcaRoute
+  '/tariffe': typeof TariffeRoute
+  '/tratta': typeof TrattaRoute
+  '/porto/$id': typeof PortoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/barca': typeof BarcaRoute
+  '/tariffe': typeof TariffeRoute
+  '/tratta': typeof TrattaRoute
+  '/porto/$id': typeof PortoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/barca': typeof BarcaRoute
+  '/tariffe': typeof TariffeRoute
+  '/tratta': typeof TrattaRoute
+  '/porto/$id': typeof PortoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/barca' | '/tariffe' | '/tratta' | '/porto/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/barca' | '/tariffe' | '/tratta' | '/porto/$id'
+  id: '__root__' | '/' | '/barca' | '/tariffe' | '/tratta' | '/porto/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BarcaRoute: typeof BarcaRoute
+  TariffeRoute: typeof TariffeRoute
+  TrattaRoute: typeof TrattaRoute
+  PortoIdRoute: typeof PortoIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +88,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/barca': {
+      id: '/barca'
+      path: '/barca'
+      fullPath: '/barca'
+      preLoaderRoute: typeof BarcaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tariffe': {
+      id: '/tariffe'
+      path: '/tariffe'
+      fullPath: '/tariffe'
+      preLoaderRoute: typeof TariffeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tratta': {
+      id: '/tratta'
+      path: '/tratta'
+      fullPath: '/tratta'
+      preLoaderRoute: typeof TrattaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/porto/$id': {
+      id: '/porto/$id'
+      path: '/porto/$id'
+      fullPath: '/porto/$id'
+      preLoaderRoute: typeof PortoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BarcaRoute: BarcaRoute,
+  TariffeRoute: TariffeRoute,
+  TrattaRoute: TrattaRoute,
+  PortoIdRoute: PortoIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
