@@ -51,8 +51,8 @@ export function PortSheet({ port: base, boat, onClose }: { port: Port | undefine
                 <div key={s} className="flex flex-col items-center gap-1 rounded-xl border p-2"><I className="h-5 w-5 text-primary" /><span className="text-[11px] capitalize">{s}</span></div>); })}
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button asChild size="lg"><a onClick={contact} href={`tel:${port.phone.replace(/\s/g, "")}`}><Phone /> Chiama</a></Button>
-              <Button asChild size="lg" variant="outline"><a onClick={contact} href={`mailto:${port.email}`}><Mail /> Email</a></Button>
+              {port.phone && <Button asChild size="lg"><a onClick={contact} href={`tel:${port.phone.replace(/\s/g, "")}`}><Phone /> Chiama</a></Button>}
+              {port.email && <Button asChild size="lg" variant="outline"><a onClick={contact} href={`mailto:${port.email}`}><Mail /> Email</a></Button>}
             </div>
             <div className="mt-2"><FavoriteButton port={port} photo={PHOTO[port.kind]} /></div>
             {listing?.website && <Button asChild variant="outline" className="mt-2 w-full"><a onClick={contact} href={listing.website} target="_blank" rel="noreferrer"><Globe /> Sito web</a></Button>}

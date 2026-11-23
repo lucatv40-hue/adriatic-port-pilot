@@ -57,7 +57,7 @@ function PortPage() {
         <h2 className="mb-1 font-display text-xl">Ormeggio</h2>
         {row("Fondale", `${p.depth} m`)}{row("Lunghezza max", `${p.maxLength} m`)}{row("Larghezza max", `${p.maxBeam} m`)}
         {row("Posti barca", String(p.berths))}{row("Disponibilità", p.availability)}
-        {row("Bassa stagione (12 m)", `€${p.rateLow}/notte`)}{row("Alta stagione (12 m)", `€${p.rateHigh}/notte`)}
+        {row("Bassa stagione (12 m)", `€${p.rateLow}/notte`)}{row("Alta stagione (12 m)", `€${p.rateHigh}/notte`)}{row("Fonte prezzi", p.verified ? "Gestore verificato" : p.priceSource === "ufficiale" ? "Listino ufficiale" : "Indicativa")}
       </section>
       <section className="rounded-2xl border bg-card p-4">
         <h2 className="mb-3 font-display text-xl">Servizi</h2>
@@ -65,8 +65,8 @@ function PortPage() {
       </section>
       <section className="grid gap-2">
         <FavoriteButton port={p} photo={PHOTO[p.kind]} />
-        <Button asChild size="lg"><a onClick={contact} href={`tel:${p.phone.replace(/\s/g, "")}`}><Phone /> {p.phone}</a></Button>
-        <Button asChild size="lg" variant="outline"><a onClick={contact} href={`mailto:${p.email}`}><Mail /> {p.email}</a></Button>
+        {p.phone && <Button asChild size="lg"><a onClick={contact} href={`tel:${p.phone.replace(/\s/g, "")}`}><Phone /> {p.phone}</a></Button>}
+        {p.email && <Button asChild size="lg" variant="outline"><a onClick={contact} href={`mailto:${p.email}`}><Mail /> {p.email}</a></Button>}
         <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground"><Radio className="h-4 w-4" /> VHF canale {p.vhf}</p>
       </section>
     </div>
