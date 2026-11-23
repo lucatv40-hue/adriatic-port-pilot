@@ -39,6 +39,7 @@ use the editor.
 - Boat profile is stored per user in the `boats` table (RLS own-row); `useBoat` reads it, the "only suitable" toggle stays in localStorage.
 - Leaflet is only loaded via `React.lazy` behind `<ClientOnly>` (it touches `window` at import).
 - Weather comes from keyless Open-Meteo forecast + marine APIs fetched client-side.
+- Route ETA logic lives in the pure tested `route-timing.ts`; use cumulative nautical miles at constant knots and UTC forecast timestamps aligned by time, selecting only a covered nearest hour so local timezone and missing data cannot shift arrival weather.
 - Forecast parsing (`src/lib/weather.ts`) never throws: missing values become null and the UI shows "non disponibile"; threshold check lives in `src/lib/thresholds.ts`.
 - Roles live in `user_roles` + `has_role()`; notices are public-read, admin-write (RLS) and saved via `saveNotice` server fn, which pushes to users following the zone.
 - Web push: VAPID pair derived from secret `VAPID_SEED` in `src/lib/push.server.ts` (WebCrypto lib, Worker-safe); `public/push-sw.js` is push-only, registered with scope `/push/` so it never controls pages.

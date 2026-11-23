@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Tratta: partenza, velocità media, orari alle 5 tappe e meteo all'arrivo; verifica con account Skipper
 - [x] Mappa: cluster, OpenSeaMap, posizione, ricerca, scheda dal basso
 - [x] Tratta: tocco su 2 porti, rotta su mappa, 5 punti, 48h grafico, soglie in rosso, "non disponibile"
 - [x] Avvisi + admin, allerte con push

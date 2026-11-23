@@ -11,18 +11,34 @@ async function safe(url: string): Promise<unknown[]> {
 }
 type H = { hourly?: Record<string, unknown> };
 
+export function parseForecastSeries(w: H["hourly"], m: H["hourly"]): Series {
+  const timestamps = (hourly: H["hourly"]) => Array.isArray(hourly?.["time"])
+    ? hourly["time"].map((v: unknown) => {
+      if (typeof v !== "number" || !Number.isFinite(v)) return "";
+      const date = new Date(v * 1000);
+      return Number.isFinite(date.getTime()) ? date.toISOString() : "";
+    })
+    : [];
+  const windTimes = timestamps(w), marineTimes = timestamps(m);
+  const time = [...new Set([...windTimes, ...marineTimes].filter(Boolean))].sort();
+  const values = (hourly: H["hourly"], times: string[], key: string) => {
+    const data = arr(hourly?.[key], times.length);
+    const byTime = new Map(times.map((t, i) => [t, data[i] ?? null]));
+    return time.map((t) => byTime.get(t) ?? null);
+  };
+  return { time, wind: values(w, windTimes, "wind_speed_10m"), gust: values(w, windTimes, "wind_gusts_10m"), windDir: values(w, windTimes, "wind_direction_10m"), wave: values(m, marineTimes, "wave_height"), waveDir: values(m, marineTimes, "wave_direction") };
+}
+
 export async function fetchRouteForecast(pts: { lat: number; lon: number }[]): Promise<PointForecast[]> {
   const lat = pts.map((p) => p.lat).join(","), lon = pts.map((p) => p.lon).join(",");
-  const q = `latitude=${lat}&longitude=${lon}&forecast_hours=48&timezone=Europe%2FRome`;
+  const q = `latitude=${lat}&longitude=${lon}&forecast_hours=48&timezone=UTC&timeformat=unixtime`;
   const [W, M] = await Promise.all([
     safe(`https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kn`),
     safe(`https://marine-api.open-meteo.com/v1/marine?${q}&hourly=wave_height,wave_direction`),
   ]);
   return pts.map((p, i) => {
     const w = (W[i] as H | undefined)?.hourly, m = (M[i] as H | undefined)?.hourly;
-    const time = ((w?.["time"] ?? m?.["time"]) as string[] | undefined) ?? [];
-    const n = time.length;
-    const series = { time, wind: arr(w?.["wind_speed_10m"], n), gust: arr(w?.["wind_gusts_10m"], n), windDir: arr(w?.["wind_direction_10m"], n), wave: arr(m?.["wave_height"], n), waveDir: arr(m?.["wave_direction"], n) };
+    const series = parseForecastSeries(w, m);
     return { ...p, series, windOk: series.wind.some((x) => x !== null), waveOk: series.wave.some((x) => x !== null) };
   });
 }
