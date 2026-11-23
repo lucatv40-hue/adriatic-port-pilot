@@ -3,10 +3,10 @@ import { Upgrade } from "@/components/Upgrade";
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { Wind, Waves, RotateCcw, Navigation2, Clock } from "lucide-react";
+import { Wind, Waves, RotateCcw, Navigation2, Clock, TriangleAlert } from "lucide-react";
 import { getPort } from "@/lib/ports";
-import { noticesQuery } from "@/lib/notices";
-import { isNoticeActive } from "@/lib/zones";
+import { noticesQuery, sourcesQuery, CATEGORY_LABEL } from "@/lib/notices";
+import { matchNotice } from "@/lib/route-notices";
 import { StationAccuracy } from "@/components/StationAccuracy";
 import { fetchRouteForecast, samplePoints, compass, type PointForecast } from "@/lib/weather";
 import { routeSchedule, forecastAtArrival, localDepartureValue, formatRouteTime, type RouteStop } from "@/lib/route-timing";
@@ -97,13 +97,19 @@ function PlanInner() {
   const lastStop = schedule.at(-1);
   const durationMinutes = lastStop ? Math.round((lastStop.arrival - Date.parse(departure)) / 60_000) : 0;
   const nq = useQuery(noticesQuery);
-  const notices = a && b ? (nq.data ?? []).filter((n) => isNoticeActive(n.valid_until) && (n.zone === a.region || n.zone === b.region)) : [];
+  const sq = useQuery(sourcesQuery);
+  const start = Date.parse(departure), end = lastStop?.arrival ?? start;
+  const notices = points.length === 5 && Number.isFinite(start)
+    ? (nq.data ?? []).flatMap((n) => { const m = matchNotice(n, points, start, end); return m ? [{ n, m }] : []; }).sort((x, y) => x.m.distanceKm - y.m.distanceKm)
+    : [];
+  const lastCheck = (sq.data ?? []).map((x) => x.last_ok_at).filter(Boolean).sort().at(-1) ?? null;
+  const stale = (sq.data ?? []).some((x) => !x.last_ok_at || Date.now() - Date.parse(x.last_ok_at) > x.every_hours * 2 * 3_600_000);
 
   return (
     <div className="mx-auto max-w-xl">
       <div className="relative h-[45dvh]">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} /></Suspense>
+          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
         <div className="absolute inset-x-3 top-3 z-[500] flex items-center justify-between gap-2 rounded-full bg-card px-4 py-2 text-sm font-bold shadow-float">
           <span className="flex items-center gap-1.5 truncate"><Navigation2 className="h-4 w-4 shrink-0 text-primary" />
@@ -127,12 +133,25 @@ function PlanInner() {
         {q.isLoading && <p className="text-muted-foreground">Carico previsioni…</p>}
         {points.length === 5 && <StationAccuracy points={points} />}
         {q.data?.map((p, i) => <PointCard key={i} p={p} i={i} total={q.data.length} t={t} stop={schedule[i]} />)}
-        {notices.map((n) => (
-          <div key={n.id} className="rounded-xl border-l-4 border-warning bg-card p-3 text-sm"><p className="font-bold">{n.title}</p><p className="text-muted-foreground">{n.body}</p>
-            <a href={n.source_url} target="_blank" rel="noreferrer" className="font-bold text-primary">Fonte ufficiale</a></div>
-        ))}
+        {points.length === 5 && (
+          <section className="space-y-2 rounded-2xl border bg-card p-3" aria-label="Avvisi rilevanti per la tua rotta">
+            <h3 className="flex items-center gap-2 font-display text-lg"><TriangleAlert className="h-5 w-5 text-warning" />Avvisi rilevanti per la tua rotta</h3>
+            <p className="text-xs text-muted-foreground">Ultimo controllo delle fonti: {lastCheck ? formatRouteTime(lastCheck) : "non disponibile"}. Un controllo recente non garantisce che siano stati pubblicati tutti gli avvisi.</p>
+            {stale && <p className="text-xs font-bold text-destructive" role="alert">Alcune fonti non si aggiornano da tempo: i dati potrebbero non essere aggiornati.</p>}
+            {notices.length === 0 && <p className="text-sm">Nessun avviso registrato lungo il percorso nel periodo di navigazione.</p>}
+            {notices.map(({ n, m }) => (
+              <article key={n.id} className={`rounded-xl border-l-4 bg-background p-3 text-sm ${m.kind === "sulla-rotta" ? "border-destructive" : "border-warning"}`}>
+                <p className="text-xs font-bold uppercase text-muted-foreground">{CATEGORY_LABEL[n.category] ?? "Altri pericoli"} · {m.kind === "sulla-rotta" ? "sulla rotta" : m.kind === "zona" ? "avviso di zona, non un divieto sulla rotta" : `a ${(m.distanceKm / 1.852).toFixed(1)} Mn dalla rotta`}</p>
+                <p className="font-bold">{n.title}</p>
+                <p className="text-muted-foreground">{n.body}</p>
+                <p className="mt-1 text-xs">Posizione {n.lat.toFixed(3)}N {n.lon.toFixed(3)}E{n.verified ? "" : " (non verificata)"} · Validità {n.valid_from ? `dal ${formatRouteTime(n.valid_from)} ` : ""}al {formatRouteTime(n.valid_until)}{n.issued_at ? ` · emesso il ${new Date(n.issued_at).toLocaleDateString("it-IT")}` : ""}</p>
+                <a href={n.source_url} target="_blank" rel="noreferrer" className="font-bold text-primary">Fonte ufficiale{n.issuer ? `: ${n.issuer}` : ""}{n.ref ? ` n. ${n.ref}` : ""}</a>
+              </article>
+            ))}
+          </section>
+        )}
         {!a && <Button variant="outline" className="w-full" onClick={() => { setFrom("certosa"); setTo("sangiusto"); }}>Esempio: Venezia → Trieste</Button>}
-        <p className="text-xs text-muted-foreground">Dati Open-Meteo. Non sostituisce i bollettini ufficiali.</p>
+        <p className="text-xs text-muted-foreground">Dati Open-Meteo e fonti ufficiali. Strumento informativo: non sostituisce NAVTEX, VHF e i bollettini ufficiali.</p>
       </div>
     </div>
   );

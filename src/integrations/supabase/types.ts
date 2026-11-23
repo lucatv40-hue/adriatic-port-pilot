@@ -184,44 +184,119 @@ export type Database = {
         }
         Relationships: []
       }
+      notice_sources: {
+        Row: {
+          country: string
+          credits_month: number
+          credits_month_key: string | null
+          every_hours: number
+          id: string
+          items_seen: number
+          last_checked_at: string | null
+          last_error: string | null
+          last_ok_at: string | null
+          method: string
+          name: string
+        }
+        Insert: {
+          country: string
+          credits_month?: number
+          credits_month_key?: string | null
+          every_hours?: number
+          id: string
+          items_seen?: number
+          last_checked_at?: string | null
+          last_error?: string | null
+          last_ok_at?: string | null
+          method: string
+          name: string
+        }
+        Update: {
+          country?: string
+          credits_month?: number
+          credits_month_key?: string | null
+          every_hours?: number
+          id?: string
+          items_seen?: number
+          last_checked_at?: string | null
+          last_error?: string | null
+          last_ok_at?: string | null
+          method?: string
+          name?: string
+        }
+        Relationships: []
+      }
       notices: {
         Row: {
           body: string
+          category: string
+          content_hash: string | null
+          country: string | null
           created_at: string
           id: string
+          issued_at: string | null
+          issuer: string | null
           lat: number
           lon: number
           notified_at: string | null
+          original_text: string | null
           radius_km: number
+          ref: string | null
+          source_key: string | null
           source_url: string
+          status: string
           title: string
+          valid_from: string | null
           valid_until: string
+          verified: boolean
           zone: string
         }
         Insert: {
           body?: string
+          category?: string
+          content_hash?: string | null
+          country?: string | null
           created_at?: string
           id?: string
+          issued_at?: string | null
+          issuer?: string | null
           lat: number
           lon: number
           notified_at?: string | null
+          original_text?: string | null
           radius_km?: number
+          ref?: string | null
+          source_key?: string | null
           source_url?: string
+          status?: string
           title: string
+          valid_from?: string | null
           valid_until: string
+          verified?: boolean
           zone: string
         }
         Update: {
           body?: string
+          category?: string
+          content_hash?: string | null
+          country?: string | null
           created_at?: string
           id?: string
+          issued_at?: string | null
+          issuer?: string | null
           lat?: number
           lon?: number
           notified_at?: string | null
+          original_text?: string | null
           radius_km?: number
+          ref?: string | null
+          source_key?: string | null
           source_url?: string
+          status?: string
           title?: string
+          valid_from?: string | null
           valid_until?: string
+          verified?: boolean
           zone?: string
         }
         Relationships: []

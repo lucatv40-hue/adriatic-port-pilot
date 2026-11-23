@@ -50,6 +50,13 @@
       "when": 1795390723986,
       "tag": "0006_restrict_listing_photo_reads_to_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795431866716,
+      "tag": "0007_migration",
+      "breakpoints": true
     }
   ]
 }

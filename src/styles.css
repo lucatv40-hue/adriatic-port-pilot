@@ -178,3 +178,6 @@ button, a, input, label { touch-action: manipulation; }
 .legal-copy a { color: var(--primary); text-decoration: underline; overflow-wrap: anywhere; }
 .port-pin.depth span { color: var(--card); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+
+.notice-area { stroke: var(--warning); fill: var(--warning); fill-opacity: 0.2; stroke-width: 2; }
+.notice-area.danger { stroke: var(--destructive); fill: var(--destructive); }
