@@ -63,7 +63,7 @@ function Index() {
         </Suspense>
       </ClientOnly>
 
-      <div className="absolute inset-x-3 top-3 z-[500] space-y-2">
+      <div className="absolute left-3 right-16 top-3 z-[500] space-y-2">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cerca porto o località" aria-label="Cerca porto"

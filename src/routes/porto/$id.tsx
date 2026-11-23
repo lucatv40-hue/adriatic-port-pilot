@@ -8,7 +8,8 @@ import { useBoat } from "@/lib/boat";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FavoriteButton } from "@/components/FavoriteButton";
-import { PHOTO } from "@/components/PortSheet";
+import { PortAerial } from "@/components/PortAerial";
+import { portAerial } from "@/lib/port-aerial";
 
 export const Route = createFileRoute("/porto/$id")({
   loader: ({ params }) => { const port = getPort(params.id); if (!port) throw notFound(); return { port }; },
@@ -42,7 +43,7 @@ function PortPage() {
           : <Badge variant="outline" className="mt-2 border-warning text-warning"><Info className="h-3 w-3" /> Dati di esempio da verificare</Badge>}
         {listing?.description && <p className="mt-3">{listing.description}</p>}
       </div>
-      {photos.length > 0 && <div className="flex snap-x gap-2 overflow-x-auto">{photos.map((u) => <img key={u} src={u} alt={p.name} loading="lazy" className="aspect-[4/3] w-4/5 shrink-0 snap-center rounded-xl object-cover" />)}</div>}
+      {photos.length > 0 ? <div className="flex snap-x gap-2 overflow-x-auto">{photos.map((u) => <img key={u} src={u} alt={p.name} loading="lazy" className="aspect-[4/3] w-4/5 shrink-0 snap-center rounded-xl object-cover" />)}</div> : <PortAerial port={p} />}
       {listing && listing.rates.length > 0 && (
         <section className="rounded-2xl border bg-card p-4">
           <h2 className="mb-2 font-display text-xl">Tariffe per stagione</h2>
@@ -64,7 +65,7 @@ function PortPage() {
         <div className="flex flex-wrap gap-2">{p.services.map((s) => <Badge key={s} variant="secondary" className="capitalize">{s}</Badge>)}</div>
       </section>
       <section className="grid gap-2">
-        <FavoriteButton port={p} photo={PHOTO[p.kind]} />
+        <FavoriteButton port={p} photo={portAerial(p.id)?.url ?? ""} />
         {p.phone && <Button asChild size="lg"><a onClick={contact} href={`tel:${p.phone.replace(/\s/g, "")}`}><Phone /> {p.phone}</a></Button>}
         {p.email && <Button asChild size="lg" variant="outline"><a onClick={contact} href={`mailto:${p.email}`}><Mail /> {p.email}</a></Button>}
         <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground"><Radio className="h-4 w-4" /> VHF canale {p.vhf}</p>

@@ -1,4 +1,8 @@
 # Roadmap
+- [x] Mappa estesa e pannello tratta trascinabile e scorrevole
+- [x] Rotazione a due dita di mappa e marker
+- [x] 21 vedute aeree reali FVG/Croazia con fonte e attribuzione
+- [ ] Foto Veneto/Slovenia: WMS Veneto rifiuta le richieste browser; manca una fonte slovena autorizzata per questa app
 - [x] Tratta: partenza, velocità media, orari alle 5 tappe e meteo all'arrivo; verifica con account Skipper
 - [x] Mappa: cluster, OpenSeaMap, posizione, ricerca, scheda dal basso
 - [x] Tratta: tocco su 2 porti, rotta su mappa, 5 punti, 48h grafico, soglie in rosso, "non disponibile"

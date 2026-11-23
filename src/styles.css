@@ -181,3 +181,16 @@ button, a, input, label { touch-action: manipulation; }
 
 .notice-area { stroke: var(--warning); fill: var(--warning); fill-opacity: 0.2; stroke-width: 2; }
 .notice-area.danger { stroke: var(--destructive); fill: var(--destructive); }
+
+.route-curtain { position: absolute; bottom: 0; left: 0; right: 0; z-index: 600; display: flex; flex-direction: column; max-width: 40rem; margin-inline: auto; background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); border-bottom: 0; border-radius: 8px 8px 0 0; box-shadow: var(--shadow-float); transition: height .22s ease; overflow: hidden; }
+.route-curtain.stage-0 { height: 64px; }
+.route-curtain.stage-1 { height: 45%; }
+.route-curtain.stage-2 { height: 88%; }
+.route-curtain.is-dragging { transition: none; }
+.curtain-grip { flex-shrink: 0; height: 64px; cursor: ns-resize; touch-action: none; user-select: none; }
+.curtain-grip button { touch-action: none; }
+.curtain-handle { display: block; width: 40px; height: 4px; border-radius: 4px; margin: 7px auto 2px; background: var(--muted-foreground); }
+.leaflet-control-rotate { background: var(--card) !important; color: var(--foreground) !important; }
+.leaflet-control-rotate a { min-width: 44px; min-height: 44px; }
+.orthophoto-view .leaflet-tile-pane, .dark .orthophoto-view .leaflet-tile-pane { filter: none; }
+.route-map .leaflet-bottom { bottom: 64px; z-index: 450; }

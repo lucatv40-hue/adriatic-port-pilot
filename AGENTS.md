@@ -38,6 +38,8 @@ use the editor.
 - Port seed data and boat-fit logic (`checkFit`, `fitLevel`: size=grey beats depth=orange) live in `src/lib/ports.ts` (pure, tested); map, list, port page and tests share them.
 - Boat profile is stored per user in the `boats` table (RLS own-row); `useBoat` reads it, the "only suitable" toggle stays in localStorage.
 - Leaflet is only loaded via `React.lazy` behind `<ClientOnly>` (it touches `window` at import).
+- Interactive maps use leaflet-rotate with touchRotate and rotateWithView markers; the route data curtain is non-modal so uncovered map areas stay usable.
+- Aerial port imagery uses attributed public orthophotos through port-aerial; Veneto is WMS view-only (no redistribution), licensed FVG/Croatian snapshots use asset pointers, and unavailable coverage never substitutes generic photos.
 - Weather comes from keyless Open-Meteo forecast + marine APIs fetched client-side.
 - Route ETA logic lives in the pure tested `route-timing.ts`; use cumulative nautical miles at constant knots and UTC forecast timestamps aligned by time, selecting only a covered nearest hour so local timezone and missing data cannot shift arrival weather.
 - Forecast parsing (`src/lib/weather.ts`) never throws: missing values become null and the UI shows "non disponibile"; threshold check lives in `src/lib/thresholds.ts`.

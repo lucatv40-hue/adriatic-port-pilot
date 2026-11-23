@@ -7,12 +7,9 @@ import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/compone
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { PortAerial } from "@/components/PortAerial";
+import { portAerial } from "@/lib/port-aerial";
 import { checkFit, fitLevel, type Port, type Service, type Boat } from "@/lib/ports";
-import marina from "@/assets/port-marina.jpg";
-import porto from "@/assets/port-porto.jpg";
-import ormeggio from "@/assets/port-ormeggio.jpg";
-
-export const PHOTO = { Marina: marina, Porto: porto, Ormeggio: ormeggio } as const;
 export const SERVICE_ICON: Record<Service, LucideIcon> = { acqua: Droplets, corrente: Plug, carburante: Fuel, wifi: Wifi, docce: ShowerHead, gru: Construction, ristorante: Utensils, cantiere: Wrench };
 
 export function PortSheet({ port: base, boat, onClose }: { port: Port | undefined; boat: Boat | null; onClose: () => void }) {
@@ -30,7 +27,7 @@ export function PortSheet({ port: base, boat, onClose }: { port: Port | undefine
           <div className="overflow-y-auto px-4 pb-6">
             {photos.length ? (
               <div className="mt-2 flex snap-x gap-2 overflow-x-auto">{photos.map((u) => <img key={u} src={u} alt={port.name} loading="lazy" className="aspect-[16/9] w-full shrink-0 snap-center rounded-xl object-cover" />)}</div>
-            ) : <img src={PHOTO[port.kind]} alt={port.name} width={1024} height={640} loading="lazy" className="mt-2 aspect-[16/9] w-full rounded-xl object-cover" />}
+            ) : <PortAerial port={port} />}
             <p className="mt-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">{port.kind} · {port.town}</p>
             <DrawerTitle className="font-display text-3xl font-normal">{port.name}</DrawerTitle>
             <DrawerDescription asChild>{port.verified
@@ -54,7 +51,7 @@ export function PortSheet({ port: base, boat, onClose }: { port: Port | undefine
               {port.phone && <Button asChild size="lg"><a onClick={contact} href={`tel:${port.phone.replace(/\s/g, "")}`}><Phone /> Chiama</a></Button>}
               {port.email && <Button asChild size="lg" variant="outline"><a onClick={contact} href={`mailto:${port.email}`}><Mail /> Email</a></Button>}
             </div>
-            <div className="mt-2"><FavoriteButton port={port} photo={PHOTO[port.kind]} /></div>
+            <div className="mt-2"><FavoriteButton port={port} photo={portAerial(port.id)?.url ?? ""} /></div>
             {listing?.website && <Button asChild variant="outline" className="mt-2 w-full"><a onClick={contact} href={listing.website} target="_blank" rel="noreferrer"><Globe /> Sito web</a></Button>}
             <p className="mt-2 flex items-center justify-center gap-1.5 text-sm text-muted-foreground"><Radio className="h-4 w-4" /> VHF {port.vhf}</p>
             <Button asChild variant="ghost" className="mt-1 w-full"><Link to="/porto/$id" params={{ id: port.id }}>Pagina del porto <ChevronRight /></Link></Button>

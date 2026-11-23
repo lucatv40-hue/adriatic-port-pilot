@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import "leaflet-rotate";
 import "leaflet.markercluster";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
@@ -20,7 +21,8 @@ export default function PortMap({ ports, levels, onSelect }: { ports: Port[]; le
 
   useEffect(() => {
     if (!el.current || map.current) return;
-    const m = L.map(el.current, { zoomControl: false, preferCanvas: true }).setView([45.3, 13.1], 8);
+    L.Marker.mergeOptions({ rotateWithView: true });
+    const m = L.map(el.current, { zoomControl: false, preferCanvas: true, rotate: true, touchRotate: true, rotateControl: { position: "topright", closeOnZeroBearing: false } }).setView([45.3, 13.1], 8);
     try {
       const view = JSON.parse(localStorage.getItem(MAP_VIEW_KEY) ?? "null");
       if (view && Number.isFinite(view.lat) && Number.isFinite(view.lon) && Number.isFinite(view.zoom)) m.setView([view.lat, view.lon], Math.min(18, Math.max(3, view.zoom)));
@@ -42,7 +44,7 @@ export default function PortMap({ ports, levels, onSelect }: { ports: Port[]; le
     g.addLayers(ports.map((p) => {
       const lv = levels.get(p.id) ?? "ok";
       const icon = L.divIcon({ className: "", html: `<div class="port-pin ${lv}"><span>${lv === "ok" ? p.kind[0] : "!"}</span></div>`, iconSize: [30, 30], iconAnchor: [15, 30] });
-      return L.marker([p.lat, p.lon], { icon, title: p.name }).on("click", () => sel.current(p.id));
+      return L.marker([p.lat, p.lon], { icon, title: p.name, rotateWithView: true }).on("click", () => sel.current(p.id));
     }));
   }, [ports, levels]);
 

@@ -13,6 +13,7 @@ import { routeSchedule, forecastAtArrival, localDepartureValue, formatRouteTime,
 import { useThresholds, isOver } from "@/lib/thresholds";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RouteCurtain } from "@/components/RouteCurtain";
 
 const RouteMap = lazy(() => import("@/components/RouteMap"));
 
@@ -106,18 +107,19 @@ function PlanInner() {
   const stale = (sq.data ?? []).some((x) => !x.last_ok_at || Date.now() - Date.parse(x.last_ok_at) > x.every_hours * 2 * 3_600_000);
 
   return (
-    <div className="mx-auto max-w-xl">
-      <div className="relative h-[45dvh]">
+    <div className="relative h-full min-h-0 overflow-hidden">
+      <div className="absolute inset-0">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
           <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
-        <div className="absolute inset-x-3 top-3 z-[500] flex items-center justify-between gap-2 rounded-full bg-card px-4 py-2 text-sm font-bold shadow-float">
-          <span className="flex items-center gap-1.5 truncate"><Navigation2 className="h-4 w-4 shrink-0 text-primary" />
-            {!a ? "Tocca il porto di partenza" : !b ? `${a.name} → tocca l'arrivo` : `${a.name} → ${b.name}`}</span>
+        <div className="absolute left-3 right-16 top-3 z-[500] flex items-center justify-between gap-2 rounded-lg bg-card px-3 py-2 text-sm font-bold shadow-float">
+          <span className="flex min-w-0 items-center gap-1.5"><Navigation2 className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">
+            {!a ? "Tocca il porto di partenza" : !b ? `${a.name} → tocca l'arrivo` : `${a.name} → ${b.name}`}</span></span>
           {a && <Button variant="ghost" size="icon" className="shrink-0" onClick={() => { setFrom(null); setTo(null); }} aria-label="Ricomincia"><RotateCcw className="h-4 w-4" /></Button>}
         </div>
       </div>
 
+      <RouteCurtain summary={lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · arrivo ${formatRouteTime(lastStop.arrival)}` : "Partenza, velocità e previsioni"}>
       <div className="space-y-4 p-4">
         <div className="grid min-w-0 gap-3 border-b pb-4">
           <label className="min-w-0 text-sm font-bold">Partenza (ora locale)<Input type="datetime-local" className="mt-1 h-12 min-w-0 max-w-full text-base" value={departure} onChange={(e) => setDeparture(e.target.value)} /></label>
@@ -153,6 +155,7 @@ function PlanInner() {
         {!a && <Button variant="outline" className="w-full" onClick={() => { setFrom("certosa"); setTo("sangiusto"); }}>Esempio: Venezia → Trieste</Button>}
         <p className="text-xs text-muted-foreground">Dati Open-Meteo e fonti ufficiali. Strumento informativo: non sostituisce NAVTEX, VHF e i bollettini ufficiali.</p>
       </div>
+      </RouteCurtain>
     </div>
   );
 }
