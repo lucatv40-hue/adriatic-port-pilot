@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { noticesQuery, type NoticeRow } from "@/lib/notices";
-import { saveNotice, deleteNotice } from "@/lib/notices.functions";
+import { saveNotice, deleteNotice, runNoticeImport } from "@/lib/notices.functions";
 import { isNoticeActive } from "@/lib/zones";
 import { REGIONS } from "@/lib/ports";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,13 @@ function Admin() {
     return !!data;
   } });
   const notices = useQuery(noticesQuery);
-  const save = useServerFn(saveNotice), del = useServerFn(deleteNotice);
+  const save = useServerFn(saveNotice), del = useServerFn(deleteNotice), runImport = useServerFn(runNoticeImport);
+  const [importing, setImporting] = useState(false);
+  const doImport = async () => {
+    setImporting(true);
+    try { const r = await runImport(); await qc.invalidateQueries({ queryKey: ["notices"] }); if (r.errors.some((e) => e.includes("402"))) toast.warning("Crediti di lettura esauriti: il lettore riprenderà quando si ricaricano"); else toast.success(`Lettore automatico: ${r.added} nuovi avvisi (${r.checked} pagine lette)`); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Errore"); } finally { setImporting(false); }
+  };
   const [f, setF] = useState<Form>(empty);
   const [busy, setBusy] = useState(false);
 
@@ -60,7 +66,8 @@ function Admin() {
 
   return (
     <div className="mx-auto max-w-xl space-y-5 p-4">
-      <h1 className="font-display text-3xl">{f.id ? "Modifica avviso" : "Nuovo avviso"}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="font-display text-3xl">{f.id ? "Modifica avviso" : "Nuovo avviso"}</h1>
+        <Button type="button" variant="outline" disabled={importing} onClick={doImport}>{importing ? "Lettura in corso…" : "Leggi ordinanze ufficiali"}</Button></div>
       <form onSubmit={submit} className="space-y-3">
         {inp("title", "Titolo", { required: true, minLength: 3 })}
         <div className="space-y-1"><Label htmlFor="body">Testo</Label><Textarea id="body" rows={4} value={f.body} onChange={(e) => setF({ ...f, body: e.target.value })} /></div>

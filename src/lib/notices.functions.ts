@@ -69,3 +69,14 @@ export const sendTestPush = createServerFn({ method: "POST" })
     const sent = await sendToSubs(context.supabase, data ?? [], { title: "Rotta Adriatica", body: "Le notifiche funzionano ⚓", url: "/allerte" });
     return { sent };
   });
+
+/** Admin: avvia subito il lettore automatico delle ordinanze ufficiali. */
+export const runNoticeImport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!isAdmin) throw new Error("Solo gli amministratori");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { importNotices } = await import("./notice-import.server");
+    return importNotices(supabaseAdmin);
+  });

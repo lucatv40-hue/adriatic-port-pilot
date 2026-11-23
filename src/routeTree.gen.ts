@@ -28,6 +28,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout/return'
 import { Route as PortoIdRouteImport } from './routes/porto/$id'
 import { Route as AuthenticatedAdminAvvisiRouteImport } from './routes/_authenticated/admin.avvisi'
 import { Route as AuthenticatedAdminGestoriRouteImport } from './routes/_authenticated/admin.gestori'
+import { Route as ApiPublicJobsImportNoticesRouteImport } from './routes/api/public/jobs/import-notices'
 import { Route as ApiPublicJobsWeatherAlertsRouteImport } from './routes/api/public/jobs/weather-alerts'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -129,6 +130,12 @@ const AuthenticatedAdminGestoriRoute =
     path: '/admin/gestori',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicJobsImportNoticesRoute =
+  ApiPublicJobsImportNoticesRouteImport.update({
+    id: '/api/public/jobs/import-notices',
+    path: '/api/public/jobs/import-notices',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicJobsWeatherAlertsRoute =
   ApiPublicJobsWeatherAlertsRouteImport.update({
     id: '/api/public/jobs/weather-alerts',
@@ -167,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/porto/$id': typeof PortoIdRoute
   '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/admin/gestori': typeof AuthenticatedAdminGestoriRoute
+  '/api/public/jobs/import-notices': typeof ApiPublicJobsImportNoticesRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -190,6 +198,7 @@ export interface FileRoutesByTo {
   '/porto/$id': typeof PortoIdRoute
   '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/admin/gestori': typeof AuthenticatedAdminGestoriRoute
+  '/api/public/jobs/import-notices': typeof ApiPublicJobsImportNoticesRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -215,6 +224,7 @@ export interface FileRoutesById {
   '/porto/$id': typeof PortoIdRoute
   '/_authenticated/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/_authenticated/admin/gestori': typeof AuthenticatedAdminGestoriRoute
+  '/api/public/jobs/import-notices': typeof ApiPublicJobsImportNoticesRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/porto/$id'
     | '/admin/avvisi'
     | '/admin/gestori'
+    | '/api/public/jobs/import-notices'
     | '/api/public/jobs/weather-alerts'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/porto/$id'
     | '/admin/avvisi'
     | '/admin/gestori'
+    | '/api/public/jobs/import-notices'
     | '/api/public/jobs/weather-alerts'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
@@ -287,6 +299,7 @@ export interface FileRouteTypes {
     | '/porto/$id'
     | '/_authenticated/admin/avvisi'
     | '/_authenticated/admin/gestori'
+    | '/api/public/jobs/import-notices'
     | '/api/public/jobs/weather-alerts'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
@@ -307,6 +320,7 @@ export interface RootRouteChildren {
   TrattaRoute: typeof TrattaRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   PortoIdRoute: typeof PortoIdRoute
+  ApiPublicJobsImportNoticesRoute: typeof ApiPublicJobsImportNoticesRoute
   ApiPublicJobsWeatherAlertsRoute: typeof ApiPublicJobsWeatherAlertsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -447,6 +461,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminGestoriRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/jobs/import-notices': {
+      id: '/api/public/jobs/import-notices'
+      path: '/api/public/jobs/import-notices'
+      fullPath: '/api/public/jobs/import-notices'
+      preLoaderRoute: typeof ApiPublicJobsImportNoticesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jobs/weather-alerts': {
       id: '/api/public/jobs/weather-alerts'
       path: '/api/public/jobs/weather-alerts'
@@ -505,6 +526,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrattaRoute: TrattaRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   PortoIdRoute: PortoIdRoute,
+  ApiPublicJobsImportNoticesRoute: ApiPublicJobsImportNoticesRoute,
   ApiPublicJobsWeatherAlertsRoute: ApiPublicJobsWeatherAlertsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
