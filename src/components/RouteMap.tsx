@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-import L from "leaflet";
-import "leaflet-rotate";
+import L from "@/lib/leaflet-rotated";
 import "leaflet/dist/leaflet.css";
 import { PORTS } from "@/lib/ports";
 
