@@ -7,6 +7,7 @@ import { Wind, Waves, RotateCcw, Navigation2 } from "lucide-react";
 import { getPort } from "@/lib/ports";
 import { noticesQuery } from "@/lib/notices";
 import { isNoticeActive } from "@/lib/zones";
+import { StationAccuracy } from "@/components/StationAccuracy";
 import { fetchRouteForecast, samplePoints, maxOf, compass, type PointForecast } from "@/lib/weather";
 import { useThresholds, isOver } from "@/lib/thresholds";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,7 @@ function PlanInner() {
         </div>
         {a && b && <p className="text-sm text-muted-foreground">Circa {dist} Mn in linea retta · 5 punti · prossime 48 ore · valori oltre soglia in rosso</p>}
         {q.isLoading && <p className="text-muted-foreground">Carico previsioni…</p>}
+        {points.length === 5 && <StationAccuracy points={points} />}
         {q.data?.map((p, i) => <PointCard key={i} p={p} i={i} total={q.data.length} t={t} />)}
         {notices.map((n) => (
           <div key={n.id} className="rounded-xl border-l-4 border-warning bg-card p-3 text-sm"><p className="font-bold">{n.title}</p><p className="text-muted-foreground">{n.body}</p>
