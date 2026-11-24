@@ -39,6 +39,7 @@ use the editor.
 - Boat profile is stored per user in the `boats` table (RLS own-row); `useBoat` reads it, the "only suitable" toggle stays in localStorage.
 - Leaflet is only loaded via `React.lazy` behind `<ClientOnly>` (it touches `window` at import).
 - Interactive maps import the shared leaflet-rotated module, which binds globalThis.L before leaflet-rotate evaluates (the plugin requires this global); keep touchRotate and rotateWithView markers, and a non-modal route data curtain so uncovered map areas stay usable.
+- Portalled menus inside the route curtain use z-index 700, above the curtain's 600, so choices remain visible over the map panel.
 - Aerial port imagery uses attributed public orthophotos through port-aerial; Veneto is WMS view-only (no redistribution), licensed FVG/Croatian snapshots use asset pointers, and unavailable coverage never substitutes generic photos.
 - Weather comes from keyless Open-Meteo forecast + marine APIs fetched client-side.
 - Route wind supports selectable ICON-2I with whole-point best_match fallback on missing hours/variables or distant grid cells; share 15-minute in-flight request caching (including unchanged Marine API), bracket the next 48 hours in UTC with Europe/Rome input/display, and retain model/grid/retrieval provenance without inventing model initialization times.
