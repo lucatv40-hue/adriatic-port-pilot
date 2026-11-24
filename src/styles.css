@@ -176,7 +176,7 @@
 .me-dot { fill: var(--color-accent); fill-opacity: 1; stroke: var(--color-card); }
 .leaflet-marker-icon, .marker-cluster { will-change: transform; }
 .route-line { stroke: var(--color-accent); }
-.wp { display:grid; place-items:center; width:36px; height:36px; border-radius:9999px; background: var(--color-card); color: var(--color-forecast-wind); border:2px solid var(--color-forecast-wind); font-size:14px; font-weight:700; box-shadow: var(--shadow-float); }
+.wp { display:grid; place-items:center; width:27px; height:27px; border-radius:9999px; background: var(--color-card); color: var(--color-forecast-wind); border:2px solid var(--color-forecast-wind); font-size:11px; font-weight:700; box-shadow: var(--shadow-float); }
 .wp.selected { background: var(--color-forecast-wind); color: var(--color-primary-foreground); outline: 3px solid var(--color-card); }
 .notice-zone { fill: var(--color-warning); fill-opacity: .2; stroke: var(--color-warning); stroke-width: 2; }
 .notice-zone.focus { fill: var(--color-destructive); stroke: var(--color-destructive); fill-opacity: .3; }

@@ -54,7 +54,7 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     const holds: ReturnType<typeof holdGesture>[] = [];
     waypoints.current = ll.map((x, i) => {
       const hold = holdGesture(() => pointAnchor.current?.(i), () => {}); holds.push(hold);
-      const marker = L.marker(x, { title: `Punto meteo ${i + 1}`, rotateWithView: true, zIndexOffset: 1500, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [36, 36], iconAnchor: [18, 18] }) }).on("click", () => { if (!hold.activated()) pointPick.current?.(i); }).addTo(g);
+      const marker = L.marker(x, { title: `Punto meteo ${i + 1}`, rotateWithView: true, zIndexOffset: 1500, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [27, 27], iconAnchor: [14, 14] }) }).on("click", () => { if (!hold.activated()) pointPick.current?.(i); }).addTo(g);
       const element = marker.getElement();
       if (element) {
         const options = { signal: abort.signal };
@@ -95,7 +95,7 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     const g = L.layerGroup().addTo(m); draftLayer.current = g;
     const ll = draft.map((p) => [p.lat, p.lon] as L.LatLngTuple);
     if (ll.length > 1) L.polyline(ll, { className: "route-line", weight: 4 }).addTo(g);
-    ll.forEach((x, i) => L.marker(x, { interactive: false, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] }) }).addTo(g));
+    ll.forEach((x, i) => L.marker(x, { interactive: false, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [27, 27], iconAnchor: [14, 14] }) }).addTo(g));
     const last = ll.at(-1);
     if (!drawing || !last) return () => { g.remove(); };
     const rubber = L.polyline([last, m.getCenter()], { className: "route-line rubber", weight: 3, dashArray: "6 6" }).addTo(g);
