@@ -1,5 +1,5 @@
 export interface Series { time: string[]; wind: (number | null)[]; gust: (number | null)[]; windDir: (number | null)[]; wave: (number | null)[]; waveDir: (number | null)[] }
-export type WindModel = "icon2i" | "best_match";
+export type WindModel = "icon2i";
 export interface WindSource { model: WindModel; fetchedAt: string; modelUpdatedAt: string | null; fallback: boolean; complete: boolean; gridLat: number | null; gridLon: number | null }
 export interface PointForecast { lat: number; lon: number; series: Series; windOk: boolean; waveOk: boolean; windSource?: WindSource }
 
@@ -30,10 +30,14 @@ export function forecastWindow(now: number) {
   const times = Array.from({ length: (end - start) / 3_600_000 + 1 }, (_, i) => (start + i * 3_600_000) / 1000);
   return { start, end, times };
 }
-export function completeWind(data: H | undefined, times: number[], point: { lat: number; lon: number }): boolean {
+function localWindCell(data: H | undefined, point: { lat: number; lon: number }): boolean {
   if (!data?.hourly || data.hourly_units?.["wind_speed_10m"] !== "kn" || data.hourly_units?.["wind_gusts_10m"] !== "kn" || data.hourly_units?.["wind_direction_10m"] !== "°") return false;
   // An out-of-domain model may return a distant boundary cell, not local weather.
   if (num(data.latitude) === null || num(data.longitude) === null || Math.abs((data.latitude ?? 0) - point.lat) > 0.2 || Math.abs((data.longitude ?? 0) - point.lon) > 0.3) return false;
+  return true;
+}
+export function completeWind(data: H | undefined, times: number[], point: { lat: number; lon: number }): boolean {
+  if (!localWindCell(data, point) || !data?.hourly) return false;
   const actual = data.hourly["time"];
   if (!Array.isArray(actual)) return false;
   return times.every((time) => {
@@ -63,28 +67,26 @@ export function parseForecastSeries(w: H["hourly"], m: H["hourly"]): Series {
   return { time, wind: values(w, windTimes, "wind_speed_10m"), gust: values(w, windTimes, "wind_gusts_10m"), windDir: values(w, windTimes, "wind_direction_10m"), wave: values(m, marineTimes, "wave_height"), waveDir: values(m, marineTimes, "wave_direction") };
 }
 
-export async function fetchRouteForecast(pts: { lat: number; lon: number }[], model: WindModel = "best_match", now = Date.now()): Promise<PointForecast[]> {
+export async function fetchRouteForecast(pts: { lat: number; lon: number }[], now = Date.now()): Promise<PointForecast[]> {
   if (pts.length === 0) return [];
   const lat = pts.map((p) => p.lat).join(","), lon = pts.map((p) => p.lon).join(",");
   const window = forecastWindow(now);
   const hour = (time: number) => new Date(time).toISOString().slice(0, 16);
   const q = `latitude=${lat}&longitude=${lon}&start_hour=${hour(window.start)}&end_hour=${hour(window.end)}&timezone=UTC&timeformat=unixtime`;
-  const windUrl = (selected: WindModel) => `https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kn${selected === "icon2i" ? "&models=italia_meteo_arpae_icon_2i&cell_selection=sea" : ""}`;
+  const windUrl = `https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kn&models=italia_meteo_arpae_icon_2i&cell_selection=sea`;
   const [W, M] = await Promise.all([
-    cached(windUrl(model)),
+    cached(windUrl),
     cached(`https://marine-api.open-meteo.com/v1/marine?${q}&hourly=wave_height,wave_direction`),
   ]);
-  const fallback = pts.map((p, i) => model === "icon2i" && !completeWind(row(W[i]), window.times, p));
-  const alternate = fallback.some(Boolean) ? await cached(windUrl("best_match")) : [];
   return pts.map((p, i) => {
-    // Replace the whole wind series at a failed point: never silently splice models.
-    const selected = row(fallback[i] ? alternate[i] : W[i]);
-    const parsed = parseForecastSeries(selected?.hourly, row(M[i])?.hourly);
+    // Keep covered ICON-2I hours; invalid cells and missing values never use another model.
+    const selected = row(W[i]);
+    const parsed = parseForecastSeries(localWindCell(selected, p) ? selected?.hourly : undefined, row(M[i])?.hourly);
     const time = window.times.map((t) => new Date(t * 1000).toISOString());
     const indices = new Map(parsed.time.map((t, index) => [t, index]));
     const values = (key: Exclude<keyof Series, "time">) => time.map((t) => { const index = indices.get(t); return index === undefined ? null : parsed[key][index] ?? null; });
     const series: Series = { time, wind: values("wind"), gust: values("gust"), windDir: values("windDir"), wave: values("wave"), waveDir: values("waveDir") };
-    return { ...p, series, windOk: series.wind.some((x) => x !== null), waveOk: series.wave.some((x) => x !== null), windSource: { model: fallback[i] ? "best_match" : model, fallback: fallback[i] ?? false, complete: completeWind(selected, window.times, p), fetchedAt: requests.get(windUrl(fallback[i] ? "best_match" : model))?.fetchedAt ?? new Date(now).toISOString(), modelUpdatedAt: null, gridLat: num(selected?.latitude), gridLon: num(selected?.longitude) } };
+    return { ...p, series, windOk: series.wind.some((x) => x !== null), waveOk: series.wave.some((x) => x !== null), windSource: { model: "icon2i", fallback: false, complete: completeWind(selected, window.times, p), fetchedAt: requests.get(windUrl)?.fetchedAt ?? new Date(now).toISOString(), modelUpdatedAt: null, gridLat: num(selected?.latitude), gridLon: num(selected?.longitude) } };
   });
 }
 export const maxOf = (a: (number | null)[]) => { const v = a.filter((x): x is number => x !== null); return v.length ? Math.max(...v) : null; };

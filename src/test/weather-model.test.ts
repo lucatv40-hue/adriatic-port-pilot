@@ -26,27 +26,41 @@ describe("ICON-2I route weather", () => {
     const now = Date.parse("2026-11-27T00:39:00Z");
     const fetch = vi.fn(async (_url: string) => new Response(JSON.stringify(Array.from({ length: 5 }, () => data(now)))));
     vi.stubGlobal("fetch", fetch);
-    const result = await fetchRouteForecast(Array.from({ length: 5 }, () => point), "icon2i", now);
+    const result = await fetchRouteForecast(Array.from({ length: 5 }, () => point), now);
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(String(fetch.mock.calls[0]?.[0])).toContain("models=italia_meteo_arpae_icon_2i&cell_selection=sea");
     expect(result).toHaveLength(5);
     expect(result[0]?.windSource).toMatchObject({ model: "icon2i", fallback: false, modelUpdatedAt: null });
   });
-  it("falls back for the entire failed point without mixing models, keeps null waves and reuses marine data", async () => {
+  it("keeps ICON-2I on incomplete hours without requesting automatic wind and reuses marine data", async () => {
     const now = Date.parse("2026-11-28T00:39:00Z");
     const broken = data(now, 40); broken.hourly.wind_gusts_10m.pop();
     const fetch = vi.fn(async (url: string) => new Response(JSON.stringify(url.includes("marine-api") ? {} : url.includes("models=") ? broken : data(now, 12))));
     vi.stubGlobal("fetch", fetch);
-    const result = await fetchRouteForecast([point], "icon2i", now);
-    expect(result[0]?.windSource).toMatchObject({ model: "best_match", fallback: true });
-    expect(result[0]?.series.wind.every((v) => v === 12)).toBe(true);
+    const result = await fetchRouteForecast([point], now);
+    expect(result[0]?.windSource).toMatchObject({ model: "icon2i", fallback: false, complete: false });
+    expect(result[0]?.series.wind.every((v) => v === 40)).toBe(true);
+    expect(result[0]?.series.gust.at(-1)).toBeNull();
     expect(result[0]?.series.wave.every((v) => v === null)).toBe(true);
-    await fetchRouteForecast([point], "best_match", now);
-    expect(fetch).toHaveBeenCalledTimes(3);
+    await fetchRouteForecast([point], now);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch.mock.calls.every(([url]) => url.includes("marine-api") || url.includes("models=italia_meteo_arpae_icon_2i"))).toBe(true);
+  });
+  it("rejects distant wind cells without switching models and preserves independent waves", async () => {
+    const now = Date.parse("2026-11-30T00:39:00Z");
+    const fetch = vi.fn(async (url: string) => new Response(JSON.stringify(url.includes("marine-api")
+      ? { hourly: { time: forecastWindow(now).times, wave_height: forecastWindow(now).times.map(() => 0.7), wave_direction: forecastWindow(now).times.map(() => 180) } }
+      : { ...data(now), latitude: 52 })));
+    vi.stubGlobal("fetch", fetch);
+    const result = await fetchRouteForecast([point], now);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(result[0]?.series.wind.every((v) => v === null)).toBe(true);
+    expect(result[0]?.windOk).toBe(false);
+    expect(result[0]?.series.wave.every((v) => v === 0.7)).toBe(true);
   });
   it("failed sources return null rather than zeros", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("offline"); }));
-    const result = await fetchRouteForecast([point], "icon2i", Date.parse("2026-11-29T00:39:00Z"));
+    const result = await fetchRouteForecast([point], Date.parse("2026-11-29T00:39:00Z"));
     expect(result[0]?.series.wind.every((v) => v === null)).toBe(true);
     expect(result[0]?.windOk).toBe(false);
   });

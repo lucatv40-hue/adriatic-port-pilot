@@ -10,12 +10,11 @@ import { getPort } from "@/lib/ports";
 import { noticesQuery, sourcesQuery, CATEGORY_LABEL } from "@/lib/notices";
 import { matchNotice } from "@/lib/route-notices";
 import { StationAccuracy } from "@/components/StationAccuracy";
-import { fetchRouteForecast, samplePoints, type WindModel } from "@/lib/weather";
+import { fetchRouteForecast } from "@/lib/weather";
 import { routeSchedule, anchoredSchedule, localDepartureValue, departureTimestamp, formatRouteTime } from "@/lib/route-timing";
 import { useThresholds } from "@/lib/thresholds";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RouteWeather } from "@/components/RouteWeather";
 import { ShelteredBays } from "@/components/ShelteredBays";
 import { RouteCurtain } from "@/components/RouteCurtain";
@@ -50,7 +49,6 @@ function PlanInner() {
   const [selectedPoint, setSelectedPoint] = useState(0);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [reference, setReference] = useState<{ point: number; time: number } | null>(null);
-  const [windModel, setWindModel] = useState<WindModel>("best_match");
   const [animated, setAnimated] = useState(false);
   const [voyage, setVoyage] = useState(false);
   const [voyageTime, setVoyageTime] = useState<number | null>(null);
@@ -70,7 +68,7 @@ function PlanInner() {
   const portPoints = useMemo(() => (a && b ? seaRoute(a, b, 5) : []), [a, b]);
   const points = free ? freePoints : portPoints;
   const routeKey = points.map((p) => `${p.lat},${p.lon}`).join(";");
-  const q = useQuery({ queryKey: ["route48", routeKey, windModel], queryFn: () => fetchRouteForecast(points, windModel), enabled: points.length >= 2, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
+  const q = useQuery({ queryKey: ["route48", routeKey, "icon2i-only"], queryFn: () => fetchRouteForecast(points), enabled: points.length >= 2, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
   useEffect(() => { if (animated && selectedTime === null && q.data?.[0]?.series.time[0]) setSelectedTime(q.data[0].series.time[0]); }, [animated, q.data, selectedTime]);
   const pick = (id: string) => { if (free) return; if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
   useEffect(() => { setSelectedPoint(0); setSelectedTime(null); setVoyageTime(null); setReference(null); }, [routeKey]);
@@ -146,7 +144,7 @@ function PlanInner() {
         {draft.length > 0 && <Button variant="secondary" className="h-9" onClick={finish}><Flag className="h-4 w-4" />Arrivo</Button>}
       </div>}
       <div className="weather-bar"><div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
-      {animated && points.length >= 2 && q.data && <WeatherTimeline key={`${from}-${to}-${windModel}`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}</div>
+      {animated && points.length >= 2 && q.data && <WeatherTimeline key={`${from}-${to}-icon2i`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}</div>
       {voyage && points.length >= 2 && q.data && schedule.length >= 2 && <VoyagePlayer points={points} stops={schedule} forecasts={q.data} speedKn={Number(speed)} time={simTime} onTime={setVoyageTime} onShift={shiftDeparture} thresholds={t} />}
 
       <RouteCurtain summary={lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · arrivo ${formatRouteTime(lastStop.arrival)}` : "Partenza, velocità e previsioni"}>
@@ -154,7 +152,7 @@ function PlanInner() {
         <div className="grid min-w-0 gap-3 border-b pb-4">
           <label className="min-w-0 text-sm font-bold">Partenza (ora italiana)<Input type="datetime-local" className="mt-1 h-12 min-w-0 max-w-full text-base" value={departure} onChange={(e) => { setReference(null); setSelectedTime(null); setDeparture(e.target.value); }} /></label>
           <label className="text-sm font-bold">Velocità media (kn)<Input type="number" min="0.1" step="0.1" inputMode="decimal" className="mt-1 h-12 text-base" value={speed} onChange={(e) => setSpeed(e.target.value)} /></label>
-          <div className="min-w-0"><label htmlFor="wind-model" className="text-sm font-bold">Modello vento</label><Select value={windModel} onValueChange={(value) => { if (value === "icon2i" || value === "best_match") setWindModel(value); }}><SelectTrigger id="wind-model" className="mt-1 h-12 w-full"><SelectValue /></SelectTrigger><SelectContent className="z-[700]"><SelectItem value="best_match">Open-Meteo — automatico</SelectItem><SelectItem value="icon2i">ICON-2I — ItaliaMeteo</SelectItem></SelectContent></Select></div>
+          <p className="text-xs text-muted-foreground">Vento: ICON-2I · ItaliaMeteo via Open-Meteo · nessun ripiego su altri modelli.</p>
           {(!Number.isFinite(Number(speed)) || Number(speed) <= 0) && <p className="text-sm text-destructive" role="alert">Inserisci una velocità maggiore di zero.</p>}
           {lastStop && <p className="text-sm font-bold">Arrivo previsto: {formatRouteTime(lastStop.arrival)} · durata {Math.floor(durationMinutes / 60)} h {durationMinutes % 60} min</p>}
         </div>
