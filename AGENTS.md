@@ -59,4 +59,3 @@ use the editor.
 - Voyage simulation logic lives in pure tested `src/lib/voyage.ts`: boat position follows routeSchedule; weather at the boat reads both neighbouring points at the same simulated time, blends by position, is labelled an estimate and returns null outside forecast coverage.
 - Wind particles read the six-hourly ICON-2I grid that GitHub Actions/ecCodes publishes to the gh-pages branch (current.json + content-addressed frames); GRIB cannot run in the Worker.
 - Sail routing: pure tested `src/lib/sailing.ts` (VMC, one tack per leg); free routes share the N-point forecast flow.
-- Rotte via canali lagunari e attorno alla terra (sea-route.ts).

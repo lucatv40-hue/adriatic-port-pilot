@@ -1,0 +1,1 @@
+- sea-route.ts: lagoon ports exit via inlet channels; sea legs avoid coarse land polygons through offshore gates (tested).
