@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Campo vento: verificati GRIB reali ICON-2I U/V/FR_LAND, licenza e limiti; convertite e validate 49 ore, predisposto contratto e preprocessore esterno senza cambiare le tre modalità esistenti
+- [ ] Campo vento geografico operativo: manca servizio esterno con aggiornamento automatico e destinazione tile; layer non attivato finché questa dipendenza non è pronta (architettura e verifica in docs/wind-grid.md)
 - [x] Etichette meteo compatte con caratteri invariati e linee sottili ai punti; comandi e intestazioni snelliti, verificati su telefono e desktop nell’account Skipper (13 test superati)
 - [x] Meteo animato: cinque punti, timeline e interpolazione condivisa con i grafici; verifica mobile/desktop su account Skipper, 83 test superati
 - [x] Restyling meteo: cinque punti sincronizzati mappa/pannello, ora condivisa tra indicatori e grafici, tooltip, direzioni, fonti e scale distinte; verificati smartphone Android emulato e pannello desktop con dati reali (78 test superati)
