@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Meteo animato: cinque punti, timeline e interpolazione condivisa con i grafici; verifica mobile/desktop su account Skipper, 83 test superati
 - [x] Restyling meteo: cinque punti sincronizzati mappa/pannello, ora condivisa tra indicatori e grafici, tooltip, direzioni, fonti e scale distinte; verificati smartphone Android emulato e pannello desktop con dati reali (78 test superati)
 - [x] Menu Modello vento visibile sopra la tendina; cambio ICON-2I, lettura previsioni e ritorno automatico verificati nell’account Skipper su telefono e desktop
 - [x] ICON-2I selezionabile, fallback tracciato, copertura 48 ore e confronto Venezia–Istria (5 punti completi; 75 test superati)

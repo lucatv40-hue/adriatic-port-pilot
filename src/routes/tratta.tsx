@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RouteWeather } from "@/components/RouteWeather";
 import { RouteCurtain } from "@/components/RouteCurtain";
+import { WeatherTimeline } from "@/components/WeatherTimeline";
 
 const RouteMap = lazy(() => import("@/components/RouteMap"));
 
@@ -39,6 +40,7 @@ function PlanInner() {
   const [selectedPoint, setSelectedPoint] = useState(0);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [windModel, setWindModel] = useState<WindModel>("best_match");
+  const [animated, setAnimated] = useState(false);
   useEffect(() => {
     const nextHour = new Date();
     nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
@@ -48,6 +50,7 @@ function PlanInner() {
   const a = from ? getPort(from) : undefined, b = to ? getPort(to) : undefined;
   const points = useMemo(() => (a && b ? samplePoints(a, b, 5) : []), [a, b]);
   const q = useQuery({ queryKey: ["route48", from, to, windModel], queryFn: () => fetchRouteForecast(points, windModel), enabled: points.length === 5, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
+  useEffect(() => { if (animated && selectedTime === null && q.data?.[0]?.series.time[0]) setSelectedTime(q.data[0].series.time[0]); }, [animated, q.data, selectedTime]);
   const pick = (id: string) => { if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
   useEffect(() => { setSelectedPoint(0); setSelectedTime(null); }, [from, to]);
   const schedule = useMemo(() => routeSchedule(points, departureTimestamp(departure), Number(speed)), [points, departure, speed]);
@@ -66,7 +69,7 @@ function PlanInner() {
     <div className="relative h-full min-h-0 overflow-hidden">
       <div className="absolute inset-0">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={setSelectedPoint} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
+          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={setSelectedPoint} animated={animated} forecasts={q.data ?? []} time={selectedTime} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
         <div className="absolute left-3 right-16 top-3 lg:right-[27rem] z-[500] flex items-center justify-between gap-2 rounded-lg bg-card px-3 py-2 text-sm font-bold shadow-float">
           <span className="flex min-w-0 items-center gap-1.5"><Navigation2 className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">
@@ -74,6 +77,9 @@ function PlanInner() {
           {a && <Button variant="ghost" size="icon" className="shrink-0" onClick={() => { setFrom(null); setTo(null); }} aria-label="Ricomincia"><RotateCcw className="h-4 w-4" /></Button>}
         </div>
       </div>
+
+      <div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated ? "ghost" : "default"} aria-pressed={!animated} onClick={() => setAnimated(false)}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => setAnimated(true)}>Meteo animato</Button></div>
+      {animated && points.length === 5 && q.data && <WeatherTimeline key={`${from}-${to}-${windModel}`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}
 
       <RouteCurtain summary={lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · arrivo ${formatRouteTime(lastStop.arrival)}` : "Partenza, velocità e previsioni"}>
       <div className="space-y-4 p-4">
@@ -90,7 +96,8 @@ function PlanInner() {
         </div>
         {a && b && <p className="text-sm text-muted-foreground">{lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · ` : ""}5 tappe · orari stimati a velocità costante, senza soste. Percorso in linea retta: non evita terra, bassifondi o divieti.</p>}
         {q.isLoading && <p className="text-muted-foreground">Carico previsioni…</p>}
-        {q.data && <RouteWeather forecasts={q.data} selectedPoint={selectedPoint} onPoint={setSelectedPoint} selectedTime={selectedTime} onTime={setSelectedTime} stops={schedule} thresholds={t} />}
+        {animated && <div className="space-y-1 border-b pb-3 text-xs"><p className="font-bold">Vento e onde · movimento verso destinazione</p><p><span className="text-forecast-wind">Vento &lt;15 kn</span> · <span className="text-forecast-gust">vento ≥15 kn / raffiche</span> · <span className="text-forecast-wave">onde (m)</span> · <span className="text-destructive">oltre le tue soglie</span></p><p className="text-muted-foreground">V: vento · R: raffiche · n/d: non disponibile. Frecce opposte alla provenienza; cinque previsioni locali, non un campo continuo.</p></div>}
+        {q.data && <RouteWeather forecasts={q.data} selectedPoint={selectedPoint} onPoint={setSelectedPoint} selectedTime={selectedTime} onTime={setSelectedTime} stops={schedule} thresholds={t} charts={!animated} />}
         {points.length === 5 && <StationAccuracy points={points} />}
         {points.length === 5 && (
           <section className="space-y-2 border-b pb-4" aria-label="Avvisi rilevanti per la tua rotta">

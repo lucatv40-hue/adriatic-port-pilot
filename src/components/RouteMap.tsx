@@ -1,11 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "@/lib/leaflet-rotated";
 import "leaflet/dist/leaflet.css";
 import { PORTS } from "@/lib/ports";
+import { AnimatedWeatherLayer } from "@/components/AnimatedWeatherLayer";
+import type { PointForecast } from "@/lib/weather";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, notices = [] }: { from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[] }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 } }: { from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number } }) {
+  const [instance, setInstance] = useState<L.Map | null>(null);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const ports = useRef<L.LayerGroup | null>(null);
@@ -22,6 +25,7 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png", { maxZoom: 18, className: "seamark", attribution: "© OpenSeaMap" }).addTo(m);
     ports.current = L.layerGroup().addTo(m); route.current = L.layerGroup().addTo(m); warn.current = L.layerGroup().addTo(m);
     map.current = m;
+    setInstance(m);
     const resize = new ResizeObserver(() => m.invalidateSize({ animate: false }));
     resize.observe(el.current);
     return () => { resize.disconnect(); m.remove(); map.current = null; };
@@ -42,7 +46,7 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     const ll = points.map((p) => [p.lat, p.lon] as L.LatLngTuple);
     L.polyline(ll, { className: "route-line", weight: 4, dashArray: "8 8" }).addTo(g);
     waypoints.current = ll.map((x, i) => L.marker(x, { title: `Punto meteo ${i + 1}`, rotateWithView: true, zIndexOffset: 1500, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [36, 36], iconAnchor: [18, 18] }) }).on("click", () => pointPick.current?.(i)).addTo(g));
-    m.fitBounds(L.latLngBounds(ll), { animate: false, paddingTopLeft: [40, 90], paddingBottomRight: [window.matchMedia("(min-width: 1024px)").matches ? 450 : 40, 100] });
+    m.fitBounds(L.latLngBounds(ll), { animate: false, paddingTopLeft: [65, 150], paddingBottomRight: [window.matchMedia("(min-width: 1024px)").matches ? 450 : 65, 240] });
   }, [points]);
 
   useEffect(() => {
@@ -59,5 +63,5 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return <div ref={el} className="route-map h-full w-full" />;
+  return <><div ref={el} className="route-map h-full w-full" />{animated && <AnimatedWeatherLayer map={instance} forecasts={forecasts} time={time} thresholds={thresholds} />}</>;
 }

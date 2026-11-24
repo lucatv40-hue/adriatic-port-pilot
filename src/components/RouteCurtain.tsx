@@ -28,12 +28,12 @@ export function RouteCurtain({ children, summary }: { children: ReactNode; summa
         if (Math.abs(delta) > 4) d.moved = true;
         if (!d.moved) return;
         el.classList.add("is-dragging");
-        el.style.height = `${Math.max(64, Math.min(parent.clientHeight * .88, d.height + delta))}px`;
+        el.style.height = `${Math.max(64, Math.min(parent.clientHeight * .88, parent.clientHeight - 144, d.height + delta))}px`;
       }} onPointerUp={(e) => {
         const d = drag.current, el = sheet.current, parent = el?.parentElement;
         if (!d || !el || !parent) return;
         if (d.moved) {
-          const heights = [64, parent.clientHeight * .45, parent.clientHeight * .88];
+          const heights = [64, parent.clientHeight * .45, Math.max(64, Math.min(parent.clientHeight * .88, parent.clientHeight - 144))];
           const h = el.getBoundingClientRect().height;
           setStage(heights.reduce((best, value, i) => Math.abs(value - h) < Math.abs((heights[best] ?? 64) - h) ? i : best, 0));
         } else if (!(e.target as HTMLElement).closest("button")) setStage(stage === 0 ? 1 : 0);
