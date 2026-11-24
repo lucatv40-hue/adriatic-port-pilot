@@ -29,3 +29,8 @@
 - [x] Inseriti ragione sociale italythroughtime.world ed email giacomail@yahoo.it
 - [ ] Completare indirizzo legale (in attesa della risposta del proprietario)
 - [x] Verifica velocità locale, contrasto chiaro/scuro e uso mobile; offline verificato in ambiente isolato
+
+## Da fare (richiesta Giacomo)
+- [ ] Modalità "Rotta": mirino al centro, pulsanti Waypoint/Arrivo, spezzata libera con meteo sui punti (Grafici/Animato/Viaggio)
+- [ ] Pulsante "Vela": bordi con migliore VMG/VMC sul vento previsto
+- [ ] Pannelli grafici/viaggio spostabili anche su PC
