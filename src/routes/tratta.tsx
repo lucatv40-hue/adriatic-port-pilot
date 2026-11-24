@@ -9,7 +9,7 @@ import { noticesQuery, sourcesQuery, CATEGORY_LABEL } from "@/lib/notices";
 import { matchNotice } from "@/lib/route-notices";
 import { StationAccuracy } from "@/components/StationAccuracy";
 import { fetchRouteForecast, samplePoints, type WindModel } from "@/lib/weather";
-import { routeSchedule, localDepartureValue, departureTimestamp, formatRouteTime } from "@/lib/route-timing";
+import { routeSchedule, anchoredSchedule, localDepartureValue, departureTimestamp, formatRouteTime } from "@/lib/route-timing";
 import { useThresholds } from "@/lib/thresholds";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ function PlanInner() {
   const [speed, setSpeed] = useState("6");
   const [selectedPoint, setSelectedPoint] = useState(0);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [reference, setReference] = useState<{ point: number; time: number } | null>(null);
   const [windModel, setWindModel] = useState<WindModel>("best_match");
   const [animated, setAnimated] = useState(false);
   const [voyage, setVoyage] = useState(false);
@@ -56,17 +57,31 @@ function PlanInner() {
   const q = useQuery({ queryKey: ["route48", from, to, windModel], queryFn: () => fetchRouteForecast(points, windModel), enabled: points.length === 5, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
   useEffect(() => { if (animated && selectedTime === null && q.data?.[0]?.series.time[0]) setSelectedTime(q.data[0].series.time[0]); }, [animated, q.data, selectedTime]);
   const pick = (id: string) => { if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
-  useEffect(() => { setSelectedPoint(0); setSelectedTime(null); setVoyageTime(null); }, [from, to]);
+  useEffect(() => { setSelectedPoint(0); setSelectedTime(null); setVoyageTime(null); setReference(null); }, [from, to]);
   useEffect(() => { setVoyageTime(null); }, [departure, speed]);
-  const shiftDeparture = (h: number) => { const t = departureTimestamp(departure); if (Number.isFinite(t)) setDeparture(localDepartureValue(new Date(t + h * 3_600_000))); };
-  const schedule = useMemo(() => routeSchedule(points, departureTimestamp(departure), Number(speed)), [points, departure, speed]);
+  const shiftDeparture = (h: number) => { const t = departureTimestamp(departure); if (Number.isFinite(t)) { setReference(null); setDeparture(localDepartureValue(new Date(t + h * 3_600_000))); } };
+  const schedule = useMemo(() => reference ? anchoredSchedule(points, Number(speed), reference.point, reference.time) : routeSchedule(points, departureTimestamp(departure), Number(speed)), [points, departure, speed, reference]);
+  const passage = schedule[selectedPoint]?.arrival;
+  const chartTime = !animated && passage !== undefined && Number.isFinite(passage) ? new Date(passage).toISOString() : selectedTime;
+  const selectPoint = (point: number) => { setSelectedPoint(point); if (!animated) setSelectedTime(null); };
+  const anchorTime = (point: number, time: number) => {
+    const updated = anchoredSchedule(points, Number(speed), point, time);
+    const first = updated[0]; if (!first) return;
+    setReference({ point, time }); setSelectedPoint(point); setSelectedTime(null);
+    setDeparture(localDepartureValue(new Date(first.arrival))); setVoyageTime(null);
+  };
+  const anchorPoint = (point: number) => {
+    const time = point === selectedPoint && selectedTime ? Date.parse(selectedTime) : schedule[point]?.arrival;
+    if (time !== undefined) anchorTime(point, time);
+  };
+  const selectHour = (time: string | null) => { if (time !== null) anchorTime(selectedPoint, Date.parse(time)); };
   const lastStop = schedule.at(-1);
   const simTime = voyageTime ?? schedule[0]?.arrival ?? null;
   const boat = voyage && simTime !== null ? boatAt(points, schedule, simTime) : null;
-  const durationMinutes = lastStop ? Math.round((lastStop.arrival - departureTimestamp(departure)) / 60_000) : 0;
+  const durationMinutes = lastStop ? Math.round((lastStop.arrival - (schedule[0]?.arrival ?? 0)) / 60_000) : 0;
   const nq = useQuery(noticesQuery);
   const sq = useQuery(sourcesQuery);
-  const start = departureTimestamp(departure), end = lastStop?.arrival ?? start;
+  const start = schedule[0]?.arrival ?? departureTimestamp(departure), end = lastStop?.arrival ?? start;
   const notices = points.length === 5 && Number.isFinite(start)
     ? (nq.data ?? []).flatMap((n) => { const m = matchNotice(n, points, start, end); return m ? [{ n, m }] : []; }).sort((x, y) => x.m.distanceKm - y.m.distanceKm)
     : [];
@@ -77,7 +92,7 @@ function PlanInner() {
     <div className="relative h-full min-h-0 overflow-hidden">
       <div className="absolute inset-0">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={setSelectedPoint} animated={animated || voyage} forecasts={q.data ?? []} time={voyage && simTime !== null ? new Date(simTime).toISOString() : selectedTime} boat={boat} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
+          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} animated={animated || voyage} forecasts={q.data ?? []} time={voyage && simTime !== null ? new Date(simTime).toISOString() : chartTime} boat={boat} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
         <div className="absolute left-3 right-16 top-3 lg:right-[27rem] z-[500] flex items-center justify-between gap-1 rounded-lg bg-card px-2 py-1 text-sm font-bold shadow-float">
           <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">
@@ -93,7 +108,7 @@ function PlanInner() {
       <RouteCurtain summary={lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · arrivo ${formatRouteTime(lastStop.arrival)}` : "Partenza, velocità e previsioni"}>
       <div className="space-y-4 p-4">
         <div className="grid min-w-0 gap-3 border-b pb-4">
-          <label className="min-w-0 text-sm font-bold">Partenza (ora italiana)<Input type="datetime-local" className="mt-1 h-12 min-w-0 max-w-full text-base" value={departure} onChange={(e) => setDeparture(e.target.value)} /></label>
+          <label className="min-w-0 text-sm font-bold">Partenza (ora italiana)<Input type="datetime-local" className="mt-1 h-12 min-w-0 max-w-full text-base" value={departure} onChange={(e) => { setReference(null); setSelectedTime(null); setDeparture(e.target.value); }} /></label>
           <label className="text-sm font-bold">Velocità media (kn)<Input type="number" min="0.1" step="0.1" inputMode="decimal" className="mt-1 h-12 text-base" value={speed} onChange={(e) => setSpeed(e.target.value)} /></label>
           <div className="min-w-0"><label htmlFor="wind-model" className="text-sm font-bold">Modello vento</label><Select value={windModel} onValueChange={(value) => { if (value === "icon2i" || value === "best_match") setWindModel(value); }}><SelectTrigger id="wind-model" className="mt-1 h-12 w-full"><SelectValue /></SelectTrigger><SelectContent className="z-[700]"><SelectItem value="best_match">Open-Meteo — automatico</SelectItem><SelectItem value="icon2i">ICON-2I — ItaliaMeteo</SelectItem></SelectContent></Select></div>
           {(!Number.isFinite(Number(speed)) || Number(speed) <= 0) && <p className="text-sm text-destructive" role="alert">Inserisci una velocità maggiore di zero.</p>}
@@ -106,7 +121,7 @@ function PlanInner() {
         {a && b && <p className="text-sm text-muted-foreground">{lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · ` : ""}5 tappe · orari stimati a velocità costante, senza soste. Percorso in linea retta: non evita terra, bassifondi o divieti.</p>}
         {q.isLoading && <p className="text-muted-foreground">Carico previsioni…</p>}
         {animated && <div className="space-y-1 border-b pb-3 text-xs"><p className="font-bold">Vento e onde · movimento verso destinazione</p><p><span className="text-forecast-wind">Vento &lt;15 kn</span> · <span className="text-forecast-gust">vento ≥15 kn / raffiche</span> · <span className="text-forecast-wave">onde (m)</span> · <span className="text-destructive">oltre le tue soglie</span></p><p className="text-muted-foreground">V: vento · R: raffiche · n/d: non disponibile. Frecce opposte alla provenienza; cinque previsioni locali, non un campo continuo.</p></div>}
-        {q.data && <RouteWeather forecasts={q.data} selectedPoint={selectedPoint} onPoint={setSelectedPoint} selectedTime={selectedTime} onTime={setSelectedTime} stops={schedule} thresholds={t} charts={!animated} />}
+        {q.data && <RouteWeather forecasts={q.data} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} referencePoint={reference?.point ?? 0} selectedTime={chartTime} onTime={selectHour} stops={schedule} thresholds={t} charts={!animated} />}
         {points.length === 5 && <StationAccuracy points={points} />}
         {points.length === 5 && (
           <section className="space-y-2 border-b pb-4" aria-label="Avvisi rilevanti per la tua rotta">

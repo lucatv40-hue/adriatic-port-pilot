@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { routeSchedule, forecastAtArrival, localDepartureValue, departureTimestamp } from "@/lib/route-timing";
+import { routeSchedule, anchoredSchedule, forecastAtArrival, localDepartureValue, departureTimestamp } from "@/lib/route-timing";
 import { parseForecastSeries, samplePoints } from "@/lib/weather";
 
 const departure = Date.parse("2026-11-23T09:00:00Z");
@@ -8,6 +8,32 @@ const series = parseForecastSeries(
   { time: [departure / 1000 + 3600, departure / 1000 + 7200, departure / 1000 + 10800], wave_height: [0.5, 1, 2], wave_direction: [45, 90, 180] },
 );
 describe("orari e meteo di passaggio", () => {
+  const points = samplePoints({ lat: 0, lon: 0 }, { lat: 0, lon: 1 }, 5);
+  it("l'ora scelta al punto 1 è la partenza e il punto 2 aggiunge il tempo di navigazione", () => {
+    const stops = anchoredSchedule(points, 10, 0, departure);
+    expect(stops[0]?.arrival).toBe(departure);
+    expect(stops[1]?.arrival).toBeCloseTo(departure + 1.5010115183 * 3_600_000, -1);
+  });
+  it("l'ora scelta al punto 3 ricalcola avanti e indietro", () => {
+    const stops = anchoredSchedule(points, 10, 2, departure);
+    expect(stops[2]?.arrival).toBe(departure);
+    expect(stops[3]?.arrival).toBeCloseTo(departure + 1.5010115183 * 3_600_000, -1);
+    expect(stops[1]?.arrival).toBeCloseTo(departure - 1.5010115183 * 3_600_000, -1);
+    expect(stops[0]?.arrival).toBeCloseTo(departure - 3.0020230366 * 3_600_000, -1);
+  });
+  it("un nuovo riferimento sostituisce quello precedente", () => {
+    const initial = anchoredSchedule(points, 10, 0, departure);
+    const chosen = departure + 4 * 3_600_000;
+    const updated = anchoredSchedule(points, 10, 1, chosen);
+    expect(updated[1]?.arrival).toBe(chosen);
+    expect(updated[2]?.arrival).toBeCloseTo(chosen + 1.5010115183 * 3_600_000, -1);
+    expect(updated[0]?.arrival).not.toBe(initial[0]?.arrival);
+  });
+  it("cambiare velocità conserva l'ora del riferimento", () => {
+    const stops = anchoredSchedule(points, 20, 2, departure);
+    expect(stops[2]?.arrival).toBe(departure);
+    expect(stops[3]?.arrival).toBeCloseTo(departure + .75050575915 * 3_600_000, -1);
+  });
   it("calcola 5 tappe a velocità costante in nodi", () => {
     const stops = routeSchedule(samplePoints({ lat: 0, lon: 0 }, { lat: 0, lon: 1 }), departure, 10);
     expect(stops).toHaveLength(5);

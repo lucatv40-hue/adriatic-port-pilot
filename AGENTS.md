@@ -40,7 +40,7 @@ use the editor.
 - Leaflet is only loaded via `React.lazy` behind `<ClientOnly>` (it touches `window` at import).
 - Interactive maps import the shared leaflet-rotated module, which binds globalThis.L before leaflet-rotate evaluates (the plugin requires this global); keep touchRotate and rotateWithView markers, and a non-modal route data curtain so uncovered map areas stay usable.
 - Portalled menus inside the route curtain use z-index 700, above the curtain's 600, so choices remain visible over the map panel.
-- RouteWeather shares selected waypoint and forecast timestamp with the map; manual weather selection is display-only and selectedForecast preserves ETA calculations. The non-modal curtain becomes a right-side panel on desktop.
+- RouteWeather shares waypoint/time with the map; held chart selection anchors UTC schedules via anchoredSchedule, while animation playback stays display-only. Hold gestures cancel on scrolling to prevent accidental edits.
 - Animated weather uses a client-only canvas with exactly five local glyphs and a shared timestamp; forecast-animation supplies both graph and canvas values, interpolates adjacent hours only and reverses source bearings for physical movement. Playback never fetches data and pauses when hidden; reduced-motion disables decorative movement.
 - Aerial port imagery uses attributed public orthophotos through port-aerial; Veneto is WMS view-only (no redistribution), licensed FVG/Croatian snapshots use asset pointers, and unavailable coverage never substitutes generic photos.
 - Weather comes from keyless Open-Meteo forecast + marine APIs fetched client-side.

@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Cursore protetto da pressione di 0,7 secondi; punto di riferimento e orari automatici avanti/indietro, verificati su telefono e desktop con account Skipper; 106 test superati
 - [x] Zoom Leaflet: annullato gesto differito e rimosso listener rotazione rimasto attivo dopo chiusura; verificata rotellina con tratta tracciata e riutilizzo contenitore
 - [x] Marker porti dimezzati (15 px) e nascosti mentre la rotta è tracciata; ricompaiono azzerando la tratta; verificato su telefono (36 → 0 → 36)
 - [x] Campo vento: verificati GRIB reali ICON-2I U/V/FR_LAND, licenza e limiti; convertite e validate 49 ore, predisposto contratto e preprocessore esterno senza cambiare le tre modalità esistenti

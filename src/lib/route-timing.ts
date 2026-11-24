@@ -20,6 +20,14 @@ export function routeSchedule(points: Point[], departure: number, speedKn: numbe
   });
 }
 
+/** Anchor any waypoint in UTC; earlier points subtract sailing time. */
+export function anchoredSchedule(points: Point[], speedKn: number, point: number, time: number): RouteStop[] {
+  const base = routeSchedule(points, 0, speedKn);
+  const anchor = base[point];
+  if (!anchor || !Number.isFinite(time)) return [];
+  return base.map(stop => ({ ...stop, arrival: time + stop.arrival - anchor.arrival }));
+}
+
 // Select only a covered forecast hour, never substitute a distant or expired forecast.
 export function forecastAtArrival(series: Series, arrival: number) {
   const times = series.time.map((time) => Date.parse(time));

@@ -4,10 +4,11 @@ import "leaflet/dist/leaflet.css";
 import { PORTS } from "@/lib/ports";
 import { AnimatedWeatherLayer } from "@/components/AnimatedWeatherLayer";
 import type { PointForecast } from "@/lib/weather";
+import { holdGesture } from "@/lib/hold-gesture";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null }: { boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number } }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null }: { boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number } }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -16,6 +17,7 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
   const warn = useRef<L.LayerGroup | null>(null);
   const pick = useRef(onPick); pick.current = onPick;
   const pointPick = useRef(onPoint); pointPick.current = onPoint;
+  const pointAnchor = useRef(onAnchor); pointAnchor.current = onAnchor;
   const waypoints = useRef<L.Marker[]>([]);
 
   useEffect(() => {
@@ -47,8 +49,25 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     if (points.length < 2) return;
     const ll = points.map((p) => [p.lat, p.lon] as L.LatLngTuple);
     L.polyline(ll, { className: "route-line", weight: 4, dashArray: "8 8" }).addTo(g);
-    waypoints.current = ll.map((x, i) => L.marker(x, { title: `Punto meteo ${i + 1}`, rotateWithView: true, zIndexOffset: 1500, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [36, 36], iconAnchor: [18, 18] }) }).on("click", () => pointPick.current?.(i)).addTo(g));
+    const abort = new AbortController();
+    const holds: ReturnType<typeof holdGesture>[] = [];
+    waypoints.current = ll.map((x, i) => {
+      const hold = holdGesture(() => pointAnchor.current?.(i), () => {}); holds.push(hold);
+      const marker = L.marker(x, { title: `Punto meteo ${i + 1}`, rotateWithView: true, zIndexOffset: 1500, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [36, 36], iconAnchor: [18, 18] }) }).on("click", () => { if (!hold.activated()) pointPick.current?.(i); }).addTo(g);
+      const element = marker.getElement();
+      if (element) {
+        const options = { signal: abort.signal };
+        element.addEventListener("pointerdown", event => { if (event.isPrimary && event.button === 0) { element.setPointerCapture(event.pointerId); hold.start(event.clientX, event.clientY); } }, options);
+        element.addEventListener("pointermove", event => hold.move(event.clientX, event.clientY), options);
+        element.addEventListener("pointerup", hold.end, options);
+        element.addEventListener("pointercancel", hold.end, options);
+        element.addEventListener("lostpointercapture", hold.end, options);
+        element.addEventListener("contextmenu", event => event.preventDefault(), options);
+      }
+      return marker;
+    });
     m.fitBounds(L.latLngBounds(ll), { animate: false, paddingTopLeft: [65, 150], paddingBottomRight: [window.matchMedia("(min-width: 1024px)").matches ? 450 : 65, 240] });
+    return () => { abort.abort(); holds.forEach(hold => hold.end()); };
   }, [points]);
 
   useEffect(() => {
