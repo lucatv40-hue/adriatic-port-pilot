@@ -1,5 +1,6 @@
 // Pure sail-routing helpers: per leg, compare the direct course with a single-tack/gybe
 // pair chosen for the best VMC (speed made good towards the leg's end) on the forecast wind.
+import { crossesLand, inLagoon, onLand } from "@/lib/sea-route";
 type Point = { lat: number; lon: number };
 export interface SailLeg { from: number; tack: Point | null; twd: number | null; timeH: number; directTimeH: number; distanceNm: number; vmc: number; kind: "diretto" | "bolina" | "poppa" | "n/d" }
 
@@ -24,6 +25,8 @@ export function sailLeg(a: Point, b: Point, twd: number | null, speedKn: number,
   const brg = (Math.atan2(d.x, d.y) / rad + 360) % 360;
   const empty = { from: index, tack: null, twd, distanceNm: dist };
   if (twd === null || !(speedKn > 0) || dist === 0) return { ...empty, timeH: dist / speedKn, directTimeH: dist / speedKn, vmc: speedKn, kind: "n/d" };
+  // Inside a lagoon channel or on a leg that touches land, no tacking: follow the channel.
+  if (inLagoon(a) || inLagoon(b)) return { ...empty, timeH: dist / speedKn, directTimeH: dist / speedKn, vmc: speedKn, kind: "diretto" };
   const vDirect = speedKn * polar(brg - twd);
   const directTimeH = vDirect > 0 ? dist / vDirect : Infinity;
   let best = { timeH: directTimeH, tack: null as Point | null, h1: brg };
@@ -38,7 +41,10 @@ export function sailLeg(a: Point, b: Point, twd: number | null, speedKn: number,
     const v1 = speedKn * polar(h1 - twd), v2 = speedKn * polar(h2 - twd);
     if (v1 <= 0 || v2 <= 0) continue;
     const t = s1 / v1 + s2 / v2;
-    if (t < best.timeH * 0.98) best = { timeH: t, tack: fromXY(a, u1.x * s1, u1.y * s1), h1 };
+    if (t >= best.timeH * 0.98) continue;
+    const tp = fromXY(a, u1.x * s1, u1.y * s1);
+    if (onLand(tp) || crossesLand(a, tp) || crossesLand(tp, b)) continue;
+    best = { timeH: t, tack: fromXY(a, u1.x * s1, u1.y * s1), h1 };
   }
   const offWind = Math.abs(((brg - twd + 540) % 360) - 180);
   const kind = best.tack ? (offWind < 90 ? "bolina" : "poppa") : "diretto";

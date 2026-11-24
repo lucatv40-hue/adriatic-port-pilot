@@ -9,8 +9,9 @@ const p = (lat: number, lon: number): LL => ({ lat, lon });
 export const LAGOONS: { name: string; area: Poly; exits: { name: string; channel: LL[] }[] }[] = [
   {
     name: "Laguna di Venezia",
-    area: [[45.56, 12.18], [45.56, 12.47], [45.445, 12.44], [45.42, 12.395], [45.34, 12.31], [45.24, 12.292], [45.2, 12.285], [45.14, 12.27], [45.14, 12.12]],
+    area: [[45.56, 12.18], [45.56, 12.47], [45.49, 12.47], [45.465, 12.455], [45.445, 12.44], [45.42, 12.395], [45.34, 12.31], [45.24, 12.292], [45.2, 12.285], [45.14, 12.27], [45.14, 12.12]],
     exits: [
+      { name: "Bocca di Lido (Treporti)", channel: [p(45.468, 12.442), p(45.452, 12.432), p(45.435, 12.425), p(45.425, 12.428), p(45.416, 12.44)] },
       { name: "Bocca di Lido", channel: [p(45.431, 12.355), p(45.428, 12.38), p(45.4225, 12.408), p(45.416, 12.44)] },
       { name: "Bocca di Malamocco", channel: [p(45.375, 12.31), p(45.345, 12.316), p(45.335, 12.33), p(45.328, 12.355)] },
       { name: "Bocca di Chioggia", channel: [p(45.222, 12.284), p(45.229, 12.298), p(45.233, 12.312), p(45.234, 12.335)] },
@@ -84,6 +85,9 @@ function seaPath(a: LL, b: LL): LL[] {
 }
 
 /** Channel from a lagoon point to the inlet that best serves `toward`; null when not in a lagoon. */
+export const onLand = (pt: LL) => LAND.some((poly) => inside(pt, poly));
+export const inLagoon = (pt: LL) => LAGOONS.some((l) => inside(pt, l.area));
+
 export function lagoonExit(pt: LL, toward: LL): LL[] | null {
   const lagoon = LAGOONS.find((l) => inside(pt, l.area));
   if (!lagoon) return null;
@@ -91,7 +95,7 @@ export function lagoonExit(pt: LL, toward: LL): LL[] | null {
   for (const e of lagoon.exits) {
     let k = 0; e.channel.forEach((c, i) => { if (dist(pt, c) < dist(pt, e.channel[k]!)) k = i; });
     const ch = e.channel.slice(k);
-    const len = dist(pt, ch[0]!) + ch.slice(1).reduce((s, c, i) => s + dist(ch[i]!, c), 0) + dist(ch[ch.length - 1]!, toward);
+    const len = 3 * dist(pt, ch[0]!) + ch.slice(1).reduce((s, c, i) => s + dist(ch[i]!, c), 0) + dist(ch[ch.length - 1]!, toward);
     if (len < cost) { cost = len; best = ch; }
   }
   return [pt, ...best];
