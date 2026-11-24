@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { PortAerial } from "@/components/PortAerial";
 import { portAerial } from "@/lib/port-aerial";
+import { MARINA_PRICES } from "@/lib/marina-prices";
+import { PublishedPrices } from "@/components/PublishedPrices";
 import { checkFit, fitLevel, type Port, type Service, type Boat } from "@/lib/ports";
 export const SERVICE_ICON: Record<Service, LucideIcon> = { acqua: Droplets, corrente: Plug, carburante: Fuel, wifi: Wifi, docce: ShowerHead, gru: Construction, ristorante: Utensils, cantiere: Wrench };
 
@@ -16,6 +18,7 @@ export function PortSheet({ port: base, boat, onClose }: { port: Port | undefine
   const { data: listings } = useQuery(approvedListingsQuery);
   const listing = base ? listings?.find((l) => l.port_id === base.id) : undefined;
   const port = base ? applyListing(base, listing) : undefined;
+  const tariff = base && !listing?.rates.length ? MARINA_PRICES[base.id] : undefined;
   const [photos, setPhotos] = useState<string[]>([]);
   useEffect(() => { setPhotos([]); if (listing) { logListingEvent(listing.id, "view"); void signPhotos(listing.photos).then(setPhotos); } }, [listing?.id]);
   const contact = () => { if (listing) logListingEvent(listing.id, "contact"); };
@@ -39,10 +42,11 @@ export function PortSheet({ port: base, boat, onClose }: { port: Port | undefine
               : <p className={`mt-3 flex items-center gap-2 rounded-xl p-3 text-sm font-bold ${fitLevel(port, boat) === "size" ? "bg-muted text-muted-foreground" : "bg-warning/15 text-warning"}`}><AlertTriangle className="h-5 w-5" /> {fit.reasons.join(" · ")}</p>)}
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl bg-muted p-2"><p className="text-xs text-muted-foreground">Fondale</p><p className="text-lg font-bold">{port.depth} m</p></div>
-              <div className="rounded-xl bg-muted p-2"><p className="text-xs text-muted-foreground">Bassa st.</p><p className="text-lg font-bold">€{port.rateLow}</p></div>
-              <div className="rounded-xl bg-muted p-2"><p className="text-xs text-muted-foreground">Alta st.</p><p className="text-lg font-bold">€{port.rateHigh}</p></div>
+              <div className="rounded-xl bg-muted p-2"><p className="text-xs text-muted-foreground">{tariff?.lowLabel ?? "Bassa st."}</p><p className="text-lg font-bold">€{port.rateLow}</p></div>
+              <div className="rounded-xl bg-muted p-2"><p className="text-xs text-muted-foreground">{tariff?.highLabel ?? "Alta st."}</p><p className="text-lg font-bold">€{port.rateHigh}</p></div>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">€/notte per 12 m · max {port.maxLength}×{port.maxBeam} m · disponibilità {port.availability}</p>
+            {tariff && <div className="mt-3"><PublishedPrices tariff={tariff} compact /></div>}
             <div className="mt-4 grid grid-cols-4 gap-2">
               {port.services.map((s) => { const I = SERVICE_ICON[s]; return (
                 <div key={s} className="flex flex-col items-center gap-1 rounded-xl border p-2"><I className="h-5 w-5 text-primary" /><span className="text-[11px] capitalize">{s}</span></div>); })}

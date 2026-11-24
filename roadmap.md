@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Estratti e verificati visivamente i listini transito 2026 di Marina Uno, Portorož e Izola; schede e confronto aggiornati con fonte, fasce, condizioni e test (nessun aggiornamento periodico attivato)
 - [x] Cursore protetto da pressione di 0,7 secondi; punto di riferimento e orari automatici avanti/indietro, verificati su telefono e desktop con account Skipper; 106 test superati
 - [x] Zoom Leaflet: annullato gesto differito e rimosso listener rotazione rimasto attivo dopo chiusura; verificata rotellina con tratta tracciata e riutilizzo contenitore
 - [x] Marker porti dimezzati (15 px) e nascosti mentre la rotta è tracciata; ricompaiono azzerando la tratta; verificato su telefono (36 → 0 → 36)
