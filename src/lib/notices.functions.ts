@@ -11,7 +11,7 @@ const NoticeInput = z.object({
   id: z.string().uuid().optional(),
   title: z.string().trim().min(3).max(200),
   body: z.string().trim().max(4000),
-  zone: z.enum(["Veneto", "Friuli Venezia Giulia", "Istria"]),
+  zone: z.enum(["Veneto", "Friuli Venezia Giulia", "Istria", "Emilia-Romagna"]),
   lat: z.number().min(40).max(47),
   lon: z.number().min(11).max(16),
   radius_km: z.number().min(0).max(100),

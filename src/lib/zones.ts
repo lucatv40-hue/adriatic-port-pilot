@@ -1,6 +1,7 @@
 import type { Region } from "./ports";
 /** Zone di allerta: un punto in mare rappresentativo per il meteo. */
 export const ZONES: { id: Region; lat: number; lon: number }[] = [
+  { id: "Emilia-Romagna", lat: 44.6, lon: 12.45 },
   { id: "Veneto", lat: 45.3, lon: 12.55 },
   { id: "Friuli Venezia Giulia", lat: 45.62, lon: 13.6 },
   { id: "Istria", lat: 44.95, lon: 13.6 },

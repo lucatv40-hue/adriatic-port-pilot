@@ -71,7 +71,7 @@ function AlertsInner() {
     <div className="mx-auto max-w-xl space-y-5 p-4">
       <h1 className="font-display text-3xl">Allerte personalizzate</h1>
       <section className="space-y-2"><p className="font-bold">Zone preferite</p>
-        <div className="grid grid-cols-3 gap-2">{REGIONS.map((r) => <Button key={r} type="button" size="sm" className="h-auto whitespace-normal py-2" variant={p.zones.includes(r) ? "default" : "outline"} onClick={() => setP({ ...p, zones: p.zones.includes(r) ? p.zones.filter((z) => z !== r) : [...p.zones, r] })}>{r}</Button>)}</div></section>
+        <div className="grid grid-cols-2 gap-2">{REGIONS.map((r) => <Button key={r} type="button" size="sm" className="h-auto whitespace-normal py-2" variant={p.zones.includes(r) ? "default" : "outline"} onClick={() => setP({ ...p, zones: p.zones.includes(r) ? p.zones.filter((z) => z !== r) : [...p.zones, r] })}>{r}</Button>)}</div></section>
       <section className="grid grid-cols-2 gap-3">
         <label className="text-sm font-bold">Vento oltre (kn)<Input type="number" inputMode="decimal" className="mt-1 h-12 text-lg" value={p.wind_kn} onChange={(e) => setP({ ...p, wind_kn: Number(e.target.value) || 0 })} /></label>
         <label className="text-sm font-bold">Onda oltre (m)<Input type="number" step="0.1" inputMode="decimal" className="mt-1 h-12 text-lg" value={p.wave_m} onChange={(e) => setP({ ...p, wave_m: Number(e.target.value) || 0 })} /></label>

@@ -7,7 +7,7 @@ import { parseHhi, inNorthAdriatic, placeFor } from "@/lib/hhi";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Admin = SupabaseClient<any>;
-type Zone = "Veneto" | "Friuli Venezia Giulia" | "Istria";
+type Zone = "Veneto" | "Friuli Venezia Giulia" | "Istria" | "Emilia-Romagna";
 export const CATEGORIES = ["interdizione", "lavori", "ostacoli", "esercitazioni", "regate", "segnalamenti", "meteo", "altro"] as const;
 export const FIRECRAWL_MONTHLY_BUDGET = 1000;
 const FIRECRAWL_EST_PER_SEARCH = 6; // stima prudente: 1 ricerca + 4 pagine lette + margine

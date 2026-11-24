@@ -72,7 +72,7 @@ function Admin() {
         {inp("title", "Titolo", { required: true, minLength: 3 })}
         <div className="space-y-1"><Label htmlFor="body">Testo</Label><Textarea id="body" rows={4} value={f.body} onChange={(e) => setF({ ...f, body: e.target.value })} /></div>
         <div className="space-y-1"><Label>Zona</Label>
-          <div className="grid grid-cols-3 gap-2">{REGIONS.map((r) => <Button key={r} type="button" size="sm" variant={f.zone === r ? "default" : "outline"} className="h-auto whitespace-normal py-2" onClick={() => setF({ ...f, zone: r })}>{r}</Button>)}</div></div>
+          <div className="grid grid-cols-2 gap-2">{REGIONS.map((r) => <Button key={r} type="button" size="sm" variant={f.zone === r ? "default" : "outline"} className="h-auto whitespace-normal py-2" onClick={() => setF({ ...f, zone: r })}>{r}</Button>)}</div></div>
         <p className="text-sm text-muted-foreground">Tocca la mappa per posizionare l'area.</p>
         <div className="h-48 overflow-hidden rounded-xl border">
           <ClientOnly fallback={<div className="h-full bg-muted" />}><Suspense fallback={<div className="h-full bg-muted" />}>
