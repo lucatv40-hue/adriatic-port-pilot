@@ -10,7 +10,7 @@ import { holdGesture } from "@/lib/hold-gesture";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [] }: { drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick }: { sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -84,10 +84,16 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
   useEffect(() => {
     const m = map.current; if (!m) return;
     if (!boat) { boatMarker.current?.remove(); boatMarker.current = null; return; }
-    if (!boatMarker.current) boatMarker.current = L.marker([boat.lat, boat.lon], { title: "Barca simulata", interactive: false, zIndexOffset: 3000, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="boat-sim"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M11 2v15H4z" /><path d="M12.5 4c3 3 4.5 8 4.5 13h-4.5z" /><path d="M5 18.5h14l-2.5 3.5h-9z" /></svg></div>`, iconSize: [30, 30], iconAnchor: [15, 15] }) }).addTo(m);
-    else boatMarker.current.setLatLng([boat.lat, boat.lon]);
+    const svgHtml = sailAvatar
+      ? `<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M12 2c3 4 4 9 3.5 20h-7C8 11 9 6 12 2z" /><path class="boat-sail" d="M12 5l7 11-7 1z" /><path class="boat-mast" d="M12 5v13" /></svg>`
+      : `<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M12 2c3.5 4 4.5 9 4 20H8C7.5 11 8.5 6 12 2z" /><rect class="boat-cabin" x="9.6" y="10" width="4.8" height="6" rx="1" /></svg>`;
+    const html = `<div class="boat-sim" title="Tocca per cambiare motore/vela">${svgHtml}</div>`;
+    if (!boatMarker.current) { boatMarker.current = L.marker([boat.lat, boat.lon], { title: "Barca simulata: tocca per motore/vela", interactive: true, zIndexOffset: 3000, rotateWithView: true, icon: L.divIcon({ className: "", html, iconSize: [30, 30], iconAnchor: [15, 15] }) }).addTo(m); }
+    else { boatMarker.current.setLatLng([boat.lat, boat.lon]); const e = boatMarker.current.getElement(); if (e && e.dataset["sail"] !== String(sailAvatar)) e.innerHTML = html; }
+    const e = boatMarker.current.getElement(); if (e) e.dataset["sail"] = String(sailAvatar);
+    boatMarker.current.off("click").on("click", () => onBoatClick?.());
     const svg = boatMarker.current.getElement()?.querySelector("svg"); if (svg) svg.style.transform = `rotate(${boat.heading}deg)`;
-  }, [boat?.lat, boat?.lon, boat?.heading, instance]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [boat?.lat, boat?.lon, boat?.heading, instance, sailAvatar, onBoatClick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const draftLayer = useRef<L.LayerGroup | null>(null);
   useEffect(() => {

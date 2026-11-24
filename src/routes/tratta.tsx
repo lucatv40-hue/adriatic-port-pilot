@@ -23,6 +23,7 @@ import { WeatherTimeline } from "@/components/WeatherTimeline";
 import { VoyagePlayer } from "@/components/VoyagePlayer";
 import { boatAt, alongSailLeg } from "@/lib/voyage";
 import { useWindGrid } from "@/lib/wind-grid-loader";
+import { seaRoute } from "@/lib/sea-route";
 
 /** Six-hourly ICON-2I grid published by the GitHub Actions workflow to GitHub Pages. */
 const WIND_GRID_URL = "https://lucatv40-hue.github.io/adriatic-port-pilot";
@@ -66,7 +67,7 @@ function PlanInner() {
   }, []);
   const { t, save } = useThresholds();
   const a = from ? getPort(from) : undefined, b = to ? getPort(to) : undefined;
-  const portPoints = useMemo(() => (a && b ? samplePoints(a, b, 5) : []), [a, b]);
+  const portPoints = useMemo(() => (a && b ? seaRoute(a, b, 5) : []), [a, b]);
   const points = free ? freePoints : portPoints;
   const routeKey = points.map((p) => `${p.lat},${p.lon}`).join(";");
   const q = useQuery({ queryKey: ["route48", routeKey, windModel], queryFn: () => fetchRouteForecast(points, windModel), enabled: points.length >= 2, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
@@ -118,7 +119,7 @@ function PlanInner() {
     <div className="relative h-full min-h-0 overflow-hidden">
       <div className="absolute inset-0">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
+          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
         <div className="absolute left-3 right-16 top-3 lg:right-[27rem] z-[500] flex items-center justify-between gap-1 rounded-lg bg-card px-2 py-1 text-sm font-bold shadow-float">
           <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">
@@ -153,7 +154,7 @@ function PlanInner() {
           <label className="text-sm font-bold">Soglia vento (kn)<Input type="number" inputMode="decimal" className="mt-1 h-11 text-base" value={t.wind} onChange={(e) => save({ ...t, wind: Number(e.target.value) || 0 })} /></label>
           <label className="text-sm font-bold">Soglia onda (m)<Input type="number" step="0.1" inputMode="decimal" className="mt-1 h-11 text-base" value={t.wave} onChange={(e) => save({ ...t, wave: Number(e.target.value) || 0 })} /></label>
         </div>
-        {points.length >= 2 && <p className="text-sm text-muted-foreground">{lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · ` : ""}{points.length} tappe · orari stimati a velocità costante, senza soste. Percorso in linea retta: non evita terra, bassifondi o divieti.</p>}
+        {points.length >= 2 && <p className="text-sm text-muted-foreground">{lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · ` : ""}{points.length} tappe · orari stimati a velocità costante, senza soste. Percorso indicativo: esce dalle bocche di porto e gira attorno alla costa, ma non considera bassifondi o divieti.</p>}
         {sailing && <section className="space-y-1 border-b pb-3 text-sm" aria-label="Rotta a vela">
           <h3 className="flex items-center gap-2 font-bold"><Sailboat className="h-4 w-4 text-primary" />Rotta a vela · {Number.isFinite(sailing.timeH) ? `${Math.floor(sailing.timeH)} h ${Math.round((sailing.timeH % 1) * 60)} min` : "non disponibile"}</h3>
           {sailing.legs.map((l) => <p key={l.from} className="text-xs">Tratto {l.from + 1}→{l.from + 2}: {l.kind === "n/d" ? "vento non disponibile" : l.kind === "diretto" ? "rotta diretta" : l.kind === "bolina" ? "bordi di bolina (un cambio di mure)" : "strambata in poppa"} · VMC {l.vmc.toFixed(1)} kn{l.twd !== null ? ` · vento da ${Math.round(l.twd)}°` : ""}</p>)}

@@ -228,6 +228,10 @@ button, a, input, label { touch-action: manipulation; }
 }
 
 .boat-sim svg { fill: var(--primary); stroke: var(--primary-foreground); stroke-width: 1.5; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .4)); }
+.boat-sim { cursor: pointer; }
+.boat-sim .boat-sail { fill: var(--primary-foreground); stroke: var(--primary); stroke-width: 1; }
+.boat-sim .boat-mast { fill: none; stroke: var(--primary); stroke-width: 1.5; }
+.boat-sim .boat-cabin { fill: var(--primary-foreground); stroke: none; }
 .voyage-player { position: absolute; left: 8px; right: 8px; bottom: 68px; z-index: 550; max-height: 40vh; overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-float); padding: 4px 8px; }
 @media (min-width: 1024px) { .voyage-player { left: 24px; right: 480px; bottom: 32px; max-width: 560px; } }
 
