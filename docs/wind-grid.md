@@ -73,4 +73,24 @@ Mantenere Leaflet e la rotazione attuale. Layer trasparente separato sotto rotta
 
 Prove obbligatorie prima di mostrare «Campo vento»: rotazione con due dita, allineamento dopo pan/zoom, campionamento noto U/V, copertura e data corrente, rotta e barca leggibili, terra mascherata, riduzione del numero di particelle su smartphone, limite memoria, pausa in background, prefers-reduced-motion, assenza di richieste durante playback e disattivazione senza interferire con le tre modalità esistenti.
 
-**Dipendenza aperta:** servizio esterno di acquisizione/conversione periodica e destinazione delle tile non configurati. Per questo il campo geografico non è stato attivato: una prova locale su un singolo run non è un servizio meteo operativo.
+## Automazione predisposta (non attivata)
+
+Il workflow `.github/workflows/wind-grid.yml` controlla la fonte ogni sei ore (00:17, 06:17, 12:17, 18:17 UTC; GitHub può ritardare o saltare esecuzioni). ICON-2I emette normalmente alle 00/12 UTC: quattro controlli non significano quattro nuove emissioni. La cache evita di scaricare nuovamente i circa 170 MB della stessa emissione, salvo scadenza/evizione.
+
+`tools/wind-grid/automate.py` sceglie una directory ufficiale completa che copra ancora le prossime 48 ore, scarica U/V/FR_LAND con limite dimensione e verifica integrità, conserva SHA-256 e ora reale di acquisizione, e richiama il convertitore esistente. Produce 49 campi orari da adesso arrotondato all’ora successiva. Il sito contiene solo previsioni pubbliche, mai dati di account o file GRIB.
+
+La pubblicazione controlla tutti i campi prima di sostituire `current.json`. Ogni file JSON ha SHA-256 nel nome e nel manifest: un URL non cambia contenuto. I file già prodotti nelle ultime 72 ore vengono conservati attraverso la cache del sito; GitHub può eliminarla, quindi il futuro lettore dovrà gestire file mancanti senza simulare dati. I file sono JSON non compressi, senza dipendenza da intestazioni gzip personalizzate su Pages. Un errore lascia online il precedente sito, che **non deve essere mostrato come aggiornato**: il futuro lettore dovrà verificare run, copertura e integrità.
+
+### Attivazione richiesta al proprietario
+
+1. Collegare il progetto in Lovable → Impostazioni progetto → Git → GitHub. Lovable crea un repository privato; l’assistente non può eseguire questo collegamento.
+2. Nel repository, autorizzare Actions e impostare la variabile **WIND_GRID_ENABLED=true** (Settings → Secrets and variables → Actions → Variables). L’automazione resta spenta senza questa scelta.
+3. Lanciare manualmente “Vento ICON-2I ogni sei ore” da Actions e verificare l’esito; anche senza hosting si ottiene l’artefatto `wind-grid-validated`.
+4. Per la consegna pubblica, verificare disponibilità/costo di GitHub Pages sul proprio piano, scegliere **GitHub Actions** come sorgente in Settings → Pages e impostare **WIND_GRID_PAGES=true**. La pubblicazione contiene esclusivamente i dati meteo, non l’app. Se Pages non è disponibile sul piano del repository privato, non rendere pubblico l’intero codice per aggirare il limite: scegliere prima un hosting separato.
+5. Dopo il primo deploy, comunicare l’URL Pages e verificare `current.json`, tutte le 49 URL, lettura cross-origin dall’app e freschezza. Solo dopo si può collegare e provare il layer animato.
+
+Nessuna chiave personale necessaria: Actions usa il suo token temporaneo con soli permessi di lettura e, nel job di pubblicazione, Pages/OIDC. Nessun acquisto o servizio esterno attivato. **Gratuità non garantita**: Actions su repository privati consuma la quota del piano, e Pages privato dipende dal piano GitHub. Verificare limiti e spesa prima di abilitare; un repository pubblico dedicato ai soli dati è una possibile scelta futura, non predisposta automaticamente.
+
+Test locali: `python -B -m unittest discover -s tools/wind-grid -p 'test_*.py' -v`. Prova completa esterna: `python -B tools/wind-grid/automate.py --cache /tmp/wind-cache --site /tmp/wind-site`. La verifica locale non dimostra che il workflow sia già in esecuzione su GitHub.
+
+**Dipendenza aperta:** il proprietario ha confermato che GitHub non è ancora collegato; attivazione Actions, hosting Pages e URL pubblico restano da completare. Il campo geografico nell’app resta disattivato, senza modificare animato/viaggio/grafici esistenti.
