@@ -102,9 +102,9 @@ function PlanInner() {
         </div>
       </div>
 
-      <div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
+      <div className="weather-bar"><div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
+      {animated && points.length === 5 && q.data && <WeatherTimeline key={`${from}-${to}-${windModel}`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}</div>
       {voyage && points.length === 5 && q.data && schedule.length === 5 && <VoyagePlayer points={points} stops={schedule} forecasts={q.data} speedKn={Number(speed)} time={simTime} onTime={setVoyageTime} onShift={shiftDeparture} thresholds={t} />}
-      {animated && points.length === 5 && q.data && <WeatherTimeline key={`${from}-${to}-${windModel}`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}
 
       <RouteCurtain summary={lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · arrivo ${formatRouteTime(lastStop.arrival)}` : "Partenza, velocità e previsioni"}>
       <div className="space-y-4 p-4">

@@ -32,13 +32,13 @@ export function WeatherTimeline({ times, time, onTime }: { times: string[]; time
   }, [playing, speed, first, last, reduced, onTime]);
   if (!Number.isFinite(current)) return <p className="text-sm">Previsioni non disponibili</p>;
   const seek = (value: number) => { setPlaying(false); onTime(new Date(Math.max(first, Math.min(last, value))).toISOString()); };
+  const btn = "h-11 w-9 shrink-0";
   return <section className="weather-timeline" aria-label="Riproduzione meteo">
-    <div className="flex items-center justify-between gap-2 text-sm"><output className="font-bold tabular-nums">{formatRouteTime(current)}</output><span className="text-xs text-muted-foreground">Ora italiana · 48 h</span></div>
-    <input aria-label="Ora meteo animato" aria-valuetext={formatRouteTime(current)} className="forecast-hour h-8 w-full" type="range" min={first} max={last} step={1} value={current} onChange={e => seek(first + Math.round((Number(e.target.value) - first) / 3_600_000) * 3_600_000)} />
-    <div className="flex items-center justify-between gap-1">
-      <div className="flex gap-1"><Button variant="outline" size="icon" aria-label="Ora precedente" disabled={current <= first} onClick={() => seek(Math.ceil(current / 3_600_000) * 3_600_000 - 3_600_000)}><ChevronLeft /></Button><Button size="icon" aria-label={playing ? "Pausa" : "Play"} onClick={() => { if (current >= last) onTime(new Date(first).toISOString()); setPlaying(!playing); }}>{playing ? <Pause /> : <Play />}</Button><Button variant="outline" size="icon" aria-label="Ora successiva" disabled={current >= last} onClick={() => seek(Math.floor(current / 3_600_000) * 3_600_000 + 3_600_000)}><ChevronRight /></Button></div>
-      <div className="flex gap-1" role="group" aria-label="Velocità riproduzione">{[.5, 1, 2, 4].map(v => <Button key={v} variant={speed === v ? "default" : "ghost"} className="h-11 px-2" aria-pressed={speed === v} aria-label={`Velocità ${v}x`} onClick={() => setSpeed(v)}>{v}×</Button>)}</div>
-    </div>
-    <p className="mt-1 text-[10px] text-muted-foreground">{current % 3_600_000 ? "Valori interpolati tra previsioni orarie" : "Previsione oraria originale"}{reduced ? " · movimento ridotto" : ""}</p>
+    <Button variant="ghost" size="icon" className={btn} aria-label="Ora precedente" disabled={current <= first} onClick={() => seek(Math.ceil(current / 3_600_000) * 3_600_000 - 3_600_000)}><ChevronLeft /></Button>
+    <Button variant="ghost" size="icon" className={btn} aria-label={playing ? "Pausa" : "Play"} onClick={() => { if (current >= last) onTime(new Date(first).toISOString()); setPlaying(!playing); }}>{playing ? <Pause /> : <Play />}</Button>
+    <Button variant="ghost" size="icon" className={btn} aria-label="Ora successiva" disabled={current >= last} onClick={() => seek(Math.floor(current / 3_600_000) * 3_600_000 + 3_600_000)}><ChevronRight /></Button>
+    <input aria-label="Ora meteo animato" aria-valuetext={formatRouteTime(current)} className="forecast-hour min-w-0 flex-1" type="range" min={first} max={last} step={1} value={current} onChange={e => seek(first + Math.round((Number(e.target.value) - first) / 3_600_000) * 3_600_000)} />
+    <output className="shrink-0 px-1 text-xs font-bold tabular-nums" title={current % 3_600_000 ? "Valore interpolato" : "Previsione oraria"}>{formatRouteTime(current)}</output>
+    <Button variant="ghost" className="h-11 shrink-0 px-2 text-xs" aria-label={`Velocità ${speed}x, cambia`} onClick={() => setSpeed(v => v >= 4 ? .5 : v * 2)}>{speed}×</Button>
   </section>;
 }
