@@ -22,6 +22,17 @@ export function boatAt(points: Point[], stops: RouteStop[], time: number): BoatP
   return { lat: a.lat + (b.lat - a.lat) * f, lon: a.lon + (b.lon - a.lon) * f, segment: i - 1, fraction: f, distanceNm: sa.distanceNm + (sb.distanceNm - sa.distanceNm) * f, heading: bearing(a, b), arrived: t >= last.arrival };
 }
 
+/** Re-places the boat on a sail leg a→tack→b (one tack), keeping the same fraction of the leg by distance. */
+export function alongSailLeg(boat: BoatPosition, a: Point, tack: Point | null, b: Point): BoatPosition {
+  if (!tack) return boat;
+  const d = (p: Point, q: Point) => Math.hypot(q.lat - p.lat, (q.lon - p.lon) * Math.cos(p.lat * Math.PI / 180));
+  const d1 = d(a, tack), d2 = d(tack, b), x = boat.fraction * (d1 + d2);
+  if (d1 + d2 === 0) return boat;
+  if (x <= d1) { const f = d1 ? x / d1 : 1; return { ...boat, lat: a.lat + (tack.lat - a.lat) * f, lon: a.lon + (tack.lon - a.lon) * f, heading: bearing(a, tack) }; }
+  const f = d2 ? (x - d1) / d2 : 1;
+  return { ...boat, lat: tack.lat + (b.lat - tack.lat) * f, lon: tack.lon + (b.lon - tack.lon) * f, heading: bearing(tack, b) };
+}
+
 export type VoyageWeather = { wind: number | null; gust: number | null; windDir: number | null; wave: number | null; waveDir: number | null; estimate: boolean };
 
 /** Weather at the boat: each neighbouring forecast point read at the same simulated time, then blended by position. Outside the forecast horizon → null (never extended). */

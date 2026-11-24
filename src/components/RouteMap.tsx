@@ -82,7 +82,7 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
   useEffect(() => {
     const m = map.current; if (!m) return;
     if (!boat) { boatMarker.current?.remove(); boatMarker.current = null; return; }
-    if (!boatMarker.current) boatMarker.current = L.marker([boat.lat, boat.lon], { title: "Barca simulata", interactive: false, zIndexOffset: 3000, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="boat-sim"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M12 2c3 4 4 9 4 14l-1 6H9l-1-6c0-5 1-10 4-14z" /></svg></div>`, iconSize: [30, 30], iconAnchor: [15, 15] }) }).addTo(m);
+    if (!boatMarker.current) boatMarker.current = L.marker([boat.lat, boat.lon], { title: "Barca simulata", interactive: false, zIndexOffset: 3000, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="boat-sim"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M11 2v15H4z" /><path d="M12.5 4c3 3 4.5 8 4.5 13h-4.5z" /><path d="M5 18.5h14l-2.5 3.5h-9z" /></svg></div>`, iconSize: [30, 30], iconAnchor: [15, 15] }) }).addTo(m);
     else boatMarker.current.setLatLng([boat.lat, boat.lon]);
     const svg = boatMarker.current.getElement()?.querySelector("svg"); if (svg) svg.style.transform = `rotate(${boat.heading}deg)`;
   }, [boat?.lat, boat?.lon, boat?.heading, instance]); // eslint-disable-line react-hooks/exhaustive-deps

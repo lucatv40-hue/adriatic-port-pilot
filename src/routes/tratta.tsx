@@ -21,7 +21,7 @@ import { ShelteredBays } from "@/components/ShelteredBays";
 import { RouteCurtain } from "@/components/RouteCurtain";
 import { WeatherTimeline } from "@/components/WeatherTimeline";
 import { VoyagePlayer } from "@/components/VoyagePlayer";
-import { boatAt } from "@/lib/voyage";
+import { boatAt, alongSailLeg } from "@/lib/voyage";
 
 const RouteMap = lazy(() => import("@/components/RouteMap"));
 
@@ -88,10 +88,11 @@ function PlanInner() {
   const selectHour = (time: string | null) => { if (time !== null) anchorTime(selectedPoint, Date.parse(time)); };
   const lastStop = schedule.at(-1);
   const simTime = voyageTime ?? schedule[0]?.arrival ?? null;
-  const boat = voyage && simTime !== null ? boatAt(points, schedule, simTime) : null;
   const durationMinutes = lastStop ? Math.round((lastStop.arrival - (schedule[0]?.arrival ?? 0)) / 60_000) : 0;
   const twds = useMemo(() => points.slice(0, -1).map((_, i) => { const f = q.data?.[i], st = schedule[i]; return f && st ? forecastAtArrival(f.series, st.arrival)?.windDir ?? null : null; }), [points, q.data, schedule]);
   const sailing = useMemo(() => sail && q.data ? sailRoute(points, twds, Number(speed)) : null, [sail, q.data, points, twds, speed]);
+  const rawBoat = voyage && simTime !== null ? boatAt(points, schedule, simTime) : null;
+  const boat = rawBoat && sailing ? alongSailLeg(rawBoat, points[rawBoat.segment]!, sailing.legs[rawBoat.segment]?.tack ?? null, points[rawBoat.segment + 1]!) : rawBoat;
   const startFree = () => { setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); };
   const addWaypoint = () => { const c = centerRef.current?.(); if (c) setDraft((d) => [...d, c]); };
   const finish = () => { const c = centerRef.current?.(); const pts = c && draft.length ? [...draft, c] : draft; if (pts.length >= 2) { setFreePoints(pts); setDraft([]); setDrawing(false); } };

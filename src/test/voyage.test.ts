@@ -31,3 +31,11 @@ describe("voyage simulation", () => {
     expect(windSide(relativeWind(180, 90))).toBe("al traverso di dritta");
   });
 });
+
+import { alongSailLeg as _asl } from "@/lib/voyage";
+import { test as _t, expect as _e } from "vitest";
+_t("barca a vela passa dal punto di virata a metà bordo", () => {
+  const b = { lat: 0, lon: 0, segment: 0, fraction: 0.5, distanceNm: 0, heading: 0, arrived: false };
+  const r = _asl(b, { lat: 0, lon: 0 }, { lat: 1, lon: 0 }, { lat: 1, lon: 1 });
+  _e(r.lat).toBeCloseTo(1, 3); _e(r.lon).toBeCloseTo(0, 3);
+});
