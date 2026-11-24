@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RouteWeather } from "@/components/RouteWeather";
 import { RouteCurtain } from "@/components/RouteCurtain";
 import { WeatherTimeline } from "@/components/WeatherTimeline";
+import { VoyagePlayer } from "@/components/VoyagePlayer";
+import { boatAt } from "@/lib/voyage";
 
 const RouteMap = lazy(() => import("@/components/RouteMap"));
 
@@ -41,6 +43,8 @@ function PlanInner() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [windModel, setWindModel] = useState<WindModel>("best_match");
   const [animated, setAnimated] = useState(false);
+  const [voyage, setVoyage] = useState(false);
+  const [voyageTime, setVoyageTime] = useState<number | null>(null);
   useEffect(() => {
     const nextHour = new Date();
     nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
@@ -52,9 +56,13 @@ function PlanInner() {
   const q = useQuery({ queryKey: ["route48", from, to, windModel], queryFn: () => fetchRouteForecast(points, windModel), enabled: points.length === 5, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
   useEffect(() => { if (animated && selectedTime === null && q.data?.[0]?.series.time[0]) setSelectedTime(q.data[0].series.time[0]); }, [animated, q.data, selectedTime]);
   const pick = (id: string) => { if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
-  useEffect(() => { setSelectedPoint(0); setSelectedTime(null); }, [from, to]);
+  useEffect(() => { setSelectedPoint(0); setSelectedTime(null); setVoyageTime(null); }, [from, to]);
+  useEffect(() => { setVoyageTime(null); }, [departure, speed]);
+  const shiftDeparture = (h: number) => { const t = departureTimestamp(departure); if (Number.isFinite(t)) setDeparture(localDepartureValue(new Date(t + h * 3_600_000))); };
   const schedule = useMemo(() => routeSchedule(points, departureTimestamp(departure), Number(speed)), [points, departure, speed]);
   const lastStop = schedule.at(-1);
+  const simTime = voyageTime ?? schedule[0]?.arrival ?? null;
+  const boat = voyage && simTime !== null ? boatAt(points, schedule, simTime) : null;
   const durationMinutes = lastStop ? Math.round((lastStop.arrival - departureTimestamp(departure)) / 60_000) : 0;
   const nq = useQuery(noticesQuery);
   const sq = useQuery(sourcesQuery);
@@ -69,7 +77,7 @@ function PlanInner() {
     <div className="relative h-full min-h-0 overflow-hidden">
       <div className="absolute inset-0">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={setSelectedPoint} animated={animated} forecasts={q.data ?? []} time={selectedTime} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
+          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={setSelectedPoint} animated={animated || voyage} forecasts={q.data ?? []} time={voyage && simTime !== null ? new Date(simTime).toISOString() : selectedTime} boat={boat} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
         <div className="absolute left-3 right-16 top-3 lg:right-[27rem] z-[500] flex items-center justify-between gap-2 rounded-lg bg-card px-3 py-2 text-sm font-bold shadow-float">
           <span className="flex min-w-0 items-center gap-1.5"><Navigation2 className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">
@@ -78,7 +86,8 @@ function PlanInner() {
         </div>
       </div>
 
-      <div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated ? "ghost" : "default"} aria-pressed={!animated} onClick={() => setAnimated(false)}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => setAnimated(true)}>Meteo animato</Button></div>
+      <div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
+      {voyage && points.length === 5 && q.data && schedule.length === 5 && <VoyagePlayer points={points} stops={schedule} forecasts={q.data} speedKn={Number(speed)} time={simTime} onTime={setVoyageTime} onShift={shiftDeparture} thresholds={t} />}
       {animated && points.length === 5 && q.data && <WeatherTimeline key={`${from}-${to}-${windModel}`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}
 
       <RouteCurtain summary={lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · arrivo ${formatRouteTime(lastStop.arrival)}` : "Partenza, velocità e previsioni"}>

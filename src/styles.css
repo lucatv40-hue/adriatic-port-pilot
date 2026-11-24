@@ -222,3 +222,6 @@ button, a, input, label { touch-action: manipulation; }
   .route-curtain .curtain-grip button, .route-curtain .curtain-handle { display: none; }
   .route-curtain .curtain-grip > div { padding-top: 16px; }
 }
+
+.boat-sim svg { fill: var(--primary); stroke: var(--primary-foreground); stroke-width: 1.5; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .4)); }
+.voyage-player { max-height: 46vh; overflow-y: auto; }
