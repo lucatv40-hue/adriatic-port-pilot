@@ -6,7 +6,7 @@ on:
     - cron: '17 */6 * * *'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: wind-grid-delivery
@@ -48,25 +48,11 @@ jobs:
         env:
           MODEL_RUN: ${{ steps.discover.outputs.run }}
         run: python -B tools/wind-grid/automate.py --run "$MODEL_RUN"
-      - name: Prepara pubblicazione dei soli dati meteo
+      - name: Pubblica su branch gh-pages (senza artifact)
         if: vars.WIND_GRID_PAGES == 'true'
-        uses: actions/upload-pages-artifact@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: .wind-site
-          retention-days: 1
-
-  publish:
-    if: vars.WIND_GRID_PAGES == 'true'
-    needs: prepare
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Sostituisci sito solo con previsione completa
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .wind-site
+          publish_branch: gh-pages
+          force_orphan: true
