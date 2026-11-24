@@ -1,3 +1,6 @@
+import { loadWaveGrid, waveAt } from "./wave-grid";
+// Waves: Copernicus Marine (open licence, commercial use allowed) via the gh-pages grid.
+const WAVE_GRID_URL = "https://lucatv40-hue.github.io/adriatic-port-pilot";
 export interface Series { time: string[]; wind: (number | null)[]; gust: (number | null)[]; windDir: (number | null)[]; wave: (number | null)[]; waveDir: (number | null)[] }
 export type WindModel = "icon2i";
 export interface WindSource { model: WindModel; fetchedAt: string; modelUpdatedAt: string | null; fallback: boolean; complete: boolean; gridLat: number | null; gridLon: number | null }
@@ -76,16 +79,16 @@ export async function fetchRouteForecast(pts: { lat: number; lon: number }[], no
   const windUrl = `https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=kn&models=italia_meteo_arpae_icon_2i&cell_selection=sea`;
   const [W, M] = await Promise.all([
     cached(windUrl),
-    cached(`https://marine-api.open-meteo.com/v1/marine?${q}&hourly=wave_height,wave_direction`),
+    loadWaveGrid(WAVE_GRID_URL),
   ]);
   return pts.map((p, i) => {
     // Keep covered ICON-2I hours; invalid cells and missing values never use another model.
     const selected = row(W[i]);
-    const parsed = parseForecastSeries(localWindCell(selected, p) ? selected?.hourly : undefined, row(M[i])?.hourly);
+    const parsed = parseForecastSeries(localWindCell(selected, p) ? selected?.hourly : undefined, undefined);
     const time = window.times.map((t) => new Date(t * 1000).toISOString());
     const indices = new Map(parsed.time.map((t, index) => [t, index]));
     const values = (key: Exclude<keyof Series, "time">) => time.map((t) => { const index = indices.get(t); return index === undefined ? null : parsed[key][index] ?? null; });
-    const series: Series = { time, wind: values("wind"), gust: values("gust"), windDir: values("windDir"), wave: values("wave"), waveDir: values("waveDir") };
+    const series: Series = { time, wind: values("wind"), gust: values("gust"), windDir: values("windDir"), wave: time.map((t) => (M ? waveAt(M, p.lat, p.lon, t).h : null)), waveDir: time.map((t) => (M ? waveAt(M, p.lat, p.lon, t).d : null)) };
     return { ...p, series, windOk: series.wind.some((x) => x !== null), waveOk: series.wave.some((x) => x !== null), windSource: { model: "icon2i", fallback: false, complete: completeWind(selected, window.times, p), fetchedAt: requests.get(windUrl)?.fetchedAt ?? new Date(now).toISOString(), modelUpdatedAt: null, gridLat: num(selected?.latitude), gridLon: num(selected?.longitude) } };
   });
 }

@@ -48,6 +48,15 @@ jobs:
         env:
           MODEL_RUN: ${{ steps.discover.outputs.run }}
         run: python -B tools/wind-grid/automate.py --run "$MODEL_RUN"
+      - name: Onde Copernicus Marine (48 ore)
+        env:
+          CMEMS_USER: ${{ secrets.COPERNICUSMARINE_SERVICE_USERNAME }}
+          COPERNICUSMARINE_SERVICE_USERNAME: ${{ secrets.COPERNICUSMARINE_SERVICE_USERNAME }}
+          COPERNICUSMARINE_SERVICE_PASSWORD: ${{ secrets.COPERNICUSMARINE_SERVICE_PASSWORD }}
+        run: |
+          if [ -z "$CMEMS_USER" ]; then echo 'Credenziali Copernicus mancanti'; exit 0; fi
+          python -m pip install -r tools/wave-grid/requirements.txt
+          python -B tools/wave-grid/fetch.py .wind-site
       - name: Pubblica su branch gh-pages (senza artifact)
         if: vars.WIND_GRID_PAGES == 'true'
         uses: peaceiris/actions-gh-pages@v4

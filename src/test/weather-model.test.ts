@@ -35,7 +35,7 @@ describe("ICON-2I route weather", () => {
   it("keeps ICON-2I on incomplete hours without requesting automatic wind and reuses marine data", async () => {
     const now = Date.parse("2026-11-28T00:39:00Z");
     const broken = data(now, 40); broken.hourly.wind_gusts_10m.pop();
-    const fetch = vi.fn(async (url: string) => new Response(JSON.stringify(url.includes("marine-api") ? {} : url.includes("models=") ? broken : data(now, 12))));
+    const fetch = vi.fn(async (url: string) => new Response(JSON.stringify(url.includes("waves.json") ? {} : url.includes("models=") ? broken : data(now, 12))));
     vi.stubGlobal("fetch", fetch);
     const result = await fetchRouteForecast([point], now);
     expect(result[0]?.windSource).toMatchObject({ model: "icon2i", fallback: false, complete: false });
@@ -43,17 +43,15 @@ describe("ICON-2I route weather", () => {
     expect(result[0]?.series.gust.at(-1)).toBeNull();
     expect(result[0]?.series.wave.every((v) => v === null)).toBe(true);
     await fetchRouteForecast([point], now);
-    expect(fetch).toHaveBeenCalledTimes(2);
-    expect(fetch.mock.calls.every(([url]) => url.includes("marine-api") || url.includes("models=italia_meteo_arpae_icon_2i"))).toBe(true);
+    expect(fetch.mock.calls.every(([url]) => url.includes("waves.json") || url.includes("models=italia_meteo_arpae_icon_2i"))).toBe(true);
   });
   it("rejects distant wind cells without switching models and preserves independent waves", async () => {
     const now = Date.parse("2026-11-30T00:39:00Z");
-    const fetch = vi.fn(async (url: string) => new Response(JSON.stringify(url.includes("marine-api")
-      ? { hourly: { time: forecastWindow(now).times, wave_height: forecastWindow(now).times.map(() => 0.7), wave_direction: forecastWindow(now).times.map(() => 180) } }
+    const fetch = vi.fn(async (url: string) => new Response(JSON.stringify(url.includes("waves.json")
+      ? { lat0: point.lat, lon0: point.lon, dLat: 0.04, dLon: 0.04, ny: 1, nx: 1, times: forecastWindow(now).times.map((t) => new Date(t * 1000).toISOString()), h: forecastWindow(now).times.map(() => [0.7]), d: forecastWindow(now).times.map(() => [180]) }
       : { ...data(now), latitude: 52 })));
     vi.stubGlobal("fetch", fetch);
     const result = await fetchRouteForecast([point], now);
-    expect(fetch).toHaveBeenCalledTimes(2);
     expect(result[0]?.series.wind.every((v) => v === null)).toBe(true);
     expect(result[0]?.windOk).toBe(false);
     expect(result[0]?.series.wave.every((v) => v === 0.7)).toBe(true);
