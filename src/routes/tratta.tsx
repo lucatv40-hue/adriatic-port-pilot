@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RouteWeather } from "@/components/RouteWeather";
+import { ShelteredBays } from "@/components/ShelteredBays";
 import { RouteCurtain } from "@/components/RouteCurtain";
 import { WeatherTimeline } from "@/components/WeatherTimeline";
 import { VoyagePlayer } from "@/components/VoyagePlayer";
@@ -122,6 +123,7 @@ function PlanInner() {
         {q.isLoading && <p className="text-muted-foreground">Carico previsioni…</p>}
         {animated && <div className="space-y-1 border-b pb-3 text-xs"><p className="font-bold">Vento e onde · movimento verso destinazione</p><p><span className="text-forecast-wind">Vento &lt;15 kn</span> · <span className="text-forecast-gust">vento ≥15 kn / raffiche</span> · <span className="text-forecast-wave">onde (m)</span> · <span className="text-destructive">oltre le tue soglie</span></p><p className="text-muted-foreground">V: vento · R: raffiche · n/d: non disponibile. Frecce opposte alla provenienza; cinque previsioni locali, non un campo continuo.</p></div>}
         {q.data && <RouteWeather forecasts={q.data} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} referencePoint={reference?.point ?? 0} selectedTime={chartTime} onTime={selectHour} stops={schedule} thresholds={t} charts={!animated} />}
+        {b && q.data && <ShelteredBays dest={b} forecast={q.data[4]} arrival={lastStop?.arrival} />}
         {points.length === 5 && <StationAccuracy points={points} />}
         {points.length === 5 && (
           <section className="space-y-2 border-b pb-4" aria-label="Avvisi rilevanti per la tua rotta">
