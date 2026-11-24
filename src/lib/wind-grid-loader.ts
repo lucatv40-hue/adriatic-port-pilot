@@ -29,10 +29,12 @@ const frames = new Map<string, Promise<WindGrid | null>>();
 
 /** Manifests and frames are fetched once per URL; a failed read is retried on the next need. */
 function manifest(base: string): Promise<Manifest | null> {
-  const key = base + "/manifest.json";
+  const key = base + "/current.json";
   const cached = manifests.get(key);
   if (cached) return cached;
-  const pending = fetch(key)
+  // Published site exposes current.json; local snapshots only have manifest.json.
+  const pending = fetch(key, { cache: "no-cache" })
+    .then((r) => (r.ok ? r : fetch(base + "/manifest.json")))
     .then((r) => (r.ok ? r.json() : Promise.reject(new Error("manifest " + r.status))))
     .then((json: unknown) => manifestSchema.safeParse(json))
     .then((parsed) => (parsed.success ? parsed.data : null))

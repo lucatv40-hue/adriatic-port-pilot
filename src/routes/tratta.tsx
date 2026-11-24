@@ -24,6 +24,9 @@ import { VoyagePlayer } from "@/components/VoyagePlayer";
 import { boatAt, alongSailLeg } from "@/lib/voyage";
 import { useWindGrid } from "@/lib/wind-grid-loader";
 
+/** Six-hourly ICON-2I grid published by the GitHub Actions workflow to GitHub Pages. */
+const WIND_GRID_URL = "https://lucatv40-hue.github.io/adriatic-port-pilot";
+
 const RouteMap = lazy(() => import("@/components/RouteMap"));
 
 export const Route = createFileRoute("/tratta")({
@@ -95,7 +98,7 @@ function PlanInner() {
   const rawBoat = voyage && simTime !== null ? boatAt(points, schedule, simTime) : null;
   const boat = rawBoat && sailing ? alongSailLeg(rawBoat, points[rawBoat.segment]!, sailing.legs[rawBoat.segment]?.tack ?? null, points[rawBoat.segment + 1]!) : rawBoat;
   // A local grid snapshot is a development preview only; the published app waits for a live source.
-  const windBase = import.meta.env.DEV ? ((import.meta.env["VITE_WIND_GRID_URL"] as string | undefined) ?? null) : null;
+  const windBase = (import.meta.env["VITE_WIND_GRID_URL"] as string | undefined) ?? WIND_GRID_URL;
   const mapTime = voyage && simTime !== null ? new Date(simTime).toISOString() : chartTime;
   const windGrid = useWindGrid(windBase, animated || voyage ? mapTime : null);
   const startFree = () => { setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); };

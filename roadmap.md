@@ -7,7 +7,7 @@
 - [x] Preparato aggiornamento ICON-2I ogni sei ore con GitHub Actions, cache per emissione e pubblicazione atomica; 8 test automatici, 6 test contratto, controllo workflow e 49 campi reali validati
 - [x] Renderer vento a flusso: particelle advettate nel campo reale (lib + test), canvas pronto a essere alimentato da qualsiasi fonte
 - [x] Vela: scelta VMC/VMG valutata — con la polare attuale le due coincidono (VMC minimizza il tempo verso la destinazione, che è il VMG verso il mark); serve una polare reale per differenziarle
-- [ ] Fonte dati vento a flusso: da decidere con il proprietario (piano commerciale Open-Meteo ~29 €/mese, token gratuito MeteoHub, o automazione GitHub); nessun costo attivato
+- [x] Fonte dati vento a flusso: ICON-2I da GitHub Pages (workflow ogni 6 h)
 - [ ] Attivare aggiornamento esterno: proprietario conferma GitHub non collegato; attendere collegamento, abilitazione Actions/hosting e URL pubblico verificabile (nessun costo attivato)
 - [ ] Campo vento geografico operativo: manca servizio esterno con aggiornamento automatico e destinazione tile; layer non attivato finché questa dipendenza non è pronta (architettura e verifica in docs/wind-grid.md)
 - [x] Etichette meteo compatte con caratteri invariati e linee sottili ai punti; comandi e intestazioni snelliti, verificati su telefono e desktop nell’account Skipper (13 test superati)

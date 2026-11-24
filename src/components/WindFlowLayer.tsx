@@ -38,7 +38,11 @@ export function WindFlowLayer({ map, frames, time }: { map: L.Map | null; frames
       if (canvas.width !== width * dpr || canvas.height !== height * dpr) { canvas.width = width * dpr; canvas.height = height * dpr; }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const { frames: data, time: selected } = latest.current;
-      const at = Date.parse(selected ?? "");
+      const asked = Date.parse(selected ?? "");
+      // Within the first/last forecast hour, show that frame instead of an empty map.
+      const times = data.map((f) => Date.parse(f.validTime));
+      const near = times.find((t) => Math.abs(t - asked) < 3_600_000 && (data.length === 1 || asked < Math.min(...times) || asked > Math.max(...times)));
+      const at = near ?? asked;
       if (!Number.isFinite(at) || data.length === 0) { ctx.clearRect(0, 0, width, height); particles = []; return; }
       const css = getComputedStyle(container), token = (name: string) => css.getPropertyValue(name).trim();
       const box = map.getBounds();

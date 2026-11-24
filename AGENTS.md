@@ -57,5 +57,5 @@ use the editor.
 - Notice import prefers free direct HTTP sources (HHI radio notices, pure parser in `src/lib/hhi.ts`) every 6 h and uses Firecrawl only daily for Italian Capitanerie under a monthly credit budget tracked in `notice_sources`; coordinates come only from notice text or known places (marked unverified) because AI must never invent positions.
 - Route ↔ notice matching lives in pure tested `src/lib/route-notices.ts` (distance to route + overlap with sailing window; wide zone notices are labelled, never shown as on-route bans).
 - Voyage simulation logic lives in pure tested `src/lib/voyage.ts`: boat position follows routeSchedule; weather at the boat reads both neighbouring points at the same simulated time, blends by position, is labelled an estimate and returns null outside forecast coverage.
-- Wind grids use opt-in six-hour external GitHub Actions/ecCodes, cached GRIB inputs and atomic content-addressed delivery; keep the layer off until live hosting is verified (GRIB cannot run in the Worker).
+- Wind particles read the six-hourly ICON-2I grid that GitHub Actions/ecCodes publishes to the gh-pages branch (current.json + content-addressed frames); GRIB cannot run in the Worker.
 - Sail routing: pure tested `src/lib/sailing.ts` (VMC, one tack per leg); free routes share the N-point forecast flow.
