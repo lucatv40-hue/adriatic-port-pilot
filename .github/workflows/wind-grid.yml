@@ -48,13 +48,6 @@ jobs:
         env:
           MODEL_RUN: ${{ steps.discover.outputs.run }}
         run: python -B tools/wind-grid/automate.py --run "$MODEL_RUN"
-      - name: Conserva dati verificati per controllo
-        uses: actions/upload-artifact@v4
-        with:
-          name: wind-grid-validated
-          path: .wind-site/
-          include-hidden-files: true
-          retention-days: 3
       - name: Prepara pubblicazione dei soli dati meteo
         if: vars.WIND_GRID_PAGES == 'true'
         uses: actions/upload-pages-artifact@v3
