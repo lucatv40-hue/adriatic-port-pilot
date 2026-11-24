@@ -24,22 +24,43 @@ export function AnimatedWeatherLayer({ map, forecasts, time, thresholds }: { map
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, width, height);
       const css = getComputedStyle(container), token = (name: string) => css.getPropertyValue(name).trim();
       const { forecasts: data, time: selected, thresholds: limits } = latest.current;
+      const labels: { x: number; y: number; w: number; h: number }[] = [];
       data.forEach((p, index) => {
         const f = interpolatedForecast(p.series, Date.parse(selected ?? p.series.time[0] ?? ""));
         const at = map.latLngToContainerPoint([p.lat, p.lon]);
         if (at.x < -100 || at.x > width + 100 || at.y < -100 || at.y > height + 100) return;
         ctx.save(); ctx.translate(at.x, at.y);
-        const labelY = index % 2 === 0 ? 28 : -104;
+        const windText = `V ${f?.wind == null ? "n/d" : f.wind.toFixed(0) + " kn"}`;
+        const gustText = `R ${f?.gust == null ? "n/d" : f.gust.toFixed(0) + " kn"}`;
+        const waveText = f?.wave == null ? "O n/d" : `O ${f.wave.toFixed(1)} m`;
+        ctx.font = "bold 12px Atkinson Hyperlegible, sans-serif";
+        const windWidth = ctx.measureText(windText).width;
+        ctx.font = "11px Atkinson Hyperlegible, sans-serif";
+        const gustWidth = ctx.measureText(gustText).width, waveWidth = ctx.measureText(waveText).width;
+        const boxW = Math.ceil(Math.max(windWidth, gustWidth + waveWidth + 8) + 12), boxH = 36;
+        const side = index % 2 === 0 ? 1 : -1;
+        const candidates = [[side * 46, side * 54], [-side * 46, side * 54], [side * 46, -side * 54], [-side * 46, -side * 54], [0, side * 96]];
+        const boxes = candidates.map(([dx = 0, dy = 0]) => ({
+          x: Math.max(4, Math.min(width - boxW - 4, at.x + dx - boxW / 2)),
+          y: Math.max(4, Math.min(height - boxH - 4, at.y + dy - boxH / 2)), w: boxW, h: boxH,
+        }));
+        const box = boxes.find(b => labels.every(other => b.x + b.w + 4 < other.x || other.x + other.w + 4 < b.x || b.y + b.h + 4 < other.y || other.y + other.h + 4 < b.y)) ?? boxes[0];
+        if (!box) { ctx.restore(); return; }
+        labels.push(box);
+        const left = box.x - at.x, top = box.y - at.y;
+        const edgeX = Math.max(left, Math.min(left + boxW, 0)), edgeY = Math.max(top, Math.min(top + boxH, 0));
         ctx.strokeStyle = token("--muted-foreground"); ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(0, index % 2 === 0 ? 20 : -28); ctx.lineTo(0, index % 2 === 0 ? labelY : labelY + 49); ctx.stroke();
-        ctx.save(); ctx.translate(0, labelY - 23);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(edgeX, edgeY); ctx.stroke();
+        ctx.save(); ctx.translate(left, top);
         ctx.fillStyle = token("--card"); ctx.strokeStyle = token("--border"); ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.roundRect(-57, 23, 114, 49, 6); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(0, 0, boxW, boxH, 4); ctx.fill(); ctx.stroke();
         const windColor = token(f?.wind != null && f.wind > limits.wind ? "--destructive" : f?.wind != null && f.wind >= 15 ? "--forecast-gust" : "--forecast-wind");
         ctx.font = "bold 12px Atkinson Hyperlegible, sans-serif"; ctx.textAlign = "center";
-        ctx.fillStyle = windColor; ctx.fillText(`V ${f?.wind == null ? "n/d" : f.wind.toFixed(0) + " kn"}`, 0, 38);
-        ctx.fillStyle = token(f?.gust != null && f.gust > limits.wind ? "--destructive" : "--forecast-gust"); ctx.font = "11px Atkinson Hyperlegible, sans-serif"; ctx.fillText(`R ${f?.gust == null ? "n/d" : f.gust.toFixed(0) + " kn"}`, -23, 55);
-        ctx.fillStyle = token(f?.wave != null && f.wave > limits.wave ? "--destructive" : "--forecast-wave"); ctx.fillText(f?.wave == null ? "O n/d" : `${f.wave.toFixed(1)} m`, 28, 55);
+        ctx.fillStyle = windColor; ctx.fillText(windText, boxW / 2, 14);
+        ctx.textAlign = "left";
+        ctx.fillStyle = token(f?.gust != null && f.gust > limits.wind ? "--destructive" : "--forecast-gust"); ctx.font = "11px Atkinson Hyperlegible, sans-serif"; ctx.fillText(gustText, 6, 29);
+        ctx.textAlign = "right";
+        ctx.fillStyle = token(f?.wave != null && f.wave > limits.wave ? "--destructive" : "--forecast-wave"); ctx.fillText(waveText, boxW - 6, 29);
         ctx.restore();
         if (f?.windDir != null && f.wind != null) {
           ctx.save(); ctx.translate(-30, -16); ctx.rotate((movementDirection(f.windDir) + map.getBearing()) * Math.PI / 180);

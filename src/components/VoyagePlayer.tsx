@@ -29,7 +29,9 @@ export function VoyagePlayer({ points, stops, forecasts, speedKn, time, onTime, 
   const boat = boatAt(points, stops, t);
   if (!boat || !Number.isFinite(t)) return null;
   const w = voyageWeather(forecasts, boat, t);
-  const total = stops.at(-1)!.distanceNm;
+  const lastStop = stops.at(-1);
+  if (!lastStop) return null;
+  const total = lastStop.distanceNm;
   const rel = w?.windDir != null ? relativeWind(w.windDir, boat.heading) : null;
   const n = (v: number | null | undefined, d = 0) => v == null ? "n/d" : v.toFixed(d);
   return <section className="weather-timeline voyage-player" aria-label="Simulazione del viaggio">
@@ -45,13 +47,13 @@ export function VoyagePlayer({ points, stops, forecasts, speedKn, time, onTime, 
       </div>
       <div className="flex items-center gap-1 text-xs" role="group" aria-label="Sposta partenza"><span className="font-bold">Partenza</span><Button variant="outline" className="h-11 px-2" onClick={() => { setPlaying(false); onShift(-1); }}>−1 h</Button><Button variant="outline" className="h-11 px-2" onClick={() => { setPlaying(false); onShift(1); }}>+1 h</Button></div>
     </div>
-    <p className="text-xs tabular-nums">{n(boat.distanceNm, 1)} Mn percorse · {n(total - boat.distanceNm, 1)} restanti · rotta {Math.round(boat.heading)}°</p>
+    <p className="text-xs tabular-nums">{n(boat.distanceNm, 1)} / {n(total, 1)} Mn · restano {n(total - boat.distanceNm, 1)} · {Math.round(boat.heading)}°</p>
     {w ? <div className="mt-1 grid grid-cols-3 gap-1 text-xs tabular-nums">
       <span className={isOver(w.wind, thresholds.wind) ? "font-bold text-destructive" : "text-forecast-wind font-bold"}>Vento {n(w.wind)} kn {compass(w.windDir)}</span>
       <span className={isOver(w.gust, thresholds.wind) ? "font-bold text-destructive" : "text-forecast-gust font-bold"}>Raffiche {n(w.gust)} kn</span>
       <span className={isOver(w.wave, thresholds.wave) ? "font-bold text-destructive" : "text-forecast-wave font-bold"}>Onde {n(w.wave, 1)} m {compass(w.waveDir)}</span>
       <span className="col-span-3">{rel === null ? "Direzione vento n/d" : <>Vento <b>{windSide(rel)}</b> ({Math.round(rel)}° dalla prua)</>}</span>
     </div> : <p className="mt-1 text-xs font-bold text-destructive">Dati non disponibili per quest'ora del viaggio</p>}
-    <p className="mt-1 text-[10px] text-muted-foreground">{w?.estimate ? "Stima interpolata tra le 5 tappe, non previsione ad alta risoluzione." : "Previsione alla tappa."} Non indica se la partenza è sicura.</p>
+    <p className="mt-1 text-[10px] text-muted-foreground">{w?.estimate ? "Stima tra tappe" : "Previsione alla tappa"} · non certifica una partenza sicura.</p>
   </section>;
 }
