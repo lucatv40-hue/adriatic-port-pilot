@@ -212,11 +212,11 @@ button, a, input, label { touch-action: manipulation; }
 .forecast-hour { accent-color: var(--forecast-wind); }
 .animated-weather-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 440; }
 .wind-flow-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 435; }
-.weather-bar { position: absolute; top: 84px; left: 12px; right: 64px; z-index: 550; display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; pointer-events: none; }
+.weather-bar { position: absolute; top: 44px; left: 12px; right: 64px; z-index: 550; display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; pointer-events: none; }
 .weather-bar > * { pointer-events: auto; }
 @media (min-width: 1024px) { .weather-bar { right: 28rem; } }
 .weather-mode { display: flex; background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-float); padding: 0; }
-.weather-mode button { height: 44px; padding-inline: 10px; }
+.weather-mode button { height: 28px; padding-inline: 8px; font-size: 12px; }
 .weather-timeline { display: flex; align-items: center; flex: 1 1 240px; min-width: 0; max-width: 460px; height: 46px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-float); padding: 0 2px; }
 .weather-timeline .forecast-hour { height: 24px; }
 @media (min-width: 1024px) {
@@ -232,7 +232,7 @@ button, a, input, label { touch-action: manipulation; }
 .boat-sim .boat-sail { fill: var(--primary-foreground); stroke: var(--primary); stroke-width: 1; }
 .boat-sim .boat-mast { fill: none; stroke: var(--primary); stroke-width: 1.5; }
 .boat-sim .boat-cabin { fill: var(--primary-foreground); stroke: none; }
-.voyage-player { position: absolute; left: 8px; right: 8px; bottom: 68px; z-index: 550; max-height: 40vh; overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-float); padding: 4px 8px; }
+.voyage-player { position: absolute; left: 8px; right: 8px; bottom: 68px; z-index: 550; max-height: 28vh; overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-float); padding: 2px 6px; font-size: 12px; }
 @media (min-width: 1024px) { .voyage-player { left: 24px; right: 480px; bottom: 32px; max-width: 560px; } }
 
 .crosshair { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); z-index: 450; pointer-events: none; }

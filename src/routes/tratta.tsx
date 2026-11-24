@@ -23,7 +23,7 @@ import { WeatherTimeline } from "@/components/WeatherTimeline";
 import { VoyagePlayer } from "@/components/VoyagePlayer";
 import { boatAt, alongSailLeg } from "@/lib/voyage";
 import { useWindGrid } from "@/lib/wind-grid-loader";
-import { seaRoute } from "@/lib/sea-route";
+import { seaRoute, crossesLand, onLand, inLagoon } from "@/lib/sea-route";
 
 /** Six-hourly ICON-2I grid published by the GitHub Actions workflow to GitHub Pages. */
 const WIND_GRID_URL = "https://lucatv40-hue.github.io/adriatic-port-pilot";
@@ -95,7 +95,15 @@ function PlanInner() {
   const simTime = voyageTime ?? schedule[0]?.arrival ?? null;
   const durationMinutes = lastStop ? Math.round((lastStop.arrival - (schedule[0]?.arrival ?? 0)) / 60_000) : 0;
   const twds = useMemo(() => points.slice(0, -1).map((_, i) => { const f = q.data?.[i], st = schedule[i]; return f && st ? forecastAtArrival(f.series, st.arrival)?.windDir ?? null : null; }), [points, q.data, schedule]);
-  const sailing = useMemo(() => sail && q.data ? sailRoute(points, twds, Number(speed)) : null, [sail, q.data, points, twds, speed]);
+  const sailing = useMemo(() => {
+    if (!sail || !q.data) return null;
+    const r = sailRoute(points, twds, Number(speed));
+    // Tacks are only kept at open sea: never on land, in a lagoon or across the coast.
+    const legs = r.legs.map((l, i) => { const t = l.tack, a = points[i]!, b = points[i + 1]!; return t && (onLand(t) || inLagoon(t) || inLagoon(a) || crossesLand(a, t) || crossesLand(t, b)) ? { ...l, tack: null, kind: "diretto" as const } : l; });
+    const path = points.length ? [points[0]!] : [];
+    legs.forEach((l, i) => { if (l.tack) path.push(l.tack); path.push(points[i + 1]!); });
+    return { ...r, legs, path };
+  }, [sail, q.data, points, twds, speed]);
   const rawBoat = voyage && simTime !== null ? boatAt(points, schedule, simTime) : null;
   const boat = rawBoat && sailing ? alongSailLeg(rawBoat, points[rawBoat.segment]!, sailing.legs[rawBoat.segment]?.tack ?? null, points[rawBoat.segment + 1]!) : rawBoat;
   // A local grid snapshot is a development preview only; the published app waits for a live source.
@@ -121,21 +129,21 @@ function PlanInner() {
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
           <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
-        <div className="absolute left-3 right-16 top-3 lg:right-[27rem] z-[500] flex items-center justify-between gap-1 rounded-lg bg-card px-2 py-1 text-sm font-bold shadow-float">
-          <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">
+        <div className="absolute left-3 right-16 top-2 lg:right-[27rem] z-[500] flex items-center justify-between gap-1 rounded-md bg-card px-1.5 py-0.5 text-xs font-bold shadow-float">
+          <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="min-w-0 break-words">
             {free ? (drawing ? (draft.length ? `Rotta libera · ${draft.length} punti · sposta la mappa` : "Porta la partenza sotto il mirino") : `Rotta libera · ${freePoints.length} punti`) : !a ? "Tocca il porto di partenza" : !b ? `${a.name} → tocca l'arrivo` : `${a.name} → ${b.name}`}</span></span>
           <span className="flex shrink-0 items-center gap-1">
-          {!free && <Button variant="outline" size="sm" className="h-9" onClick={startFree}><Crosshair className="h-4 w-4" />Rotta</Button>}
-          {points.length >= 2 && <Button variant={sail ? "default" : "outline"} size="sm" className="h-9" aria-pressed={sail} onClick={() => setSail(!sail)}><Sailboat className="h-4 w-4" />Vela</Button>}
-          {(a || free) && <Button variant="ghost" size="icon" className="shrink-0" onClick={reset} aria-label="Ricomincia"><RotateCcw className="h-4 w-4" /></Button>}
+          {!free && <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={startFree}><Crosshair className="h-3.5 w-3.5" />Rotta</Button>}
+          {points.length >= 2 && <Button variant="outline" size="sm" className="h-7 px-2 text-xs" aria-label={sail ? "Passa a motore" : "Passa a vela"} onClick={() => setSail(!sail)}>{sail ? <><Navigation2 className="h-3.5 w-3.5" />Motore</> : <><Sailboat className="h-3.5 w-3.5" />Vela</>}</Button>}
+          {(a || free) && <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={reset} aria-label="Ricomincia"><RotateCcw className="h-4 w-4" /></Button>}
           </span>
         </div>
       </div>
 
       {drawing && <div className="draw-bar" role="group" aria-label="Disegno rotta">
-        <Button onClick={addWaypoint} className="h-11"><Plus className="h-4 w-4" />{draft.length ? "Waypoint" : "Partenza"}</Button>
-        {draft.length > 0 && <Button variant="outline" className="h-11" onClick={() => setDraft((d) => d.slice(0, -1))} aria-label="Annulla ultimo punto"><Undo2 className="h-4 w-4" /></Button>}
-        {draft.length > 0 && <Button variant="secondary" className="h-11" onClick={finish}><Flag className="h-4 w-4" />Arrivo</Button>}
+        <Button onClick={addWaypoint} className="h-9"><Plus className="h-4 w-4" />{draft.length ? "Waypoint" : "Partenza"}</Button>
+        {draft.length > 0 && <Button variant="outline" className="h-9" onClick={() => setDraft((d) => d.slice(0, -1))} aria-label="Annulla ultimo punto"><Undo2 className="h-4 w-4" /></Button>}
+        {draft.length > 0 && <Button variant="secondary" className="h-9" onClick={finish}><Flag className="h-4 w-4" />Arrivo</Button>}
       </div>}
       <div className="weather-bar"><div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
       {animated && points.length >= 2 && q.data && <WeatherTimeline key={`${from}-${to}-${windModel}`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}</div>
