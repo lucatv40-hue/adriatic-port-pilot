@@ -58,4 +58,4 @@ use the editor.
 - Route ↔ notice matching lives in pure tested `src/lib/route-notices.ts` (distance to route + overlap with sailing window; wide zone notices are labelled, never shown as on-route bans).
 - Voyage simulation logic lives in pure tested `src/lib/voyage.ts`: boat position follows routeSchedule; weather at the boat reads both neighbouring points at the same simulated time, blends by position, is labelled an estimate and returns null outside forecast coverage.
 - Wind grids use opt-in six-hour external GitHub Actions/ecCodes, cached GRIB inputs and atomic content-addressed delivery; keep the layer off until live hosting is verified (GRIB cannot run in the Worker).
-- Sail routing lives in pure tested `src/lib/sailing.ts` (simplified polar from the mean speed, one tack/gybe per leg chosen by VMC); free crosshair routes reuse the same N-point forecast pipeline as port routes.
+- Sail routing: pure tested `src/lib/sailing.ts` (VMC, one tack per leg); free routes share the N-point forecast flow.
