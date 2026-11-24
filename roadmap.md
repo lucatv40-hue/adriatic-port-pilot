@@ -1,4 +1,5 @@
 # Roadmap
+- [x] ICON-2I selezionabile, fallback tracciato, copertura 48 ore e confronto Venezia–Istria (5 punti completi; 75 test superati)
 - [x] Mappa estesa e pannello tratta trascinabile e scorrevole
 - [x] Rotazione a due dita di mappa e marker
 - [x] 21 vedute aeree reali FVG/Croazia con fonte e attribuzione

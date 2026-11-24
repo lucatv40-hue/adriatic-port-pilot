@@ -41,6 +41,7 @@ use the editor.
 - Interactive maps import the shared leaflet-rotated module, which binds globalThis.L before leaflet-rotate evaluates (the plugin requires this global); keep touchRotate and rotateWithView markers, and a non-modal route data curtain so uncovered map areas stay usable.
 - Aerial port imagery uses attributed public orthophotos through port-aerial; Veneto is WMS view-only (no redistribution), licensed FVG/Croatian snapshots use asset pointers, and unavailable coverage never substitutes generic photos.
 - Weather comes from keyless Open-Meteo forecast + marine APIs fetched client-side.
+- Route wind supports selectable ICON-2I with whole-point best_match fallback on missing hours/variables or distant grid cells; share 15-minute in-flight request caching (including unchanged Marine API), bracket the next 48 hours in UTC with Europe/Rome input/display, and retain model/grid/retrieval provenance without inventing model initialization times.
 - Route ETA logic lives in the pure tested `route-timing.ts`; use cumulative nautical miles at constant knots and UTC forecast timestamps aligned by time, selecting only a covered nearest hour so local timezone and missing data cannot shift arrival weather.
 - Forecast parsing (`src/lib/weather.ts`) never throws: missing values become null and the UI shows "non disponibile"; threshold check lives in `src/lib/thresholds.ts`.
 - Roles live in `user_roles` + `has_role()`; notices are public-read, admin-write (RLS) and saved via `saveNotice` server fn, which pushes to users following the zone.

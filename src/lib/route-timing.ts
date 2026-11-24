@@ -39,10 +39,23 @@ export function forecastAtArrival(series: Series, arrival: number) {
 }
 
 export function localDepartureValue(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(date);
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
+}
+
+export function departureTimestamp(value: string): number {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return NaN;
+  const wallTime = Date.parse(`${value}:00Z`);
+  if (!Number.isFinite(wallTime)) return NaN;
+  let utc = wallTime;
+  for (let i = 0; i < 3; i++) {
+    const displayed = Date.parse(`${localDepartureValue(new Date(utc))}:00Z`);
+    utc += wallTime - displayed;
+  }
+  return localDepartureValue(new Date(utc)) === value ? utc : NaN;
 }
 
 export function formatRouteTime(value: number | string): string {
-  return new Date(value).toLocaleString("it-IT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return new Date(value).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }

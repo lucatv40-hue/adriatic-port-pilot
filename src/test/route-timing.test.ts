@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { routeSchedule, forecastAtArrival, localDepartureValue } from "@/lib/route-timing";
+import { routeSchedule, forecastAtArrival, localDepartureValue, departureTimestamp } from "@/lib/route-timing";
 import { parseForecastSeries, samplePoints } from "@/lib/weather";
 
 const departure = Date.parse("2026-11-23T09:00:00Z");
@@ -38,7 +38,10 @@ describe("orari e meteo di passaggio", () => {
     expect(routeSchedule([{ lat: 45, lon: 12 }], departure, 0)).toEqual([]);
     expect(routeSchedule([{ lat: 45, lon: 12 }], NaN, 6)).toEqual([]);
   });
-  it("il campo partenza conserva l'ora locale scelta", () => {
-    expect(localDepartureValue(new Date(2026, 10, 23, 10, 30))).toBe("2026-11-23T10:30");
+  it("il campo partenza usa Europe/Rome indipendentemente dal dispositivo", () => {
+    expect(localDepartureValue(new Date("2026-11-23T09:30:00Z"))).toBe("2026-11-23T10:30");
+    expect(departureTimestamp("2026-11-23T10:30")).toBe(Date.parse("2026-11-23T09:30:00Z"));
+    expect(departureTimestamp("2026-07-23T10:30")).toBe(Date.parse("2026-07-23T08:30:00Z"));
+    expect(departureTimestamp("2026-03-29T02:30")).toBeNaN();
   });
 });

@@ -8,11 +8,12 @@ import { getPort } from "@/lib/ports";
 import { noticesQuery, sourcesQuery, CATEGORY_LABEL } from "@/lib/notices";
 import { matchNotice } from "@/lib/route-notices";
 import { StationAccuracy } from "@/components/StationAccuracy";
-import { fetchRouteForecast, samplePoints, compass, type PointForecast } from "@/lib/weather";
-import { routeSchedule, forecastAtArrival, localDepartureValue, formatRouteTime, type RouteStop } from "@/lib/route-timing";
+import { fetchRouteForecast, samplePoints, compass, type PointForecast, type WindModel } from "@/lib/weather";
+import { routeSchedule, forecastAtArrival, localDepartureValue, departureTimestamp, formatRouteTime, type RouteStop } from "@/lib/route-timing";
 import { useThresholds, isOver } from "@/lib/thresholds";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RouteCurtain } from "@/components/RouteCurtain";
 
 const RouteMap = lazy(() => import("@/components/RouteMap"));
@@ -56,6 +57,7 @@ function PointCard({ p, i, total, t, stop }: { p: PointForecast; i: number; tota
       <div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className="font-display text-xl">{i + 1}. {label}</h3><span className="text-xs text-muted-foreground">{p.lat.toFixed(2)}N {p.lon.toFixed(2)}E</span></div>
       {stop && <p className="flex items-center gap-2 text-sm font-bold"><Clock className="h-4 w-4 shrink-0 text-primary" />{i === 0 ? "Partenza" : "Passaggio previsto"}: {formatRouteTime(stop.arrival)} · {stop.distanceNm.toFixed(1)} Mn</p>}
       {forecast?.time ? <p className="text-xs text-muted-foreground">Previsione oraria più vicina: {formatRouteTime(forecast.time)}</p> : <p className="text-sm text-muted-foreground">{stop ? "Previsione al passaggio non disponibile: orario fuori copertura o dati mancanti." : "Inserisci una partenza e una velocità valide."}</p>}
+      {p.windSource && <p className="text-xs text-muted-foreground">{p.windSource.model === "icon2i" ? "Vento: ICON-2I — ItaliaMeteo" : p.windSource.fallback ? "Vento: Open-Meteo — modello alternativo" : "Vento: Open-Meteo — selezione automatica"}<br />Dati richiesti: {formatRouteTime(p.windSource.fetchedAt)} · aggiornamento del modello non fornito dalla fonte.{!p.windSource.complete && " Copertura vento incompleta: valori mancanti non disponibili."}</p>}
       <div className="grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-lg bg-muted p-2"><p className="flex items-center gap-1 text-xs text-muted-foreground"><Wind className="h-3.5 w-3.5" /> Vento al passaggio</p>
           <p className={`text-lg font-bold ${red(wind, t.wind)}`}>{wind === null ? NA : `${Math.round(wind)} kn`}</p>
@@ -84,6 +86,7 @@ function PlanInner() {
   const [to, setTo] = useState<string | null>(null);
   const [departure, setDeparture] = useState("");
   const [speed, setSpeed] = useState("6");
+  const [windModel, setWindModel] = useState<WindModel>("best_match");
   useEffect(() => {
     const nextHour = new Date();
     nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
@@ -92,14 +95,14 @@ function PlanInner() {
   const { t, save } = useThresholds();
   const a = from ? getPort(from) : undefined, b = to ? getPort(to) : undefined;
   const points = useMemo(() => (a && b ? samplePoints(a, b, 5) : []), [a, b]);
-  const q = useQuery({ queryKey: ["route48", from, to], queryFn: () => fetchRouteForecast(points), enabled: points.length === 5, staleTime: 15 * 60_000 });
+  const q = useQuery({ queryKey: ["route48", from, to, windModel], queryFn: () => fetchRouteForecast(points, windModel), enabled: points.length === 5, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
   const pick = (id: string) => { if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
-  const schedule = useMemo(() => routeSchedule(points, Date.parse(departure), Number(speed)), [points, departure, speed]);
+  const schedule = useMemo(() => routeSchedule(points, departureTimestamp(departure), Number(speed)), [points, departure, speed]);
   const lastStop = schedule.at(-1);
-  const durationMinutes = lastStop ? Math.round((lastStop.arrival - Date.parse(departure)) / 60_000) : 0;
+  const durationMinutes = lastStop ? Math.round((lastStop.arrival - departureTimestamp(departure)) / 60_000) : 0;
   const nq = useQuery(noticesQuery);
   const sq = useQuery(sourcesQuery);
-  const start = Date.parse(departure), end = lastStop?.arrival ?? start;
+  const start = departureTimestamp(departure), end = lastStop?.arrival ?? start;
   const notices = points.length === 5 && Number.isFinite(start)
     ? (nq.data ?? []).flatMap((n) => { const m = matchNotice(n, points, start, end); return m ? [{ n, m }] : []; }).sort((x, y) => x.m.distanceKm - y.m.distanceKm)
     : [];
@@ -122,8 +125,9 @@ function PlanInner() {
       <RouteCurtain summary={lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · arrivo ${formatRouteTime(lastStop.arrival)}` : "Partenza, velocità e previsioni"}>
       <div className="space-y-4 p-4">
         <div className="grid min-w-0 gap-3 border-b pb-4">
-          <label className="min-w-0 text-sm font-bold">Partenza (ora locale)<Input type="datetime-local" className="mt-1 h-12 min-w-0 max-w-full text-base" value={departure} onChange={(e) => setDeparture(e.target.value)} /></label>
+          <label className="min-w-0 text-sm font-bold">Partenza (ora italiana)<Input type="datetime-local" className="mt-1 h-12 min-w-0 max-w-full text-base" value={departure} onChange={(e) => setDeparture(e.target.value)} /></label>
           <label className="text-sm font-bold">Velocità media (kn)<Input type="number" min="0.1" step="0.1" inputMode="decimal" className="mt-1 h-12 text-base" value={speed} onChange={(e) => setSpeed(e.target.value)} /></label>
+          <div className="min-w-0"><label htmlFor="wind-model" className="text-sm font-bold">Modello vento</label><Select value={windModel} onValueChange={(value) => { if (value === "icon2i" || value === "best_match") setWindModel(value); }}><SelectTrigger id="wind-model" className="mt-1 h-12 w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="best_match">Open-Meteo — automatico</SelectItem><SelectItem value="icon2i">ICON-2I — ItaliaMeteo</SelectItem></SelectContent></Select></div>
           {(!Number.isFinite(Number(speed)) || Number(speed) <= 0) && <p className="text-sm text-destructive" role="alert">Inserisci una velocità maggiore di zero.</p>}
           {lastStop && <p className="text-sm font-bold">Arrivo previsto: {formatRouteTime(lastStop.arrival)} · durata {Math.floor(durationMinutes / 60)} h {durationMinutes % 60} min</p>}
         </div>
