@@ -229,3 +229,11 @@ button, a, input, label { touch-action: manipulation; }
 .boat-sim svg { fill: var(--primary); stroke: var(--primary-foreground); stroke-width: 1.5; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .4)); }
 .voyage-player { position: absolute; left: 8px; right: 8px; bottom: 68px; z-index: 550; max-height: 40vh; overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-float); padding: 4px 8px; }
 @media (min-width: 1024px) { .voyage-player { left: 24px; right: 480px; bottom: 32px; max-width: 560px; } }
+
+.crosshair { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); z-index: 450; pointer-events: none; }
+.crosshair::before, .crosshair::after { content: ""; position: absolute; background: var(--destructive); box-shadow: 0 0 0 1px var(--card); }
+.crosshair::before { left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); }
+.crosshair::after { top: 50%; left: 0; right: 0; height: 2px; transform: translateY(-50%); }
+.sail-line { stroke: var(--success, var(--primary)); stroke-dasharray: 2 6; stroke-linecap: round; }
+.draw-bar { position: absolute; left: 50%; bottom: 76px; transform: translateX(-50%); z-index: 560; display: flex; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px; box-shadow: var(--shadow-float); }
+.drag-handle { cursor: move; touch-action: none; }

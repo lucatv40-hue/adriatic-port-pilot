@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDesktopDrag } from "@/lib/use-desktop-drag";
 
 /** Non-modal: the uncovered map remains interactive at every snap point. */
 export function RouteCurtain({ children, summary }: { children: ReactNode; summary: string }) {
@@ -13,15 +14,18 @@ export function RouteCurtain({ children, summary }: { children: ReactNode; summa
     return () => query.removeEventListener("change", update);
   }, []);
   const sheet = useRef<HTMLElement>(null);
+  const move = useDesktopDrag();
   const drag = useRef<{ y: number; height: number; moved: boolean } | null>(null);
 
   return (
-    <section ref={sheet} className={`route-curtain stage-${stage}`} aria-label="Dati e grafici della tratta">
-      <div className="curtain-grip" onPointerDown={(e) => {
+    <section ref={sheet} style={desktop ? move.style : undefined} className={`route-curtain stage-${stage}`} aria-label="Dati e grafici della tratta">
+      <div className="curtain-grip drag-handle" title={desktop ? "Trascina per spostare" : undefined} onPointerDown={(e) => {
+        if (desktop) { move.handleProps.onPointerDown(e); return; }
         if (desktop || e.button !== 0 || !sheet.current || (e.target as HTMLElement).closest("button")) return;
         drag.current = { y: e.clientY, height: sheet.current.getBoundingClientRect().height, moved: false };
         e.currentTarget.setPointerCapture(e.pointerId);
       }} onPointerMove={(e) => {
+        if (desktop) { move.handleProps.onPointerMove(e); return; }
         const d = drag.current, el = sheet.current, parent = el?.parentElement;
         if (!d || !el || !parent) return;
         const delta = d.y - e.clientY;
@@ -30,6 +34,7 @@ export function RouteCurtain({ children, summary }: { children: ReactNode; summa
         el.classList.add("is-dragging");
         el.style.height = `${Math.max(64, Math.min(parent.clientHeight * .88, parent.clientHeight - 144, d.height + delta))}px`;
       }} onPointerUp={(e) => {
+        move.handleProps.onPointerUp();
         const d = drag.current, el = sheet.current, parent = el?.parentElement;
         if (!d || !el || !parent) return;
         if (d.moved) {

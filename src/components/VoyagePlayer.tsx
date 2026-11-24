@@ -5,11 +5,13 @@ import { compass, type PointForecast } from "@/lib/weather";
 import { formatRouteTime, type RouteStop } from "@/lib/route-timing";
 import { boatAt, voyageWeather, relativeWind, windSide } from "@/lib/voyage";
 import { isOver } from "@/lib/thresholds";
+import { useDesktopDrag } from "@/lib/use-desktop-drag";
 
 type P = { lat: number; lon: number };
 const DUR = 30_000; // whole trip plays in ~30 s, independent of real boat speed
 
 export function VoyagePlayer({ points, stops, forecasts, speedKn, time, onTime, onShift, thresholds }: { points: P[]; stops: RouteStop[]; forecasts: PointForecast[]; speedKn: number; time: number | null; onTime: (t: number) => void; onShift: (hours: number) => void; thresholds: { wind: number; wave: number } }) {
+  const move = useDesktopDrag();
   const [playing, setPlaying] = useState(false);
   const start = stops[0]?.arrival ?? NaN, end = stops.at(-1)?.arrival ?? NaN;
   const t = time === null ? start : Math.max(start, Math.min(end, time));
@@ -34,8 +36,8 @@ export function VoyagePlayer({ points, stops, forecasts, speedKn, time, onTime, 
   const total = lastStop.distanceNm;
   const rel = w?.windDir != null ? relativeWind(w.windDir, boat.heading) : null;
   const n = (v: number | null | undefined, d = 0) => v == null ? "n/d" : v.toFixed(d);
-  return <section className="voyage-player" aria-label="Simulazione del viaggio">
-    <div className="flex items-center justify-between gap-2 text-sm">
+  return <section className="voyage-player" style={move.style} aria-label="Simulazione del viaggio">
+    <div className="drag-handle flex items-center justify-between gap-2 text-sm" {...move.handleProps}>
       <output className="font-bold tabular-nums">⛵ {formatRouteTime(t)}</output>
       <span className="text-xs text-muted-foreground">ETA {formatRouteTime(end)} · {speedKn} kn</span>
     </div>

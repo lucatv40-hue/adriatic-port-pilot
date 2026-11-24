@@ -8,7 +8,7 @@ import { holdGesture } from "@/lib/hold-gesture";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null }: { boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number } }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [] }: { drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number } }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -27,13 +27,14 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png", { maxZoom: 18, className: "seamark", attribution: "© OpenSeaMap" }).addTo(m);
     ports.current = L.layerGroup().addTo(m); route.current = L.layerGroup().addTo(m); warn.current = L.layerGroup().addTo(m);
     map.current = m;
+    if (centerRef) centerRef.current = () => { const c = m.getCenter(); return { lat: +c.lat.toFixed(5), lon: +c.lng.toFixed(5) }; };
     setInstance(m);
     const resize = new ResizeObserver(() => m.invalidateSize({ animate: false }));
     resize.observe(el.current);
     return () => { resize.disconnect(); m.scrollWheelZoom.disable(); m.remove(); map.current = null; };
   }, []);
 
-  const hasRoute = points.length >= 2;
+  const hasRoute = points.length >= 2 || drawing || draft.length > 0;
   useEffect(() => {
     const g = ports.current; if (!g) return; g.clearLayers();
     if (hasRoute) return;
@@ -66,9 +67,9 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
       }
       return marker;
     });
-    m.fitBounds(L.latLngBounds(ll), { animate: false, paddingTopLeft: [65, 150], paddingBottomRight: [window.matchMedia("(min-width: 1024px)").matches ? 450 : 65, 240] });
+    if (!drawing) m.fitBounds(L.latLngBounds(ll), { animate: false, paddingTopLeft: [65, 150], paddingBottomRight: [window.matchMedia("(min-width: 1024px)").matches ? 450 : 65, 240] });
     return () => { abort.abort(); holds.forEach(hold => hold.end()); };
-  }, [points]);
+  }, [points, drawing]);
 
   useEffect(() => {
     waypoints.current.forEach((marker, i) => {
@@ -86,6 +87,30 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     const svg = boatMarker.current.getElement()?.querySelector("svg"); if (svg) svg.style.transform = `rotate(${boat.heading}deg)`;
   }, [boat?.lat, boat?.lon, boat?.heading, instance]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const draftLayer = useRef<L.LayerGroup | null>(null);
+  useEffect(() => {
+    const m = map.current; if (!m) return;
+    draftLayer.current?.remove(); draftLayer.current = null;
+    if (!drawing && draft.length === 0) return;
+    const g = L.layerGroup().addTo(m); draftLayer.current = g;
+    const ll = draft.map((p) => [p.lat, p.lon] as L.LatLngTuple);
+    if (ll.length > 1) L.polyline(ll, { className: "route-line", weight: 4 }).addTo(g);
+    ll.forEach((x, i) => L.marker(x, { interactive: false, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] }) }).addTo(g));
+    const last = ll.at(-1);
+    if (!drawing || !last) return () => { g.remove(); };
+    const rubber = L.polyline([last, m.getCenter()], { className: "route-line rubber", weight: 3, dashArray: "6 6" }).addTo(g);
+    const move = () => rubber.setLatLngs([last, m.getCenter()]);
+    m.on("move", move);
+    return () => { m.off("move", move); g.remove(); };
+  }, [drawing, draft, instance]);
+
+  const sailLayer = useRef<L.Polyline | null>(null);
+  useEffect(() => {
+    const m = map.current; if (!m) return;
+    sailLayer.current?.remove(); sailLayer.current = null;
+    if (sailPath.length > 1) sailLayer.current = L.polyline(sailPath.map((p) => [p.lat, p.lon] as L.LatLngTuple), { className: "sail-line", weight: 3 }).addTo(m);
+  }, [sailPath, instance]);
+
   const key = notices.map((n) => n.id + n.onRoute).join();
   useEffect(() => {
     const g = warn.current; if (!g) return; g.clearLayers();
@@ -93,5 +118,5 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return <><div ref={el} className="route-map h-full w-full" />{animated && <AnimatedWeatherLayer map={instance} forecasts={forecasts} time={time} thresholds={thresholds} />}</>;
+  return <><div ref={el} className="route-map h-full w-full" />{drawing && <div className="crosshair" aria-hidden="true" />}{animated && <AnimatedWeatherLayer map={instance} forecasts={forecasts} time={time} thresholds={thresholds} />}</>;
 }
