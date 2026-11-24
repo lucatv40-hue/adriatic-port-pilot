@@ -1,17 +1,24 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /** Non-modal: the uncovered map remains interactive at every snap point. */
 export function RouteCurtain({ children, summary }: { children: ReactNode; summary: string }) {
   const [stage, setStage] = useState(0);
+  const [desktop, setDesktop] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const update = () => setDesktop(query.matches);
+    update(); query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
   const sheet = useRef<HTMLElement>(null);
   const drag = useRef<{ y: number; height: number; moved: boolean } | null>(null);
 
   return (
     <section ref={sheet} className={`route-curtain stage-${stage}`} aria-label="Dati e grafici della tratta">
       <div className="curtain-grip" onPointerDown={(e) => {
-        if (e.button !== 0 || !sheet.current || (e.target as HTMLElement).closest("button")) return;
+        if (desktop || e.button !== 0 || !sheet.current || (e.target as HTMLElement).closest("button")) return;
         drag.current = { y: e.clientY, height: sheet.current.getBoundingClientRect().height, moved: false };
         e.currentTarget.setPointerCapture(e.pointerId);
       }} onPointerMove={(e) => {
@@ -46,7 +53,7 @@ export function RouteCurtain({ children, summary }: { children: ReactNode; summa
           </Button>
         </div>
       </div>
-      <div id="route-curtain-content" className="min-h-0 flex-1 overflow-y-auto overscroll-contain" inert={stage === 0}>{children}</div>
+      <div id="route-curtain-content" className="min-h-0 flex-1 overflow-y-auto overscroll-contain" inert={!desktop && stage === 0}>{children}</div>
     </section>
   );
 }

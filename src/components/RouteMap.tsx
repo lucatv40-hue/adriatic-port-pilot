@@ -5,13 +5,15 @@ import { PORTS } from "@/lib/ports";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, notices = [] }: { from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; notices?: N[] }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, notices = [] }: { from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[] }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const ports = useRef<L.LayerGroup | null>(null);
   const route = useRef<L.LayerGroup | null>(null);
   const warn = useRef<L.LayerGroup | null>(null);
   const pick = useRef(onPick); pick.current = onPick;
+  const pointPick = useRef(onPoint); pointPick.current = onPoint;
+  const waypoints = useRef<L.Marker[]>([]);
 
   useEffect(() => {
     if (!el.current || map.current) return;
@@ -20,7 +22,9 @@ export default function RouteMap({ from, to, points, onPick, notices = [] }: { f
     L.tileLayer("https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png", { maxZoom: 18, className: "seamark", attribution: "© OpenSeaMap" }).addTo(m);
     ports.current = L.layerGroup().addTo(m); route.current = L.layerGroup().addTo(m); warn.current = L.layerGroup().addTo(m);
     map.current = m;
-    return () => { m.remove(); map.current = null; };
+    const resize = new ResizeObserver(() => m.invalidateSize({ animate: false }));
+    resize.observe(el.current);
+    return () => { resize.disconnect(); m.remove(); map.current = null; };
   }, []);
 
   useEffect(() => {
@@ -37,9 +41,16 @@ export default function RouteMap({ from, to, points, onPick, notices = [] }: { f
     if (points.length < 2) return;
     const ll = points.map((p) => [p.lat, p.lon] as L.LatLngTuple);
     L.polyline(ll, { className: "route-line", weight: 4, dashArray: "8 8" }).addTo(g);
-    ll.forEach((x, i) => L.marker(x, { interactive: false, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [24, 24] }) }).addTo(g));
-    m.fitBounds(L.latLngBounds(ll), { paddingTopLeft: [40, 90], paddingBottomRight: [40, 100] });
+    waypoints.current = ll.map((x, i) => L.marker(x, { title: `Punto meteo ${i + 1}`, rotateWithView: true, zIndexOffset: 1500, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [36, 36], iconAnchor: [18, 18] }) }).on("click", () => pointPick.current?.(i)).addTo(g));
+    m.fitBounds(L.latLngBounds(ll), { animate: false, paddingTopLeft: [40, 90], paddingBottomRight: [window.matchMedia("(min-width: 1024px)").matches ? 450 : 40, 100] });
   }, [points]);
+
+  useEffect(() => {
+    waypoints.current.forEach((marker, i) => {
+      marker.getElement()?.querySelector(".wp")?.classList.toggle("selected", i === selectedPoint);
+      marker.setZIndexOffset(i === selectedPoint ? 2000 : 1500);
+    });
+  }, [points, selectedPoint]);
 
   const key = notices.map((n) => n.id + n.onRoute).join();
   useEffect(() => {
