@@ -28,7 +28,7 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     setInstance(m);
     const resize = new ResizeObserver(() => m.invalidateSize({ animate: false }));
     resize.observe(el.current);
-    return () => { resize.disconnect(); m.remove(); map.current = null; };
+    return () => { resize.disconnect(); m.scrollWheelZoom.disable(); m.remove(); map.current = null; };
   }, []);
 
   const hasRoute = points.length >= 2;

@@ -34,7 +34,7 @@ export default function PortMap({ ports, levels, onSelect }: { ports: Port[]; le
       iconCreateFunction: (c) => L.divIcon({ className: "", html: `<div class="port-cluster">${c.getChildCount()}</div>`, iconSize: [40, 40] }),
     }).addTo(m);
     map.current = m;
-    return () => { m.remove(); map.current = null; };
+    return () => { m.scrollWheelZoom.disable(); m.remove(); map.current = null; };
   }, []);
 
   useEffect(() => {

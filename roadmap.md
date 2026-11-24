@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Zoom Leaflet: annullato gesto differito e rimosso listener rotazione rimasto attivo dopo chiusura; verificata rotellina con tratta tracciata e riutilizzo contenitore
 - [x] Marker porti dimezzati (15 px) e nascosti mentre la rotta è tracciata; ricompaiono azzerando la tratta; verificato su telefono (36 → 0 → 36)
 - [x] Campo vento: verificati GRIB reali ICON-2I U/V/FR_LAND, licenza e limiti; convertite e validate 49 ore, predisposto contratto e preprocessore esterno senza cambiare le tre modalità esistenti
 - [x] Preparato aggiornamento ICON-2I ogni sei ore con GitHub Actions, cache per emissione e pubblicazione atomica; 8 test automatici, 6 test contratto, controllo workflow e 49 campi reali validati
