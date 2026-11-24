@@ -34,7 +34,7 @@ export function VoyagePlayer({ points, stops, forecasts, speedKn, time, onTime, 
   const total = lastStop.distanceNm;
   const rel = w?.windDir != null ? relativeWind(w.windDir, boat.heading) : null;
   const n = (v: number | null | undefined, d = 0) => v == null ? "n/d" : v.toFixed(d);
-  return <section className="weather-timeline voyage-player" aria-label="Simulazione del viaggio">
+  return <section className="voyage-player" aria-label="Simulazione del viaggio">
     <div className="flex items-center justify-between gap-2 text-sm">
       <output className="font-bold tabular-nums">⛵ {formatRouteTime(t)}</output>
       <span className="text-xs text-muted-foreground">ETA {formatRouteTime(end)} · {speedKn} kn</span>
