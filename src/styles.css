@@ -211,6 +211,7 @@ button, a, input, label { touch-action: manipulation; }
 .forecast-key { width: 16px; height: 3px; background: var(--forecast-color); }
 .forecast-hour { accent-color: var(--forecast-wind); }
 .animated-weather-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 440; }
+.wind-flow-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 435; }
 .weather-bar { position: absolute; top: 84px; left: 12px; right: 64px; z-index: 550; display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; pointer-events: none; }
 .weather-bar > * { pointer-events: auto; }
 @media (min-width: 1024px) { .weather-bar { right: 28rem; } }

@@ -5,6 +5,9 @@
 - [x] Marker porti dimezzati (15 px) e nascosti mentre la rotta è tracciata; ricompaiono azzerando la tratta; verificato su telefono (36 → 0 → 36)
 - [x] Campo vento: verificati GRIB reali ICON-2I U/V/FR_LAND, licenza e limiti; convertite e validate 49 ore, predisposto contratto e preprocessore esterno senza cambiare le tre modalità esistenti
 - [x] Preparato aggiornamento ICON-2I ogni sei ore con GitHub Actions, cache per emissione e pubblicazione atomica; 8 test automatici, 6 test contratto, controllo workflow e 49 campi reali validati
+- [x] Renderer vento a flusso: particelle advettate nel campo reale (lib + test), canvas pronto a essere alimentato da qualsiasi fonte
+- [ ] Vela: scelta tra VMC (verso la destinazione, oggi) e VMG (miglior progresso sul vento) con interruttore nella sezione "Rotta a vela"
+- [ ] Fonte dati vento a flusso: da decidere con il proprietario (piano commerciale Open-Meteo ~29 €/mese, token gratuito MeteoHub, o automazione GitHub); nessun costo attivato
 - [ ] Attivare aggiornamento esterno: proprietario conferma GitHub non collegato; attendere collegamento, abilitazione Actions/hosting e URL pubblico verificabile (nessun costo attivato)
 - [ ] Campo vento geografico operativo: manca servizio esterno con aggiornamento automatico e destinazione tile; layer non attivato finché questa dipendenza non è pronta (architettura e verifica in docs/wind-grid.md)
 - [x] Etichette meteo compatte con caratteri invariati e linee sottili ai punti; comandi e intestazioni snelliti, verificati su telefono e desktop nell’account Skipper (13 test superati)

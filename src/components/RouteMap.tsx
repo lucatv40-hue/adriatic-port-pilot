@@ -3,12 +3,14 @@ import L from "@/lib/leaflet-rotated";
 import "leaflet/dist/leaflet.css";
 import { PORTS } from "@/lib/ports";
 import { AnimatedWeatherLayer } from "@/components/AnimatedWeatherLayer";
+import { WindFlowLayer } from "@/components/WindFlowLayer";
+import type { WindGrid } from "@/lib/wind-grid";
 import type { PointForecast } from "@/lib/weather";
 import { holdGesture } from "@/lib/hold-gesture";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [] }: { drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number } }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [] }: { drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -118,5 +120,5 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return <><div ref={el} className="route-map h-full w-full" />{drawing && <div className="crosshair" aria-hidden="true" />}{animated && <AnimatedWeatherLayer map={instance} forecasts={forecasts} time={time} thresholds={thresholds} />}</>;
+  return <><div ref={el} className="route-map h-full w-full" />{drawing && <div className="crosshair" aria-hidden="true" />}{windGrid.length > 0 && <WindFlowLayer map={instance} frames={windGrid} time={time} />}{animated && <AnimatedWeatherLayer map={instance} forecasts={forecasts} time={time} thresholds={thresholds} />}</>;
 }

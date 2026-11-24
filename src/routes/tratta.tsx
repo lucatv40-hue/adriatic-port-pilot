@@ -22,6 +22,7 @@ import { RouteCurtain } from "@/components/RouteCurtain";
 import { WeatherTimeline } from "@/components/WeatherTimeline";
 import { VoyagePlayer } from "@/components/VoyagePlayer";
 import { boatAt, alongSailLeg } from "@/lib/voyage";
+import { useWindGrid } from "@/lib/wind-grid-loader";
 
 const RouteMap = lazy(() => import("@/components/RouteMap"));
 
@@ -93,6 +94,10 @@ function PlanInner() {
   const sailing = useMemo(() => sail && q.data ? sailRoute(points, twds, Number(speed)) : null, [sail, q.data, points, twds, speed]);
   const rawBoat = voyage && simTime !== null ? boatAt(points, schedule, simTime) : null;
   const boat = rawBoat && sailing ? alongSailLeg(rawBoat, points[rawBoat.segment]!, sailing.legs[rawBoat.segment]?.tack ?? null, points[rawBoat.segment + 1]!) : rawBoat;
+  // A local grid snapshot is a development preview only; the published app waits for a live source.
+  const windBase = import.meta.env.DEV ? ((import.meta.env["VITE_WIND_GRID_URL"] as string | undefined) ?? null) : null;
+  const mapTime = voyage && simTime !== null ? new Date(simTime).toISOString() : chartTime;
+  const windGrid = useWindGrid(windBase, animated || voyage ? mapTime : null);
   const startFree = () => { setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); };
   const addWaypoint = () => { const c = centerRef.current?.(); if (c) setDraft((d) => [...d, c]); };
   const finish = () => { const c = centerRef.current?.(); const pts = c && draft.length ? [...draft, c] : draft; if (pts.length >= 2) { setFreePoints(pts); setDraft([]); setDrawing(false); } };
@@ -110,7 +115,7 @@ function PlanInner() {
     <div className="relative h-full min-h-0 overflow-hidden">
       <div className="absolute inset-0">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage} forecasts={q.data ?? []} time={voyage && simTime !== null ? new Date(simTime).toISOString() : chartTime} boat={boat} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
+          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
         <div className="absolute left-3 right-16 top-3 lg:right-[27rem] z-[500] flex items-center justify-between gap-1 rounded-lg bg-card px-2 py-1 text-sm font-bold shadow-float">
           <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">
