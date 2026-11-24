@@ -40,6 +40,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .wind-site
+          retention-days: 1
+          retention-days: 1
           key: wind-site-v1-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: wind-site-v1-
       - name: Installa convertitore esterno
@@ -53,6 +55,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: .wind-site
+          retention-days: 1
 
   publish:
     if: vars.WIND_GRID_PAGES == 'true'
