@@ -19,6 +19,7 @@ import { Route as CookieRouteImport } from './routes/cookie'
 import { Route as PreferitiRouteImport } from './routes/preferiti'
 import { Route as PrezziRouteImport } from './routes/prezzi'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RotteRouteImport } from './routes/rotte'
 import { Route as TariffeRouteImport } from './routes/tariffe'
 import { Route as TerminiRouteImport } from './routes/termini'
 import { Route as TrattaRouteImport } from './routes/tratta'
@@ -30,6 +31,7 @@ import { Route as PortoIdRouteImport } from './routes/porto/$id'
 import { Route as AuthenticatedAdminAvvisiRouteImport } from './routes/_authenticated/admin.avvisi'
 import { Route as AuthenticatedAdminGestoriRouteImport } from './routes/_authenticated/admin.gestori'
 import { Route as ApiPublicJobsImportNoticesRouteImport } from './routes/api/public/jobs/import-notices'
+import { Route as ApiPublicJobsRouteAlertsRouteImport } from './routes/api/public/jobs/route-alerts'
 import { Route as ApiPublicJobsWeatherAlertsRouteImport } from './routes/api/public/jobs/weather-alerts'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -81,6 +83,11 @@ const PrezziRoute = PrezziRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RotteRoute = RotteRouteImport.update({
+  id: '/rotte',
+  path: '/rotte',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TariffeRoute = TariffeRouteImport.update({
@@ -142,6 +149,12 @@ const ApiPublicJobsImportNoticesRoute =
     path: '/api/public/jobs/import-notices',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicJobsRouteAlertsRoute =
+  ApiPublicJobsRouteAlertsRouteImport.update({
+    id: '/api/public/jobs/route-alerts',
+    path: '/api/public/jobs/route-alerts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicJobsWeatherAlertsRoute =
   ApiPublicJobsWeatherAlertsRouteImport.update({
     id: '/api/public/jobs/weather-alerts',
@@ -171,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/preferiti': typeof PreferitiRoute
   '/prezzi': typeof PrezziRoute
   '/privacy': typeof PrivacyRoute
+  '/rotte': typeof RotteRoute
   '/tariffe': typeof TariffeRoute
   '/termini': typeof TerminiRoute
   '/tratta': typeof TrattaRoute
@@ -182,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/admin/gestori': typeof AuthenticatedAdminGestoriRoute
   '/api/public/jobs/import-notices': typeof ApiPublicJobsImportNoticesRoute
+  '/api/public/jobs/route-alerts': typeof ApiPublicJobsRouteAlertsRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -196,6 +211,7 @@ export interface FileRoutesByTo {
   '/preferiti': typeof PreferitiRoute
   '/prezzi': typeof PrezziRoute
   '/privacy': typeof PrivacyRoute
+  '/rotte': typeof RotteRoute
   '/tariffe': typeof TariffeRoute
   '/termini': typeof TerminiRoute
   '/tratta': typeof TrattaRoute
@@ -207,6 +223,7 @@ export interface FileRoutesByTo {
   '/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/admin/gestori': typeof AuthenticatedAdminGestoriRoute
   '/api/public/jobs/import-notices': typeof ApiPublicJobsImportNoticesRoute
+  '/api/public/jobs/route-alerts': typeof ApiPublicJobsRouteAlertsRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -223,6 +240,7 @@ export interface FileRoutesById {
   '/preferiti': typeof PreferitiRoute
   '/prezzi': typeof PrezziRoute
   '/privacy': typeof PrivacyRoute
+  '/rotte': typeof RotteRoute
   '/tariffe': typeof TariffeRoute
   '/termini': typeof TerminiRoute
   '/tratta': typeof TrattaRoute
@@ -234,6 +252,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/avvisi': typeof AuthenticatedAdminAvvisiRoute
   '/_authenticated/admin/gestori': typeof AuthenticatedAdminGestoriRoute
   '/api/public/jobs/import-notices': typeof ApiPublicJobsImportNoticesRoute
+  '/api/public/jobs/route-alerts': typeof ApiPublicJobsRouteAlertsRoute
   '/api/public/jobs/weather-alerts': typeof ApiPublicJobsWeatherAlertsRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -250,6 +269,7 @@ export interface FileRouteTypes {
     | '/preferiti'
     | '/prezzi'
     | '/privacy'
+    | '/rotte'
     | '/tariffe'
     | '/termini'
     | '/tratta'
@@ -261,6 +281,7 @@ export interface FileRouteTypes {
     | '/admin/avvisi'
     | '/admin/gestori'
     | '/api/public/jobs/import-notices'
+    | '/api/public/jobs/route-alerts'
     | '/api/public/jobs/weather-alerts'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
@@ -275,6 +296,7 @@ export interface FileRouteTypes {
     | '/preferiti'
     | '/prezzi'
     | '/privacy'
+    | '/rotte'
     | '/tariffe'
     | '/termini'
     | '/tratta'
@@ -286,6 +308,7 @@ export interface FileRouteTypes {
     | '/admin/avvisi'
     | '/admin/gestori'
     | '/api/public/jobs/import-notices'
+    | '/api/public/jobs/route-alerts'
     | '/api/public/jobs/weather-alerts'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
@@ -301,6 +324,7 @@ export interface FileRouteTypes {
     | '/preferiti'
     | '/prezzi'
     | '/privacy'
+    | '/rotte'
     | '/tariffe'
     | '/termini'
     | '/tratta'
@@ -312,6 +336,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/avvisi'
     | '/_authenticated/admin/gestori'
     | '/api/public/jobs/import-notices'
+    | '/api/public/jobs/route-alerts'
     | '/api/public/jobs/weather-alerts'
     | '/api/public/payments/webhook'
     | '/lovable/email/transactional/preview'
@@ -328,12 +353,14 @@ export interface RootRouteChildren {
   PreferitiRoute: typeof PreferitiRoute
   PrezziRoute: typeof PrezziRoute
   PrivacyRoute: typeof PrivacyRoute
+  RotteRoute: typeof RotteRoute
   TariffeRoute: typeof TariffeRoute
   TerminiRoute: typeof TerminiRoute
   TrattaRoute: typeof TrattaRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   PortoIdRoute: typeof PortoIdRoute
   ApiPublicJobsImportNoticesRoute: typeof ApiPublicJobsImportNoticesRoute
+  ApiPublicJobsRouteAlertsRoute: typeof ApiPublicJobsRouteAlertsRoute
   ApiPublicJobsWeatherAlertsRoute: typeof ApiPublicJobsWeatherAlertsRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -409,6 +436,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rotte': {
+      id: '/rotte'
+      path: '/rotte'
+      fullPath: '/rotte'
+      preLoaderRoute: typeof RotteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tariffe': {
@@ -488,6 +522,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsImportNoticesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/route-alerts': {
+      id: '/api/public/jobs/route-alerts'
+      path: '/api/public/jobs/route-alerts'
+      fullPath: '/api/public/jobs/route-alerts'
+      preLoaderRoute: typeof ApiPublicJobsRouteAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/jobs/weather-alerts': {
       id: '/api/public/jobs/weather-alerts'
       path: '/api/public/jobs/weather-alerts'
@@ -542,12 +583,14 @@ const rootRouteChildren: RootRouteChildren = {
   PreferitiRoute: PreferitiRoute,
   PrezziRoute: PrezziRoute,
   PrivacyRoute: PrivacyRoute,
+  RotteRoute: RotteRoute,
   TariffeRoute: TariffeRoute,
   TerminiRoute: TerminiRoute,
   TrattaRoute: TrattaRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   PortoIdRoute: PortoIdRoute,
   ApiPublicJobsImportNoticesRoute: ApiPublicJobsImportNoticesRoute,
+  ApiPublicJobsRouteAlertsRoute: ApiPublicJobsRouteAlertsRoute,
   ApiPublicJobsWeatherAlertsRoute: ApiPublicJobsWeatherAlertsRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,

@@ -328,6 +328,57 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_routes: {
+        Row: {
+          baseline: Json | null
+          created_at: string
+          departure: string | null
+          from_port: string | null
+          id: string
+          last_alert_at: string | null
+          last_check_at: string | null
+          name: string
+          points: Json
+          speed_kn: number
+          to_port: string | null
+          user_id: string
+          wave_m: number
+          wind_kn: number
+        }
+        Insert: {
+          baseline?: Json | null
+          created_at?: string
+          departure?: string | null
+          from_port?: string | null
+          id?: string
+          last_alert_at?: string | null
+          last_check_at?: string | null
+          name?: string
+          points: Json
+          speed_kn?: number
+          to_port?: string | null
+          user_id: string
+          wave_m?: number
+          wind_kn?: number
+        }
+        Update: {
+          baseline?: Json | null
+          created_at?: string
+          departure?: string | null
+          from_port?: string | null
+          id?: string
+          last_alert_at?: string | null
+          last_check_at?: string | null
+          name?: string
+          points?: Json
+          speed_kn?: number
+          to_port?: string | null
+          user_id?: string
+          wave_m?: number
+          wind_kn?: number
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean

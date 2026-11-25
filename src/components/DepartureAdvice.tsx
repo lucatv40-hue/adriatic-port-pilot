@@ -7,7 +7,7 @@ import { fetchRouteForecast } from "@/lib/weather";
 import type { Thresholds } from "@/lib/thresholds";
 import type { SailMode } from "@/lib/sailing";
 import { formatRouteTime } from "@/lib/route-timing";
-import { alternativeRoute, denseRoutePoints, worstRouteSection, type RoutePoint, type RouteSection } from "@/lib/route-risk";
+import { denseRoutePoints, worstRouteSection, type RoutePoint, type RouteSection } from "@/lib/route-risk";
 
 type Props = {
   points: RoutePoint[];
@@ -18,7 +18,6 @@ type Props = {
   initial: Propulsion;
   onUse: (departure: number, mode: Propulsion) => void;
   onHighlight: (section: RouteSection | null) => void;
-  onAlternative: (points: RoutePoint[]) => void;
   onClose: () => void;
 };
 
@@ -27,7 +26,7 @@ function Stars({ n }: { n: number }) {
   return <span className="flex" aria-label={`${n} stelle su 4`}>{[1, 2, 3, 4].map((i) => <Star key={i} className={`h-4 w-4 ${i <= n ? "fill-primary text-primary" : "text-muted-foreground"}`} />)}</span>;
 }
 
-export function DepartureAdvice({ points, departure, speedKn, thresholds, sailMode, initial, onUse, onHighlight, onAlternative, onClose }: Props) {
+export function DepartureAdvice({ points, departure, speedKn, thresholds, sailMode, initial, onUse, onHighlight, onClose }: Props) {
   const [mode, setMode] = useState<Propulsion>(initial);
   const [open, setOpen] = useState<Advice | null>(null);
   const [now] = useState(() => Date.now());
@@ -36,7 +35,6 @@ export function DepartureAdvice({ points, departure, speedKn, thresholds, sailMo
   const detail = useQuery({ queryKey: ["route-info", routeKey], queryFn: () => fetchRouteForecast(dense), staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
   const list = useMemo(() => detail.data ? bestDepartures(dense, detail.data, speedKn, mode, thresholds, now, sailMode) : [], [dense, detail.data, speedKn, mode, thresholds, now, sailMode]);
   const worst = useMemo(() => detail.data ? worstRouteSection(dense, detail.data, departure, speedKn, thresholds) : null, [dense, detail.data, departure, speedKn, thresholds]);
-  const alternative = useMemo(() => worst?.critical ? alternativeRoute(points, worst) : null, [points, worst]);
   useEffect(() => { onHighlight(worst); }, [worst, onHighlight]);
 
   return (
@@ -56,10 +54,8 @@ export function DepartureAdvice({ points, departure, speedKn, thresholds, sailMo
         <p className={`mt-1 text-xs ${worst.critical ? "font-bold text-destructive" : "text-muted-foreground"}`}>{worst.critical ? "Criticità oltre le tue soglie: tratto evidenziato in rosso." : "È il tratto più esposto, ma resta entro le tue soglie: evidenziato in giallo."}</p>
         <div className="mt-2 flex flex-wrap gap-1">
           <Button size="sm" variant="outline" className="h-8" onClick={onClose}>Vedi tratto sulla mappa</Button>
-          {worst.critical && alternative && <Button size="sm" className="h-8" onClick={() => { onAlternative(alternative); setOpen(null); }}>Genera rotta alternativa</Button>}
         </div>
-        {worst.critical && !alternative && <p className="mt-2 text-xs text-muted-foreground">Nessuna deviazione generabile senza passare sulla terra: scegli una partenza più tardi.</p>}
-        {worst.critical && <p className="mt-1 text-xs text-muted-foreground">La deviazione viene proposta sul mare e poi ricontrollata; verifica sempre carta nautica e divieti.</p>}
+        {worst.critical && <p className="mt-2 text-xs text-muted-foreground">La scelta della rotta resta tua: nessuna deviazione viene generata. Valuta tu carta nautica, divieti e un orario di partenza diverso.</p>}
       </section>}
       <h3 className="mb-2 text-sm font-bold">3 partenze consigliate</h3>
       {!detail.isLoading && list.length === 0 && <p className="text-sm text-muted-foreground">Previsioni non disponibili per valutare la partenza.</p>}

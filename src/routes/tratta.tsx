@@ -1,9 +1,9 @@
 import { usePlan } from "@/lib/usePlan";
 import { Upgrade } from "@/components/Upgrade";
-import { createFileRoute, ClientOnly } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, ClientOnly, Link } from "@tanstack/react-router";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { RotateCcw, Navigation2, TriangleAlert, Crosshair, Flag, Plus, Undo2, Sailboat } from "lucide-react";
+import { RotateCcw, Navigation2, TriangleAlert, Crosshair, Flag, Plus, Undo2, Sailboat, Bookmark } from "lucide-react";
 import { sailRoute, type SailMode } from "@/lib/sailing";
 import { forecastAtArrival } from "@/lib/route-timing";
 import { getPort } from "@/lib/ports";
@@ -24,7 +24,8 @@ import { DepartureAdvice } from "@/components/DepartureAdvice";
 import { boatAt, alongSailLeg } from "@/lib/voyage";
 import { useWindGrid } from "@/lib/wind-grid-loader";
 import { routePlan, crossesLand, onLand, inLagoon } from "@/lib/sea-route";
-import type { RoutePoint, RouteSection } from "@/lib/route-risk";
+import { saveRoute } from "@/lib/saved-routes.functions";
+import type { RouteSection } from "@/lib/route-risk";
 
 /** Six-hourly ICON-2I grid published by the GitHub Actions workflow to GitHub Pages. */
 const WIND_GRID_URL = "https://lucatv40-hue.github.io/adriatic-port-pilot";
@@ -33,6 +34,12 @@ const RouteMap = lazy(() => import("@/components/RouteMap"));
 
 export const Route = createFileRoute("/tratta")({
   head: () => ({ meta: [{ title: "Pianifica la tratta – Rotta Adriatica" }, { name: "description", content: "Scegli partenza e velocità: vento, raffiche e onde previsti all’arrivo nelle cinque tappe della tua rotta." }, { property: "og:title", content: "Pianifica la tratta – Rotta Adriatica" }, { property: "og:description", content: "Orari di passaggio e meteo marino previsto lungo il percorso in Adriatico." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const out: { from?: string; to?: string } = {};
+    if (typeof search["from"] === "string") out.from = search["from"];
+    if (typeof search["to"] === "string") out.to = search["to"];
+    return out;
+  },
   component: Plan,
 });
 
@@ -44,8 +51,9 @@ function Plan() {
 }
 
 function PlanInner() {
-  const [from, setFrom] = useState<string | null>(null);
-  const [to, setTo] = useState<string | null>(null);
+  const search = Route.useSearch();
+  const [from, setFrom] = useState<string | null>(search.from ?? null);
+  const [to, setTo] = useState<string | null>(search.to ?? null);
   const [departure, setDeparture] = useState("");
   const [speed, setSpeed] = useState("6");
   const [selectedPoint, setSelectedPoint] = useState(0);
@@ -62,7 +70,6 @@ function PlanInner() {
   const [sailMode, setSailMode] = useState<SailMode>("vmc");
   const [advice, setAdvice] = useState(false);
   const [hazard, setHazard] = useState<RouteSection | null>(null);
-  const [alternative, setAlternative] = useState<RoutePoint[] | null>(null);
   const centerRef = useRef<(() => { lat: number; lon: number } | null) | null>(null);
   useEffect(() => {
     const nextHour = new Date();
@@ -73,21 +80,12 @@ function PlanInner() {
   const a = from ? getPort(from) : undefined, b = to ? getPort(to) : undefined;
   const plan = useMemo(() => (a && b ? routePlan(a, b, 5) : null), [a, b]);
   const portPoints = plan?.points ?? [];
-  const points = alternative ?? (free ? freePoints : portPoints);
-  const routeTrack = useMemo(() => {
-    if (!alternative) return free ? undefined : plan?.track;
-    if (free || !plan?.track || portPoints.length < 2) return alternative;
-    const first = portPoints[0]!, last = portPoints.at(-1)!;
-    const same = (x: RoutePoint, y: RoutePoint) => Math.abs(x.lat - y.lat) < 0.00011 && Math.abs(x.lon - y.lon) < 0.00011;
-    const start = plan.track.findIndex((point) => same(point, first));
-    const end = plan.track.findIndex((point, i) => i > start && same(point, last));
-    if (start < 0 || end < 0) return alternative;
-    return [...plan.track.slice(0, start + 1), ...alternative.slice(1, -1), ...plan.track.slice(end)];
-  }, [alternative, free, plan, portPoints]);
+  const points = free ? freePoints : portPoints;
+  const routeTrack = free ? undefined : plan?.track;
   const routeKey = points.map((p) => `${p.lat},${p.lon}`).join(";");
   const q = useQuery({ queryKey: ["route48", routeKey, "icon2i-only"], queryFn: () => fetchRouteForecast(points), enabled: points.length >= 2, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
   useEffect(() => { if (animated && selectedTime === null && q.data?.[0]?.series.time[0]) setSelectedTime(q.data[0].series.time[0]); }, [animated, q.data, selectedTime]);
-  const pick = (id: string) => { if (free) return; setAlternative(null); setHazard(null); setAdvice(false); if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
+  const pick = (id: string) => { if (free) return; setHazard(null); setAdvice(false); if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
   useEffect(() => { setSelectedPoint(0); setSelectedTime(null); setVoyageTime(null); setReference(null); setHazard(null); }, [routeKey]);
   useEffect(() => { setVoyageTime(null); setHazard(null); }, [departure, speed]);
   const shiftDeparture = (h: number) => { const t = departureTimestamp(departure); if (Number.isFinite(t)) { setReference(null); setDeparture(localDepartureValue(new Date(t + h * 3_600_000))); } };
@@ -126,13 +124,27 @@ function PlanInner() {
   const windBase = (import.meta.env["VITE_WIND_GRID_URL"] as string | undefined) ?? WIND_GRID_URL;
   const mapTime = voyage && simTime !== null ? new Date(simTime).toISOString() : chartTime;
   const windGrid = useWindGrid(windBase, animated || voyage ? mapTime : null);
-  const startFree = () => { setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); setAlternative(null); setHazard(null); setAdvice(false); };
+  const startFree = () => { setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); setHazard(null); setAdvice(false); };
   const addWaypoint = () => { const c = centerRef.current?.(); if (c) setDraft((d) => [...d, c]); };
-  const finish = () => { const c = centerRef.current?.(); const pts = c && draft.length ? [...draft, c] : draft; if (pts.length >= 2) { setFreePoints(pts); setDraft([]); setDrawing(false); setAlternative(null); setHazard(null); } };
-  const reset = () => { setFrom(null); setTo(null); setFree(false); setDrawing(false); setDraft([]); setFreePoints([]); setSail(false); setAlternative(null); setHazard(null); setAdvice(false); };
+  const finish = () => { const c = centerRef.current?.(); const pts = c && draft.length ? [...draft, c] : draft; if (pts.length >= 2) { setFreePoints(pts); setDraft([]); setDrawing(false); setHazard(null); } };
+  const reset = () => { setFrom(null); setTo(null); setFree(false); setDrawing(false); setDraft([]); setFreePoints([]); setSail(false); setHazard(null); setAdvice(false); };
   const nq = useQuery(noticesQuery);
   const sq = useQuery(sourcesQuery);
   const start = schedule[0]?.arrival ?? departureTimestamp(departure), end = lastStop?.arrival ?? start;
+  const defaultRouteName = free ? "Rotta libera" : a && b ? `${a.name} → ${b.name}` : "";
+  const [routeName, setRouteName] = useState("");
+  const storeRoute = useMutation({
+    mutationFn: () => saveRoute({ data: {
+      name: (routeName.trim() || defaultRouteName).slice(0, 80),
+      fromPort: free ? null : from,
+      toPort: free ? null : to,
+      points: points.map((p) => ({ lat: p.lat, lon: p.lon })),
+      departure: Number.isFinite(start) ? start : null,
+      speedKn: Number(speed),
+      windKn: t.wind,
+      waveM: t.wave,
+    } }),
+  });
   const notices = points.length >= 2 && Number.isFinite(start)
     ? (nq.data ?? []).flatMap((n) => { const m = matchNotice(n, points, start, end); return m ? [{ n, m }] : []; }).sort((x, y) => x.m.distanceKm - y.m.distanceKm)
     : [];
@@ -168,7 +180,7 @@ function PlanInner() {
         <Button size="sm" variant={sailMode === "comfort" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "comfort"} onClick={() => setSailMode("comfort")}>Comoda · 60°</Button>
       </div>}
       {animated && points.length >= 2 && q.data && <WeatherTimeline key={`${from}-${to}-icon2i`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}</div>
-      {advice && points.length >= 2 && q.data && <DepartureAdvice points={points} departure={start} speedKn={Number(speed)} thresholds={t} sailMode={sailMode} initial={sail ? "vela" : "motore"} onHighlight={setHazard} onAlternative={(route) => { setAlternative(route); setHazard(null); setReference(null); setSelectedTime(null); setVoyageTime(null); }} onClose={() => setAdvice(false)} onUse={(d, m) => { setReference(null); setSelectedTime(null); setDeparture(localDepartureValue(new Date(d))); setSail(m === "vela"); setAdvice(false); }} />}
+      {advice && points.length >= 2 && q.data && <DepartureAdvice points={points} departure={start} speedKn={Number(speed)} thresholds={t} sailMode={sailMode} initial={sail ? "vela" : "motore"} onHighlight={setHazard} onClose={() => setAdvice(false)} onUse={(d, m) => { setReference(null); setSelectedTime(null); setDeparture(localDepartureValue(new Date(d))); setSail(m === "vela"); setAdvice(false); }} />}
       {voyage && points.length >= 2 && q.data && schedule.length >= 2 && <VoyagePlayer points={points} stops={schedule} forecasts={q.data} speedKn={Number(speed)} time={simTime} onTime={setVoyageTime} onShift={shiftDeparture} thresholds={t} />}
 
       <RouteCurtain summary={lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · arrivo ${formatRouteTime(lastStop.arrival)}` : "Partenza, velocità e previsioni"}>
@@ -184,6 +196,15 @@ function PlanInner() {
           <label className="text-sm font-bold">Soglia vento (kn)<Input type="number" inputMode="decimal" className="mt-1 h-11 text-base" value={t.wind} onChange={(e) => save({ ...t, wind: Number(e.target.value) || 0 })} /></label>
           <label className="text-sm font-bold">Soglia onda (m)<Input type="number" step="0.1" inputMode="decimal" className="mt-1 h-11 text-base" value={t.wave} onChange={(e) => save({ ...t, wave: Number(e.target.value) || 0 })} /></label>
         </div>
+        {points.length >= 2 && (
+          <section className="space-y-2 border-b pb-4" aria-label="Salva la rotta">
+            <h3 className="flex items-center gap-2 font-bold"><Bookmark className="h-4 w-4 text-primary" />Salva la rotta</h3>
+            <label className="text-sm font-bold">Nome<Input className="mt-1 h-11 text-base" value={routeName} onChange={(e) => setRouteName(e.target.value)} placeholder={defaultRouteName || "La mia rotta"} maxLength={80} /></label>
+            <Button className="w-full" onClick={() => storeRoute.mutate()} disabled={storeRoute.isPending}>{storeRoute.isPending ? "Salvataggio…" : "Salva rotta"}</Button>
+            {storeRoute.isSuccess && <p className="text-sm font-bold text-primary" role="status">Rotta salvata: ti avvisiamo per email se il meteo peggiora. <Link to="/rotte" className="underline">Vedi le mie rotte</Link></p>}
+            {storeRoute.isError && <p className="text-sm text-destructive" role="alert">Non è stato possibile salvarla: {storeRoute.error instanceof Error ? storeRoute.error.message : "riprova"}</p>}
+          </section>
+        )}
         {points.length >= 2 && <p className="text-sm text-muted-foreground">{lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · ` : ""}{points.length} tappe · orari stimati a velocità costante, senza soste. Percorso indicativo: esce dalle bocche di porto e gira attorno alla costa, ma non considera bassifondi o divieti.</p>}
         {sailing && <section className="space-y-1 border-b pb-3 text-sm" aria-label="Rotta a vela">
           <h3 className="flex items-center gap-2 font-bold"><Sailboat className="h-4 w-4 text-primary" />Rotta a vela · {sailMode === "comfort" ? "Comoda (≥60° dal vento)" : "VMC massima"} · {Number.isFinite(sailing.timeH) ? `${Math.floor(sailing.timeH)} h ${Math.round((sailing.timeH % 1) * 60)} min` : "non disponibile"}</h3>

@@ -1,44 +1,9 @@
 # Roadmap
-- [x] Estratti e verificati visivamente i listini transito 2026 di Marina Uno, Portorož e Izola; schede e confronto aggiornati con fonte, fasce, condizioni e test (nessun aggiornamento periodico attivato)
-- [x] Cursore protetto da pressione di 0,7 secondi; punto di riferimento e orari automatici avanti/indietro, verificati su telefono e desktop con account Skipper; 106 test superati
-- [x] Zoom Leaflet: annullato gesto differito e rimosso listener rotazione rimasto attivo dopo chiusura; verificata rotellina con tratta tracciata e riutilizzo contenitore
-- [x] Marker porti dimezzati (15 px) e nascosti mentre la rotta è tracciata; ricompaiono azzerando la tratta; verificato su telefono (36 → 0 → 36)
-- [x] Campo vento: verificati GRIB reali ICON-2I U/V/FR_LAND, licenza e limiti; convertite e validate 49 ore, predisposto contratto e preprocessore esterno senza cambiare le tre modalità esistenti
-- [x] Preparato aggiornamento ICON-2I ogni sei ore con GitHub Actions, cache per emissione e pubblicazione atomica; 8 test automatici, 6 test contratto, controllo workflow e 49 campi reali validati
-- [x] Renderer vento a flusso: particelle advettate nel campo reale (lib + test), canvas pronto a essere alimentato da qualsiasi fonte
-- [x] Vela: scelta VMC/VMG valutata — con la polare attuale le due coincidono (VMC minimizza il tempo verso la destinazione, che è il VMG verso il mark); serve una polare reale per differenziarle
-- [x] Fonte dati vento a flusso: ICON-2I da GitHub Pages (workflow ogni 6 h)
-- [ ] Attivare aggiornamento esterno: proprietario conferma GitHub non collegato; attendere collegamento, abilitazione Actions/hosting e URL pubblico verificabile (nessun costo attivato)
-- [ ] Campo vento geografico operativo: manca servizio esterno con aggiornamento automatico e destinazione tile; layer non attivato finché questa dipendenza non è pronta (architettura e verifica in docs/wind-grid.md)
-- [x] Etichette meteo compatte con caratteri invariati e linee sottili ai punti; comandi e intestazioni snelliti, verificati su telefono e desktop nell’account Skipper (13 test superati)
-- [x] Meteo animato: cinque punti, timeline e interpolazione condivisa con i grafici; verifica mobile/desktop su account Skipper, 83 test superati
-- [x] Restyling meteo: cinque punti sincronizzati mappa/pannello, ora condivisa tra indicatori e grafici, tooltip, direzioni, fonti e scale distinte; verificati smartphone Android emulato e pannello desktop con dati reali (78 test superati)
-- [x] Menu Modello vento visibile sopra la tendina; cambio ICON-2I, lettura previsioni e ritorno automatico verificati nell’account Skipper su telefono e desktop
-- [x] ICON-2I selezionabile, fallback tracciato, copertura 48 ore e confronto Venezia–Istria (5 punti completi; 75 test superati)
-- [x] Mappa estesa e pannello tratta trascinabile e scorrevole
-- [x] Rotazione a due dita di mappa e marker
-- [x] 21 vedute aeree reali FVG/Croazia con fonte e attribuzione
-- [ ] Foto Veneto/Slovenia: WMS Veneto rifiuta le richieste browser; manca una fonte slovena autorizzata per questa app
-- [x] Tratta: partenza, velocità media, orari alle 5 tappe e meteo all'arrivo; verifica con account Skipper
-- [x] Mappa: cluster, OpenSeaMap, posizione, ricerca, scheda dal basso
-- [x] Tratta: tocco su 2 porti, rotta su mappa, 5 punti, 48h grafico, soglie in rosso, "non disponibile"
-- [x] Avvisi + admin, allerte con push
-- [x] Collegamento email delle allerte al dominio indicato
-- [x] Area gestori e piani Stripe
-- [x] Profilo barca nell'account, porti arancioni/grigi, interruttore solo adatti
-- [x] Installazione, icone e schermata di avvio
-- [x] Mappa visitata e preferiti offline
-- [x] Privacy, Cookie, Termini e consenso
-- [x] Inseriti ragione sociale italythroughtime.world ed email giacomail@yahoo.it
-- [ ] Completare indirizzo legale (in attesa della risposta del proprietario)
-- [x] Verifica velocità locale, contrasto chiaro/scuro e uso mobile; offline verificato in ambiente isolato
 
-## Da fare (richiesta Giacomo)
-- [x] Rinominare «Quando partire» in «Info Rotta»
-- [x] Analisi ogni circa 4 miglia, anche tra i waypoint; tratto peggiore sulla mappa con ingresso/uscita, verificato su telefono
-- [x] Deviazione alternativa intorno alle criticità con nuovo controllo meteo; 165 test superati
-- [x] Scelta vela VMC massima / Comoda con bolina ≥60°; bordi e cambio andatura verificati con vento reale su cellulare e PC
-- [x] Vento tratta solo ICON-2I, senza modello automatico o ripiego; onde indipendenti da Open-Meteo Marine
-- [x] Modalità "Rotta": mirino al centro, pulsanti Waypoint/Arrivo, spezzata libera con meteo sui punti (Grafici/Animato/Viaggio)
-- [x] Pulsante "Vela": bordi con migliore VMG/VMC sul vento previsto
-- [x] Pannelli grafici/viaggio spostabili anche su PC
+## Fatto
+- [x] Togliere la generazione della rotta alternativa: la scelta resta al capitano (Info Rotta mostra solo il tratto peggiore e i consigli orari).
+- [x] Salvare le rotte pianificate (pulsante "Salva rotta" in Tratta + pagina "Le mie rotte" con riapertura).
+- [x] Email quando il meteo di una tratta salvata peggiora: controllo orario, una email per tratta, massimo una ogni 12 ore.
+
+## Aperto
+- (nessuno)

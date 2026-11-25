@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { alternativeRoute, denseRoutePoints, worstRouteSection, type RouteSection } from "@/lib/route-risk";
-import { crossesLand } from "@/lib/sea-route";
+import * as routeRisk from "@/lib/route-risk";
+import { denseRoutePoints, worstRouteSection } from "@/lib/route-risk";
 import { distanceNm } from "@/lib/route-timing";
 import type { PointForecast } from "@/lib/weather";
 
@@ -44,16 +44,8 @@ describe("analisi punti intermedi", () => {
   });
 });
 
-describe("rotta alternativa", () => {
-  it("devia intorno al tratto critico senza passare sulla terra", () => {
-    const points = [{ lat: 45.1, lon: 12.4 }, { lat: 45.1, lon: 13.2 }];
-    const section: RouteSection = { a: { lat: 45.1, lon: 12.6 }, b: { lat: 45.1, lon: 12.8 }, entry: now, exit: now + 3_600_000, maxWind: 25, maxGust: 33, maxWave: 2, critical: true, score: 2 };
-    const alternative = alternativeRoute(points, section)!;
-    expect(alternative).not.toBeNull();
-    expect(alternative.length).toBe(4);
-    expect(alternative[0]).toEqual(points[0]);
-    expect(alternative.at(-1)).toEqual(points[1]);
-    expect(alternative.slice(1).every((point, i) => !crossesLand(alternative[i]!, point))).toBe(true);
-    expect(alternative.some((point) => point.lat !== 45.1)).toBe(true);
+describe("scelta lasciata al capitano", () => {
+  it("non espone nessuna funzione che generi una rotta alternativa", () => {
+    expect(Object.keys(routeRisk)).not.toContain("alternativeRoute");
   });
 });

@@ -1,7 +1,6 @@
 import type { PointForecast } from "@/lib/weather";
 import type { Thresholds } from "@/lib/thresholds";
 import { distanceNm, forecastAtArrival, routeSchedule } from "@/lib/route-timing";
-import { crossesLand, inLagoon, onLand } from "@/lib/sea-route";
 
 export type RoutePoint = { lat: number; lon: number };
 export type RouteSection = {
@@ -68,39 +67,4 @@ export function worstRouteSection(points: RoutePoint[], forecasts: PointForecast
     if (!worst || score > worst.score) worst = { a: points[i]!, b: points[i + 1]!, entry: entry.arrival, exit: exit.arrival, maxWind, maxGust, maxWave, critical, score };
   }
   return worst;
-}
-
-function distanceToLegNm(point: RoutePoint, a: RoutePoint, b: RoutePoint): number {
-  const lat = point.lat * Math.PI / 180, x = (point.lon - a.lon) * Math.cos(lat) * 60, y = (point.lat - a.lat) * 60;
-  const dx = (b.lon - a.lon) * Math.cos(lat) * 60, dy = (b.lat - a.lat) * 60;
-  const fraction = dx * dx + dy * dy ? Math.max(0, Math.min(1, (x * dx + y * dy) / (dx * dx + dy * dy))) : 0;
-  return Math.hypot(x - dx * fraction, y - dy * fraction);
-}
-
-/** Proposes a sea-only dogleg around the worst section; the new route must be forecast again. */
-export function alternativeRoute(points: RoutePoint[], section: RouteSection, clearanceNm = 6): RoutePoint[] | null {
-  if (points.length < 2) return null;
-  const middle = { lat: (section.a.lat + section.b.lat) / 2, lon: (section.a.lon + section.b.lon) / 2 };
-  let leg = 0, nearest = Infinity;
-  for (let i = 0; i < points.length - 1; i++) {
-    const distance = distanceToLegNm(middle, points[i]!, points[i + 1]!);
-    if (distance < nearest) { nearest = distance; leg = i; }
-  }
-  const dx = (section.b.lon - section.a.lon) * Math.cos(middle.lat * Math.PI / 180) * 60;
-  const dy = (section.b.lat - section.a.lat) * 60, length = Math.hypot(dx, dy);
-  if (!Number.isFinite(length) || length < 0.01) return null;
-  const offset = clearanceNm + length / 2;
-  const candidates = [1, -1].map((side) => {
-    const detours = [0.25, 0.75].map((fraction) => ({
-      lat: section.a.lat + (section.b.lat - section.a.lat) * fraction + side * (dx / length) * offset / 60,
-      lon: section.a.lon + (section.b.lon - section.a.lon) * fraction + side * (-dy / length) * offset / (60 * Math.cos(middle.lat * Math.PI / 180)),
-    }));
-    return [...points.slice(0, leg + 1), ...detours, ...points.slice(leg + 1)];
-  }).filter((route) => {
-    const changed = route.slice(Math.max(0, leg), Math.min(route.length, leg + 4));
-    return changed.every((point) => !onLand(point) && !inLagoon(point)) && changed.slice(1).every((point, i) => !crossesLand(changed[i]!, point));
-  });
-  if (!candidates.length) return null;
-  const extra = (route: RoutePoint[]) => route.slice(1).reduce((sum, point, i) => sum + distanceNm(route[i]!, point), 0);
-  return candidates.sort((a, b) => extra(a) - extra(b))[0]!;
 }
