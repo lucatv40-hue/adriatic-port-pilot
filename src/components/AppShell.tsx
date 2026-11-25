@@ -1,10 +1,11 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Anchor, Map, Navigation, Ship, Table2, Moon, Sun, Megaphone, Layers, Bookmark } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { AppUtilities } from "@/components/AppUtilities";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { FooterPanel } from "@/components/FooterPanel";
 
 const NAV = [
   { to: "/", key: "map", icon: Map },
@@ -18,6 +19,10 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(false);
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const panel = NAV.find((item) => item.to !== "/" && item.to === pathname);
+  const [loweredPath, setLoweredPath] = useState<string | null>(null);
+  const collapsed = loweredPath === pathname;
   useEffect(() => {
     const saved = localStorage.getItem("ra-theme");
     const d = saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -42,10 +47,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         <AppUtilities />
         </div>
       </header>
-      <main className="min-h-0 flex-1 overflow-y-auto pb-[calc(3rem+env(safe-area-inset-bottom))]">{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 z-[1000] grid grid-cols-7 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+      <main className="min-h-0 flex-1 overflow-y-auto pb-[calc(3.25rem+env(safe-area-inset-bottom))]">
+        {panel ? <FooterPanel title={t(panel.key)} collapsed={collapsed} onToggle={() => setLoweredPath(collapsed ? null : pathname)}>{children}</FooterPanel> : children}
+      </main>
+      <nav className="fixed inset-x-0 bottom-0 z-[1000] grid h-[calc(3.25rem+env(safe-area-inset-bottom))] grid-cols-7 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
         {NAV.map(({ to, key, icon: Icon }) => (
-          <Link key={to} to={to} activeOptions={{ exact: to === "/" }}
+          <Link key={to} to={to} onClick={() => setLoweredPath(null)} activeOptions={{ exact: to === "/" }}
             className="flex flex-col items-center gap-0.5 py-1 text-xs font-bold text-muted-foreground"
             activeProps={{ className: "text-primary" }}>
             <Icon className="h-6 w-6" />{t(key)}

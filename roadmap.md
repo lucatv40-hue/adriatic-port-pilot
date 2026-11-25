@@ -7,6 +7,7 @@
 
 - [x] Colorare le scie del vento secondo l'intensità con scala stile Windy.
 - [x] Compattare tutti i pulsanti e le schede mantenendo le dimensioni dei caratteri.
+- [x] Schede della navigazione inferiore richiudibili con X e abbassabili/rialzabili con un tocco, mantenendo i dati inseriti; verificate su cellulare e PC.
 
 ## Aperto
 - (nessuno)
