@@ -119,6 +119,18 @@
   --forecast-wave: oklch(0.43 0.12 265);
   --chart-label-background: oklch(1 0 0 / 0%);
   --chart-label-foreground: oklch(0.3 0.09 255);
+  --wind-flow-calm: oklch(0.55 0.15 260);
+  --wind-flow-light: oklch(0.65 0.13 220);
+  --wind-flow-breeze: oklch(0.64 0.18 150);
+  --wind-flow-moderate: oklch(0.83 0.18 100);
+  --wind-flow-fresh: oklch(0.72 0.2 60);
+  --wind-flow-strong: oklch(0.57 0.24 27);
+  --wind-flow-gale: oklch(0.5 0.24 310);
+  --wind-flow-storm: oklch(0.42 0.2 290);
+  --wind-flow-scale: linear-gradient(to right, var(--wind-flow-calm), var(--wind-flow-light) 10%, var(--wind-flow-breeze) 20%, var(--wind-flow-moderate) 30%, var(--wind-flow-fresh) 40%, var(--wind-flow-strong) 60%, var(--wind-flow-gale) 80%, var(--wind-flow-storm));
+  --control-space: 0.5em;
+  --panel-space: 0.75rem;
+  --group-space: 0.875rem;
 }
 
 .dark {
@@ -202,11 +214,11 @@ button, a, input, label { touch-action: manipulation; }
 .notice-area.danger { stroke: var(--destructive); fill: var(--destructive); }
 
 .route-curtain { position: absolute; bottom: 0; left: 0; right: 0; z-index: 600; display: flex; flex-direction: column; max-width: 40rem; margin-inline: auto; background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); border-bottom: 0; border-radius: 8px 8px 0 0; box-shadow: var(--shadow-float); transition: height .22s ease; overflow: hidden; }
-.route-curtain.stage-0 { height: 64px; }
+.route-curtain.stage-0 { height: 48px; }
 .route-curtain.stage-1 { height: 45%; }
 .route-curtain.stage-2 { height: min(88%, calc(100% - 144px)); }
 .route-curtain.is-dragging { transition: none; }
-.curtain-grip { flex-shrink: 0; height: 64px; cursor: ns-resize; touch-action: none; user-select: none; }
+.curtain-grip { flex-shrink: 0; height: 48px; cursor: ns-resize; touch-action: none; user-select: none; }
 .curtain-grip button { touch-action: none; }
 .curtain-handle { display: block; width: 40px; height: 4px; border-radius: 4px; margin: 7px auto 2px; background: var(--muted-foreground); }
 .leaflet-control-rotate { background: var(--card) !important; color: var(--foreground) !important; }
@@ -226,14 +238,14 @@ button, a, input, label { touch-action: manipulation; }
 @media (min-width: 1024px) { .weather-bar { right: 28rem; } }
 .weather-mode { display: flex; background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-float); padding: 0; }
 .weather-mode button { height: 22px; padding-inline: 7px; font-size: 12px; }
-.weather-timeline { display: flex; align-items: center; flex: 1 1 240px; min-width: 0; max-width: 460px; height: 46px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-float); padding: 0 2px; }
+.weather-timeline { display: flex; align-items: center; flex: 1 1 240px; min-width: 0; max-width: 460px; height: 32px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow-float); padding: 0 2px; }
 .weather-timeline .forecast-hour { height: 24px; }
 @media (min-width: 1024px) {
   .route-curtain { left: auto; right: 64px; top: 90px; bottom: 32px; width: 384px; max-width: calc(100% - 100px); border-bottom: 1px solid var(--border); border-radius: 8px; }
   .route-curtain.stage-0, .route-curtain.stage-1, .route-curtain.stage-2 { height: auto; }
-  .route-curtain .curtain-grip { cursor: default; height: 60px; }
+  .route-curtain .curtain-grip { cursor: default; height: 48px; }
   .route-curtain .curtain-grip button, .route-curtain .curtain-handle { display: none; }
-  .route-curtain .curtain-grip > div { padding-top: 16px; }
+  .route-curtain .curtain-grip > div { padding-top: 8px; }
 }
 
 .boat-sim svg { fill: var(--primary); stroke: var(--primary-foreground); stroke-width: 1.5; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .4)); }
@@ -251,3 +263,43 @@ button, a, input, label { touch-action: manipulation; }
 .sail-line { stroke: var(--success, var(--primary)); stroke-dasharray: 2 6; stroke-linecap: round; }
 .draw-bar { position: absolute; left: 50%; bottom: 76px; transform: translateX(-50%); z-index: 560; display: flex; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px; box-shadow: var(--shadow-float); }
 .drag-handle { cursor: move; touch-action: none; }
+
+/* Font-relative controls: preserve text size, remove oversized fixed heights. */
+.ui-button {
+  height: auto;
+  min-height: calc(2em + 2px);
+  padding-block: var(--control-space);
+  line-height: 1;
+}
+.ui-button-icon {
+  width: calc(2em + 2px);
+  height: calc(2em + 2px);
+  min-height: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+.weather-mode .ui-button { min-height: 0; }
+.weather-bar { align-items: center; }
+.draw-bar { padding: 3px; gap: 4px; }
+.leaflet-control-rotate a { min-width: 30px; min-height: 30px; }
+
+/* Compact content only: never rescale chart coordinates, map tiles or fonts. */
+:is(.app-density main, .compact-panel) :is(.space-y-4, .space-y-5, .space-y-6, .space-y-8) > :not(:last-child) {
+  margin-block-end: min(1em, var(--group-space));
+}
+:is(.app-density main, .compact-panel) :is(.gap-3, .gap-4, .gap-5, .gap-6, .gap-8) { gap: var(--panel-space); }
+:is(.app-density main, .compact-panel) :is(.p-4, .p-5, .p-6, .p-8) { padding: var(--panel-space); }
+:is(.app-density main, .compact-panel) :is(.pb-4, .pb-5, .pb-6) { padding-bottom: var(--panel-space); }
+:is(.app-density main, .compact-panel) :is(.mt-4, .mt-5, .mt-6) { margin-top: min(1em, var(--group-space)); }
+:is(.app-density main, .compact-panel) :is(.mb-4, .mb-5, .mb-6) { margin-bottom: min(1em, var(--group-space)); }
+:is(.compact-panel, .app-density main article, .app-density main section) :is(p, label, h2, h3, li) { line-height: 1.25; }
+:is(.app-density main, .compact-panel) :is(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), [role="combobox"]) {
+  height: auto;
+  min-height: calc(2em + 2px);
+  padding-block: var(--control-space);
+  line-height: 1;
+}
+.compact-panel .px-4 { padding-inline: var(--panel-space); }
+.wind-flow-legend { width: 168px; max-width: 100%; font-size: 10px; line-height: 1.1; background: var(--card); color: var(--card-foreground); padding: 3px 5px; border-radius: 4px; }
+.wind-flow-ramp { height: 5px; background: var(--wind-flow-scale); border-radius: 2px; }
+.wind-flow-ticks { display: flex; justify-content: space-between; padding-top: 2px; }

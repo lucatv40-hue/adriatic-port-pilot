@@ -1,14 +1,18 @@
 import { useEffect, useRef } from "react";
 import type L from "leaflet";
 import { windGridAtTime, type WindGrid } from "@/lib/wind-grid";
-import { advectParticle, flowBand, seedParticle, type FlowParticle } from "@/lib/wind-flow";
+import { advectParticle, seedParticle, type FlowParticle } from "@/lib/wind-flow";
 
-const BAND_TOKEN: Record<string, string> = {
-  calm: "--muted-foreground",
-  breeze: "--forecast-wind",
-  fresh: "--forecast-gust",
-  gale: "--destructive",
-};
+const COLOR_STOPS = [
+  { kn: 0, token: "--wind-flow-calm" },
+  { kn: 5, token: "--wind-flow-light" },
+  { kn: 10, token: "--wind-flow-breeze" },
+  { kn: 15, token: "--wind-flow-moderate" },
+  { kn: 20, token: "--wind-flow-fresh" },
+  { kn: 30, token: "--wind-flow-strong" },
+  { kn: 40, token: "--wind-flow-gale" },
+  { kn: 50, token: "--wind-flow-storm" },
+] as const;
 
 /**
  * Canvas overlay that advects particles through the real model grid.
@@ -23,7 +27,7 @@ export function WindFlowLayer({ map, frames, time }: { map: L.Map | null; frames
     canvas.className = "wind-flow-canvas"; canvas.setAttribute("aria-hidden", "true"); container.appendChild(canvas);
     const ctx = canvas.getContext("2d");
     if (!ctx) { canvas.remove(); return; }
-    let frame = 0, visible = true, last = 0, particles: FlowParticle[] = [];
+    let frame = 0, visible = true, last = 0, previousTime: number | null = null, particles: FlowParticle[] = [];
     const observer = new IntersectionObserver((entries) => { visible = entries[0]?.isIntersecting ?? false; });
     observer.observe(container);
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
@@ -44,7 +48,19 @@ export function WindFlowLayer({ map, frames, time }: { map: L.Map | null; frames
       const near = times.find((t) => Math.abs(t - asked) < 3_600_000 && (data.length === 1 || asked < Math.min(...times) || asked > Math.max(...times)));
       const at = near ?? asked;
       if (!Number.isFinite(at) || data.length === 0) { ctx.clearRect(0, 0, width, height); particles = []; return; }
+      if (previousTime !== at) { ctx.clearRect(0, 0, width, height); previousTime = at; }
       const css = getComputedStyle(container), token = (name: string) => css.getPropertyValue(name).trim();
+      const windColor = (kn: number) => {
+        let lower: { kn: number; token: string } = COLOR_STOPS[0];
+        for (const upper of COLOR_STOPS.slice(1)) {
+          if (kn <= upper.kn) {
+            const weight = Math.max(0, Math.min(100, (kn - lower.kn) / (upper.kn - lower.kn) * 100));
+            return `color-mix(in oklch, ${token(lower.token)} ${100 - weight}%, ${token(upper.token)} ${weight}%)`;
+          }
+          lower = upper;
+        }
+        return token(lower.token);
+      };
       const box = map.getBounds();
       const view = { west: box.getWest(), south: box.getSouth(), east: box.getEast(), north: box.getNorth() };
       const target = Math.max(120, Math.min(900, Math.round(width * height / 2600)));
@@ -60,7 +76,6 @@ export function WindFlowLayer({ map, frames, time }: { map: L.Map | null; frames
       ctx.fillStyle = reduced.matches ? "rgba(0,0,0,1)" : "rgba(0,0,0,0.08)";
       ctx.fillRect(0, 0, width, height);
       ctx.globalCompositeOperation = "source-over";
-      const bearing = map.getBearing();
       const next: FlowParticle[] = [];
       for (const p of particles) {
         const moved = advectParticle(data, at, p, view, dt);
@@ -74,9 +89,9 @@ export function WindFlowLayer({ map, frames, time }: { map: L.Map | null; frames
         const from = map.latLngToContainerPoint([p.lat, p.lon]);
         const to = map.latLngToContainerPoint([moved.lat, moved.lon]);
         ctx.lineCap = "round";
-        ctx.strokeStyle = token(BAND_TOKEN[flowBand(wind.speedKn)] ?? "--forecast-wind");
-        ctx.lineWidth = wind.speedKn >= 35 ? 1.8 : wind.speedKn >= 20 ? 1.4 : 1;
-        ctx.globalAlpha = 0.85;
+        ctx.strokeStyle = windColor(wind.speedKn);
+        ctx.lineWidth = wind.speedKn >= 35 ? 1.8 : wind.speedKn >= 20 ? 1.4 : 1.2;
+        ctx.globalAlpha = 1;
         ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
         ctx.globalAlpha = 1;
         next.push(moved);

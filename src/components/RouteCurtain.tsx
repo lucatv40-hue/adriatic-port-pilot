@@ -18,7 +18,7 @@ export function RouteCurtain({ children, summary }: { children: ReactNode; summa
   const drag = useRef<{ y: number; height: number; moved: boolean } | null>(null);
 
   return (
-    <section ref={sheet} style={desktop ? move.style : undefined} className={`route-curtain stage-${stage}`} aria-label="Dati e grafici della tratta">
+    <section ref={sheet} style={desktop ? move.style : undefined} className={`compact-panel route-curtain stage-${stage}`} aria-label="Dati e grafici della tratta">
       <div className="curtain-grip drag-handle" title={desktop ? "Trascina per spostare" : undefined} onPointerDown={(e) => {
         if (desktop) { move.handleProps.onPointerDown(e); return; }
         if (desktop || e.button !== 0 || !sheet.current || (e.target as HTMLElement).closest("button")) return;
@@ -32,15 +32,15 @@ export function RouteCurtain({ children, summary }: { children: ReactNode; summa
         if (Math.abs(delta) > 4) d.moved = true;
         if (!d.moved) return;
         el.classList.add("is-dragging");
-        el.style.height = `${Math.max(64, Math.min(parent.clientHeight * .88, parent.clientHeight - 144, d.height + delta))}px`;
+        el.style.height = `${Math.max(48, Math.min(parent.clientHeight * .88, parent.clientHeight - 144, d.height + delta))}px`;
       }} onPointerUp={(e) => {
         move.handleProps.onPointerUp();
         const d = drag.current, el = sheet.current, parent = el?.parentElement;
         if (!d || !el || !parent) return;
         if (d.moved) {
-          const heights = [64, parent.clientHeight * .45, Math.max(64, Math.min(parent.clientHeight * .88, parent.clientHeight - 144))];
+          const heights = [48, parent.clientHeight * .45, Math.max(48, Math.min(parent.clientHeight * .88, parent.clientHeight - 144))];
           const h = el.getBoundingClientRect().height;
-          setStage(heights.reduce((best, value, i) => Math.abs(value - h) < Math.abs((heights[best] ?? 64) - h) ? i : best, 0));
+          setStage(heights.reduce((best, value, i) => Math.abs(value - h) < Math.abs((heights[best] ?? 48) - h) ? i : best, 0));
         } else if (!(e.target as HTMLElement).closest("button")) setStage(stage === 0 ? 1 : 0);
         el.style.removeProperty("height");
         el.classList.remove("is-dragging");

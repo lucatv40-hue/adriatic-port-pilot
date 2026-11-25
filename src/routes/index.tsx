@@ -67,13 +67,13 @@ function Index() {
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cerca porto o località" aria-label="Cerca porto"
-            className="h-12 rounded-full bg-card pl-10 pr-10 text-base shadow-float" />
+            className="h-8 rounded-lg bg-card pl-10 pr-10 text-base shadow-float" />
           {query && <Button size="icon" variant="ghost" onClick={() => setQuery("")} aria-label="Cancella" className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="h-5 w-5" /></Button>}
           {query && list.length > 0 && (
-            <ul className="absolute inset-x-0 top-14 max-h-64 overflow-y-auto rounded-2xl border bg-card shadow-float">
+            <ul className="absolute inset-x-0 top-9 max-h-64 overflow-y-auto rounded-lg border bg-card shadow-float">
               {list.slice(0, 6).map((p) => (
-                <li key={p.id}><button className="w-full px-4 py-3 text-left" onClick={() => { setSelected(p.id); setQuery(""); }}>
-                  <span className="font-bold">{p.name}</span> <span className="text-sm text-muted-foreground">· {p.town}</span></button></li>))}
+                <li key={p.id}><Button variant="ghost" className="w-full justify-start whitespace-normal rounded-none px-3 text-left" onClick={() => { setSelected(p.id); setQuery(""); }}>
+                  <span className="font-bold">{p.name}</span> <span className="text-sm text-muted-foreground">· {p.town}</span></Button></li>))}
             </ul>)}
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">

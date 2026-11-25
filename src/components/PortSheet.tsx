@@ -25,7 +25,7 @@ export function PortSheet({ port: base, boat, onClose }: { port: Port | undefine
   const fit = port ? checkFit(port, boat) : null;
   return (
     <Drawer open={!!port} onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent className="z-[1100] max-h-[88dvh]">
+      <DrawerContent className="compact-panel z-[1100] max-h-[88dvh]">
         {port && (
           <div className="overflow-y-auto px-4 pb-6">
             {photos.length ? (

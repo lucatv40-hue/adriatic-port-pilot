@@ -38,7 +38,7 @@ export function DepartureAdvice({ points, departure, speedKn, thresholds, sailMo
   useEffect(() => { onHighlight(worst); }, [worst, onHighlight]);
 
   return (
-    <div className="fixed inset-x-2 top-[7.5rem] z-[1100] mx-auto max-h-[70vh] max-w-md overflow-y-auto rounded-lg border bg-card p-3 text-card-foreground shadow-float" role="dialog" aria-label="Info Rotta">
+    <div className="compact-panel fixed inset-x-2 top-[5rem] z-[1100] mx-auto max-h-[78vh] max-w-md overflow-y-auto rounded-lg border bg-card p-3 text-card-foreground shadow-float" role="dialog" aria-label="Info Rotta">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="font-bold">Info Rotta · prossimi 3 giorni</h2>
         <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Chiudi" onClick={onClose}><X className="h-4 w-4" /></Button>

@@ -19,6 +19,7 @@ import { RouteWeather } from "@/components/RouteWeather";
 import { ShelteredBays } from "@/components/ShelteredBays";
 import { RouteCurtain } from "@/components/RouteCurtain";
 import { WeatherTimeline } from "@/components/WeatherTimeline";
+import { WindFlowLegend } from "@/components/WindFlowLegend";
 import { VoyagePlayer } from "@/components/VoyagePlayer";
 import { DepartureAdvice } from "@/components/DepartureAdvice";
 import { boatAt, alongSailLeg } from "@/lib/voyage";
@@ -179,7 +180,8 @@ function PlanInner() {
         <Button size="sm" variant={sailMode === "vmc" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "vmc"} onClick={() => setSailMode("vmc")}>VMC massima</Button>
         <Button size="sm" variant={sailMode === "comfort" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "comfort"} onClick={() => setSailMode("comfort")}>Comoda · 60°</Button>
       </div>}
-      {animated && points.length >= 2 && q.data && <WeatherTimeline key={`${from}-${to}-icon2i`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}</div>
+      {animated && points.length >= 2 && q.data && <WeatherTimeline key={`${from}-${to}-icon2i`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}
+      {animated && windGrid.length > 0 && <WindFlowLegend />}</div>
       {advice && points.length >= 2 && q.data && <DepartureAdvice points={points} departure={start} speedKn={Number(speed)} thresholds={t} sailMode={sailMode} initial={sail ? "vela" : "motore"} onHighlight={setHazard} onClose={() => setAdvice(false)} onUse={(d, m) => { setReference(null); setSelectedTime(null); setDeparture(localDepartureValue(new Date(d))); setSail(m === "vela"); setAdvice(false); }} />}
       {voyage && points.length >= 2 && q.data && schedule.length >= 2 && <VoyagePlayer points={points} stops={schedule} forecasts={q.data} speedKn={Number(speed)} time={simTime} onTime={setVoyageTime} onShift={shiftDeparture} thresholds={t} />}
 
