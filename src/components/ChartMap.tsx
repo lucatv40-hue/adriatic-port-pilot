@@ -51,7 +51,7 @@ export default function ChartMap({ layers, on }: { layers: ChartLayers; on: Char
     m.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "bottom-right");
     m.addControl(new maplibregl.GeolocateControl({ trackUserLocation: true }), "bottom-right");
     m.on("load", () => {
-      m.addImage("arrow-wind", arrow("#0b3d91")); m.addImage("arrow-wave", arrow("#0e7490")); m.addImage("arrow-cur", arrow("#7c3aed"));
+      m.addImage("arrow-wind", arrow("#0b3d91")); m.addImage("arrow-wave", arrow("#0e7490")); m.addImage("arrow-cur", arrow("#c2410c"));
       const foreground = labelColor(m.getContainer());
       const empty = { type: "FeatureCollection" as const, features: [] };
       for (const k of ["wind", "waves", "currents", "cape", "notices"]) m.addSource(k, { type: "geojson", data: empty });
