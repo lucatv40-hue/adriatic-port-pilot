@@ -65,6 +65,8 @@
   --color-forecast-wind: var(--forecast-wind);
   --color-forecast-gust: var(--forecast-gust);
   --color-forecast-wave: var(--forecast-wave);
+  --color-chart-label-background: var(--chart-label-background);
+  --color-chart-label-foreground: var(--chart-label-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -115,6 +117,8 @@
   --forecast-wind: oklch(0.46 0.13 238);
   --forecast-gust: oklch(0.48 0.11 180);
   --forecast-wave: oklch(0.43 0.12 265);
+  --chart-label-background: oklch(0.25 0.08 255);
+  --chart-label-foreground: oklch(1 0 0);
 }
 
 .dark {
