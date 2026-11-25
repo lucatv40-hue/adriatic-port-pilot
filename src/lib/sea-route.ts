@@ -1,9 +1,27 @@
+import { LAGOON_TRACKS } from "@/data/lagoon-tracks";
 // Pure sea routing: lagoon ports leave through channels to the nearest useful inlet,
 // open-sea legs avoid coarse land polygons via offshore gates (visibility graph + Dijkstra).
 export type LL = { lat: number; lon: number };
 type Poly = [number, number][]; // [lat, lon]
 
 const p = (lat: number, lon: number): LL => ({ lat, lon });
+
+/**
+ * Venice-lagoon marinas: tracks along the centre of the marked channels to each inlet,
+ * precomputed with the Laguna Nav engine (OSM channel network) by tools/lagoon-tracks.
+ */
+const TRACKS = LAGOON_TRACKS;
+const TRACK_BUOYS: Record<string, LL> = { lido: p(45.42, 12.458), malamocco: p(45.322, 12.372), chioggia: p(45.232, 12.348) };
+const trackKey = (q: LL) => `${q.lat.toFixed(4)},${q.lon.toFixed(4)}`;
+function channelTracks(pt: LL): { channel: LL[]; buoy: LL }[] | null {
+  const t = TRACKS[trackKey(pt)];
+  if (!t) return null;
+  return Object.entries(t).flatMap(([k, pts]) => {
+    const buoy = TRACK_BUOYS[k];
+    return buoy && pts.length > 1 ? [{ channel: [pt, ...pts.slice(1).map(([la, lo]) => p(la!, lo!)), buoy], buoy }] : [];
+  });
+}
+const pathLen = (pts: LL[]) => pts.slice(1).reduce((s, c, i) => s + dist(pts[i]!, c), 0);
 
 /** Lagoons: area polygon + channels ordered inside → outside the inlet (bocca). */
 export const LAGOONS: { name: string; area: Poly; exits: { name: string; channel: LL[]; buoy: LL }[] }[] = [
@@ -91,6 +109,11 @@ export const inLagoon = (pt: LL) => LAGOONS.some((l) => inside(pt, l.area));
 export function lagoonExit(pt: LL, toward: LL): LL[] | null {
   const lagoon = LAGOONS.find((l) => inside(pt, l.area));
   if (!lagoon) return null;
+  const known = channelTracks(pt);
+  if (known?.length) {
+    const b = known.reduce((x, y) => (pathLen(y.channel) + dist(y.buoy, toward) < pathLen(x.channel) + dist(x.buoy, toward) ? y : x));
+    return b.channel;
+  }
   let best: LL[] = [], cost = Infinity;
   for (const e of lagoon.exits) {
     let k = 0; e.channel.forEach((c, i) => { if (dist(pt, c) < dist(pt, e.channel[k]!)) k = i; });
@@ -105,6 +128,8 @@ export function lagoonExit(pt: LL, toward: LL): LL[] | null {
 function exitWithBuoy(pt: LL, toward: LL): { channel: LL[]; buoy: LL } | null {
   const lagoon = LAGOONS.find((l) => inside(pt, l.area));
   if (!lagoon) return null;
+  const known = channelTracks(pt);
+  if (known?.length) return known.reduce((x, y) => (pathLen(y.channel) + dist(y.buoy, toward) < pathLen(x.channel) + dist(x.buoy, toward) ? y : x));
   let best: { channel: LL[]; buoy: LL } | null = null, cost = Infinity;
   for (const e of lagoon.exits) {
     let k = 0; e.channel.forEach((c, i) => { if (dist(pt, c) < dist(pt, e.channel[k]!)) k = i; });

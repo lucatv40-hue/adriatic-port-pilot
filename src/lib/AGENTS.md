@@ -1,2 +1,2 @@
-- sea-route.ts: lagoon ports exit via inlet channels; sea legs avoid coarse land polygons through offshore gates (tested).
+- sea-route.ts: Venice-lagoon marinas follow precomputed channel-centre tracks (src/data/lagoon-tracks.ts, generated from the Laguna Nav engine by tools/lagoon-tracks) because hand-drawn channels cut across land; other lagoon ports exit via inlet channels; sea legs avoid coarse land polygons through offshore gates (tested).
 - sea-route.ts routePlan: lagoon departures draw channels to the inlet's safe-water buoy; weather points are equally spaced on the sea leg starting at that buoy (tested).

@@ -7,11 +7,17 @@ const legsOk = (r: { lat: number; lon: number }[]) => r.slice(1).every((q, i) =>
 describe("sea route", () => {
   it("Venice lagoon port leaves via Lido inlet toward Trieste", () => {
     const ex = lagoonExit(certosa, sangiusto)!;
-    expect(ex[ex.length - 1]!.lon).toBeCloseTo(12.44, 2);
+    expect(ex[ex.length - 1]!.lon).toBeCloseTo(12.458, 2);
   });
   it("Chioggia port leaves via Chioggia inlet toward Pula", () => {
     const ex = lagoonExit(chioggia, pula)!;
     expect(ex[ex.length - 1]!.lat).toBeCloseTo(45.234, 2);
+  });
+  it("Marina Fiorita follows the Treporti channel centre (Laguna Nav network) to the Lido jetty, then the buoy", () => {
+    const ex = lagoonExit({ lat: 45.4722, lon: 12.4492 }, sangiusto)!;
+    expect(ex.some((q) => Math.abs(q.lat - 45.4425) < 1e-3 && Math.abs(q.lon - 12.4174) < 1e-3)).toBe(true);
+    expect(ex.at(-2)).toEqual({ lat: 45.4283, lon: 12.4482 });
+    expect(ex.at(-1)).toEqual({ lat: 45.42, lon: 12.458 });
   });
   it("Trieste to Pula never crosses Istria", () => {
     const r = seaRoute(sangiusto, pula);
