@@ -10,7 +10,7 @@ import { holdGesture } from "@/lib/hold-gesture";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick }: { sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track }: { track?: P[]; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -51,7 +51,8 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     const g = route.current, m = map.current; if (!g || !m) return; g.clearLayers();
     if (points.length < 2) return;
     const ll = points.map((p) => [p.lat, p.lon] as L.LatLngTuple);
-    L.polyline(ll, { className: "route-line", weight: 4, dashArray: "8 8" }).addTo(g);
+    const line = track && track.length > 1 ? track.map((p) => [p.lat, p.lon] as L.LatLngTuple) : ll;
+    L.polyline(line, { className: "route-line", weight: 4, dashArray: "8 8" }).addTo(g);
     const abort = new AbortController();
     const holds: ReturnType<typeof holdGesture>[] = [];
     waypoints.current = ll.map((x, i) => {
@@ -69,9 +70,9 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
       }
       return marker;
     });
-    if (!drawing) m.fitBounds(L.latLngBounds(ll), { animate: false, paddingTopLeft: [65, 150], paddingBottomRight: [window.matchMedia("(min-width: 1024px)").matches ? 450 : 65, 240] });
+    if (!drawing) m.fitBounds(L.latLngBounds(line), { animate: false, paddingTopLeft: [65, 150], paddingBottomRight: [window.matchMedia("(min-width: 1024px)").matches ? 450 : 65, 240] });
     return () => { abort.abort(); holds.forEach(hold => hold.end()); };
-  }, [points, drawing]);
+  }, [points, drawing, track]);
 
   useEffect(() => {
     waypoints.current.forEach((marker, i) => {

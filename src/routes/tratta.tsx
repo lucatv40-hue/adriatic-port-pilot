@@ -22,7 +22,7 @@ import { WeatherTimeline } from "@/components/WeatherTimeline";
 import { VoyagePlayer } from "@/components/VoyagePlayer";
 import { boatAt, alongSailLeg } from "@/lib/voyage";
 import { useWindGrid } from "@/lib/wind-grid-loader";
-import { seaRoute, crossesLand, onLand, inLagoon } from "@/lib/sea-route";
+import { routePlan, crossesLand, onLand, inLagoon } from "@/lib/sea-route";
 
 /** Six-hourly ICON-2I grid published by the GitHub Actions workflow to GitHub Pages. */
 const WIND_GRID_URL = "https://lucatv40-hue.github.io/adriatic-port-pilot";
@@ -66,7 +66,8 @@ function PlanInner() {
   }, []);
   const { t, save } = useThresholds();
   const a = from ? getPort(from) : undefined, b = to ? getPort(to) : undefined;
-  const portPoints = useMemo(() => (a && b ? seaRoute(a, b, 5) : []), [a, b]);
+  const plan = useMemo(() => (a && b ? routePlan(a, b, 5) : null), [a, b]);
+  const portPoints = plan?.points ?? [];
   const points = free ? freePoints : portPoints;
   const routeKey = points.map((p) => `${p.lat},${p.lon}`).join(";");
   const q = useQuery({ queryKey: ["route48", routeKey, "icon2i-only"], queryFn: () => fetchRouteForecast(points), enabled: points.length >= 2, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
@@ -127,7 +128,7 @@ function PlanInner() {
     <div className="relative h-full min-h-0 overflow-hidden">
       <div className="absolute inset-0">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
+          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap track={free ? undefined : plan?.track} from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
         <div className="absolute left-3 right-16 top-2 lg:right-[27rem] z-[500] flex items-center justify-between gap-1 rounded-md bg-card px-1.5 py-0.5 text-xs font-bold shadow-float">
           <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="min-w-0 break-words">

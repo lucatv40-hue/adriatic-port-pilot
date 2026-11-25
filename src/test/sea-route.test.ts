@@ -24,3 +24,16 @@ describe("sea route", () => {
     expect(legsOk(r.slice(4))).toBe(true);
   });
 });
+
+import { routePlan, onLand as _onLand, inLagoon as _inLagoon } from "@/lib/sea-route";
+describe("routePlan", () => {
+  it("lagoon departure: first weather point is the safe-water buoy outside Bocca di Lido, points equally spaced at sea", () => {
+    const r = routePlan({ lat: 45.4505, lon: 12.4335 }, { lat: 45.5, lon: 13.55 }, 5);
+    expect(r.points[0]).toEqual({ lat: 45.42, lon: 12.458 });
+    expect(r.points).toHaveLength(5);
+    r.points.forEach((q) => { expect(_inLagoon(q)).toBe(false); expect(_onLand(q)).toBe(false); });
+    expect(r.track[0]).toEqual({ lat: 45.4505, lon: 12.4335 });
+    const d = r.points.slice(1).map((q, i) => Math.hypot(q.lat - r.points[i]!.lat, q.lon - r.points[i]!.lon));
+    expect(Math.max(...d) / Math.min(...d)).toBeLessThan(1.6);
+  });
+});

@@ -1,1 +1,2 @@
 - sea-route.ts: lagoon ports exit via inlet channels; sea legs avoid coarse land polygons through offshore gates (tested).
+- sea-route.ts routePlan: lagoon departures draw channels to the inlet's safe-water buoy; weather points are equally spaced on the sea leg starting at that buoy (tested).

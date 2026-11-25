@@ -6,26 +6,26 @@ type Poly = [number, number][]; // [lat, lon]
 const p = (lat: number, lon: number): LL => ({ lat, lon });
 
 /** Lagoons: area polygon + channels ordered inside → outside the inlet (bocca). */
-export const LAGOONS: { name: string; area: Poly; exits: { name: string; channel: LL[] }[] }[] = [
+export const LAGOONS: { name: string; area: Poly; exits: { name: string; channel: LL[]; buoy: LL }[] }[] = [
   {
     name: "Laguna di Venezia",
     area: [[45.56, 12.18], [45.56, 12.47], [45.49, 12.47], [45.465, 12.455], [45.445, 12.44], [45.42, 12.395], [45.34, 12.31], [45.24, 12.292], [45.2, 12.285], [45.14, 12.27], [45.14, 12.12]],
     exits: [
-      { name: "Bocca di Lido (Treporti)", channel: [p(45.468, 12.442), p(45.452, 12.432), p(45.435, 12.425), p(45.425, 12.428), p(45.416, 12.44)] },
-      { name: "Bocca di Lido", channel: [p(45.431, 12.355), p(45.428, 12.38), p(45.4225, 12.408), p(45.416, 12.44)] },
-      { name: "Bocca di Malamocco", channel: [p(45.375, 12.31), p(45.345, 12.316), p(45.335, 12.33), p(45.328, 12.355)] },
-      { name: "Bocca di Chioggia", channel: [p(45.222, 12.284), p(45.229, 12.298), p(45.233, 12.312), p(45.234, 12.335)] },
+      { name: "Bocca di Lido (Treporti)", channel: [p(45.468, 12.442), p(45.452, 12.432), p(45.435, 12.425), p(45.425, 12.428), p(45.416, 12.44)], buoy: p(45.42, 12.458) },
+      { name: "Bocca di Lido", channel: [p(45.431, 12.355), p(45.428, 12.38), p(45.4225, 12.408), p(45.416, 12.44)], buoy: p(45.42, 12.458) },
+      { name: "Bocca di Malamocco", channel: [p(45.375, 12.31), p(45.345, 12.316), p(45.335, 12.33), p(45.328, 12.355)], buoy: p(45.322, 12.372) },
+      { name: "Bocca di Chioggia", channel: [p(45.222, 12.284), p(45.229, 12.298), p(45.233, 12.312), p(45.234, 12.335)], buoy: p(45.232, 12.348) },
     ],
   },
   {
     name: "Laguna di Marano",
     area: [[45.73, 12.98], [45.73, 13.2], [45.685, 13.163], [45.668, 13.04]],
-    exits: [{ name: "Bocca di Lignano", channel: [p(45.693, 13.11), p(45.686, 13.145), p(45.678, 13.158), p(45.665, 13.165)] }],
+    exits: [{ name: "Bocca di Lignano", channel: [p(45.693, 13.11), p(45.686, 13.145), p(45.678, 13.158), p(45.665, 13.165)], buoy: p(45.655, 13.17) }],
   },
   {
     name: "Laguna di Grado",
     area: [[45.71, 13.32], [45.71, 13.41], [45.679, 13.41], [45.679, 13.32]],
-    exits: [{ name: "Porto di Grado", channel: [p(45.68, 13.378), p(45.664, 13.385)] }],
+    exits: [{ name: "Porto di Grado", channel: [p(45.68, 13.378), p(45.664, 13.385)], buoy: p(45.65, 13.39) }],
   },
 ];
 
@@ -99,6 +99,56 @@ export function lagoonExit(pt: LL, toward: LL): LL[] | null {
     if (len < cost) { cost = len; best = ch; }
   }
   return [pt, ...best];
+}
+
+/** Like lagoonExit but also returns the safe-water buoy outside the chosen inlet. */
+function exitWithBuoy(pt: LL, toward: LL): { channel: LL[]; buoy: LL } | null {
+  const lagoon = LAGOONS.find((l) => inside(pt, l.area));
+  if (!lagoon) return null;
+  let best: { channel: LL[]; buoy: LL } | null = null, cost = Infinity;
+  for (const e of lagoon.exits) {
+    let k = 0; e.channel.forEach((c, i) => { if (dist(pt, c) < dist(pt, e.channel[k]!)) k = i; });
+    const ch = [pt, ...e.channel.slice(k), e.buoy];
+    const len = 3 * dist(pt, ch[1]!) + ch.slice(2).reduce((s, c, i) => s + dist(ch[i + 1]!, c), 0) + dist(e.buoy, toward);
+    if (len < cost) { cost = len; best = { channel: ch, buoy: e.buoy }; }
+  }
+  return best;
+}
+
+function resample(path: LL[], n: number): LL[] {
+  const seg = path.slice(1).map((q, i) => dist(path[i]!, q));
+  const total = seg.reduce((s, x) => s + x, 0);
+  if (total === 0) return [path[0]!, path[path.length - 1]!];
+  const out: LL[] = [];
+  for (let k = 0; k < n; k++) {
+    let d = (total * k) / (n - 1), i = 0;
+    while (i < seg.length - 1 && d > seg[i]!) { d -= seg[i]!; i++; }
+    const t = seg[i]! ? Math.min(1, d / seg[i]!) : 0, a = path[i]!, b = path[i + 1]!;
+    out.push(p(a.lat + (b.lat - a.lat) * t, a.lon + (b.lon - a.lon) * t));
+  }
+  return out;
+}
+
+const round = (q: LL) => p(+q.lat.toFixed(4), +q.lon.toFixed(4));
+
+/**
+ * Port-to-port plan: `track` is the full drawn line (lagoon channels + sea);
+ * `points` are n weather points equally spaced on the sea leg, starting at the
+ * safe-water buoy outside the inlet (or at the port when it is already at sea).
+ */
+export function routePlan(a: LL, b: LL, n = 5): { track: LL[]; points: LL[] } {
+  if (LAGOONS.some((l) => inside(a, l.area) && inside(b, l.area))) {
+    const pts = resample([a, b], n).map(round);
+    return { track: pts, points: pts };
+  }
+  const out = exitWithBuoy(a, b);
+  const start = out?.buoy ?? a;
+  const inn = exitWithBuoy(b, start);
+  const end = inn?.buoy ?? b;
+  const sea = seaPath(start, end);
+  const track = [...(out ? out.channel.slice(0, -1) : []), ...sea, ...(inn ? inn.channel.slice(0, -1).reverse() : [])]
+    .filter((q, i, arr) => i === 0 || dist(q, arr[i - 1]!) > 1e-6).map(round);
+  return { track, points: resample(sea, n).map(round) };
 }
 
 /** Port-to-port route through channels and around land, with at least `min` points. */
