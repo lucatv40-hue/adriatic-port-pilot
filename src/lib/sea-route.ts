@@ -38,7 +38,7 @@ export const LAGOONS: { name: string; area: Poly; exits: { name: string; channel
   {
     name: "Laguna di Marano",
     area: [[45.73, 12.98], [45.73, 13.2], [45.685, 13.163], [45.668, 13.04]],
-    exits: [{ name: "Bocca di Lignano", channel: [p(45.693, 13.11), p(45.686, 13.145), p(45.678, 13.158), p(45.665, 13.165)], buoy: p(45.655, 13.17) }],
+    exits: [{ name: "Bocca di Lignano", channel: [p(45.6984, 13.0763), p(45.6986, 13.085), p(45.6985, 13.095), p(45.6985, 13.1077), p(45.6995, 13.1125), p(45.698, 13.124), p(45.6935, 13.135), p(45.687, 13.143), p(45.68, 13.152), p(45.67, 13.16)], buoy: p(45.658, 13.168) }],
   },
   {
     name: "Laguna di Grado",
