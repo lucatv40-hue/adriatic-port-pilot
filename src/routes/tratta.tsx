@@ -4,7 +4,7 @@ import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { RotateCcw, Navigation2, TriangleAlert, Crosshair, Flag, Plus, Undo2, Sailboat } from "lucide-react";
-import { sailRoute } from "@/lib/sailing";
+import { sailRoute, type SailMode } from "@/lib/sailing";
 import { forecastAtArrival } from "@/lib/route-timing";
 import { getPort } from "@/lib/ports";
 import { noticesQuery, sourcesQuery, CATEGORY_LABEL } from "@/lib/notices";
@@ -57,6 +57,7 @@ function PlanInner() {
   const [draft, setDraft] = useState<{ lat: number; lon: number }[]>([]);
   const [freePoints, setFreePoints] = useState<{ lat: number; lon: number }[]>([]);
   const [sail, setSail] = useState(false);
+  const [sailMode, setSailMode] = useState<SailMode>("vmc");
   const centerRef = useRef<(() => { lat: number; lon: number } | null) | null>(null);
   useEffect(() => {
     const nextHour = new Date();
@@ -95,13 +96,14 @@ function PlanInner() {
   const twds = useMemo(() => points.slice(0, -1).map((_, i) => { const f = q.data?.[i], st = schedule[i]; return f && st ? forecastAtArrival(f.series, st.arrival)?.windDir ?? null : null; }), [points, q.data, schedule]);
   const sailing = useMemo(() => {
     if (!sail || !q.data) return null;
-    const r = sailRoute(points, twds, Number(speed));
+    const r = sailRoute(points, twds, Number(speed), sailMode);
     // Tacks are only kept at open sea: never on land, in a lagoon or across the coast.
-    const legs = r.legs.map((l, i) => { const t = l.tack, a = points[i]!, b = points[i + 1]!; return t && (onLand(t) || inLagoon(t) || inLagoon(a) || crossesLand(a, t) || crossesLand(t, b)) ? { ...l, tack: null, kind: "diretto" as const } : l; });
-    const path = points.length ? [points[0]!] : [];
-    legs.forEach((l, i) => { if (l.tack) path.push(l.tack); path.push(points[i + 1]!); });
-    return { ...r, legs, path };
-  }, [sail, q.data, points, twds, speed]);
+    const legs = r.legs.map((l, i) => { const t = l.tack, a = points[i], b = points[i + 1]; return t && a && b && (onLand(t) || inLagoon(t) || inLagoon(a) || crossesLand(a, t) || crossesLand(t, b)) ? { ...l, tack: null, kind: "diretto" as const } : l; });
+    const first = points[0];
+    const path = first ? [first] : [];
+    legs.forEach((l, i) => { const b = points[i + 1]; if (l.tack) path.push(l.tack); if (b) path.push(b); });
+    return { ...r, legs, path: Number.isFinite(r.timeH) ? path : [] };
+  }, [sail, q.data, points, twds, speed, sailMode]);
   const rawBoat = voyage && simTime !== null ? boatAt(points, schedule, simTime) : null;
   const boat = rawBoat && sailing ? alongSailLeg(rawBoat, points[rawBoat.segment]!, sailing.legs[rawBoat.segment]?.tack ?? null, points[rawBoat.segment + 1]!) : rawBoat;
   // A local grid snapshot is a development preview only; the published app waits for a live source.
@@ -144,6 +146,10 @@ function PlanInner() {
         {draft.length > 0 && <Button variant="secondary" className="h-9" onClick={finish}><Flag className="h-4 w-4" />Arrivo</Button>}
       </div>}
       <div className="weather-bar"><div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
+      {sail && points.length >= 2 && <div className="flex gap-0.5 rounded-md border bg-card p-0.5 shadow-float" role="group" aria-label="Andatura a vela">
+        <Button size="sm" variant={sailMode === "vmc" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "vmc"} onClick={() => setSailMode("vmc")}>VMC massima</Button>
+        <Button size="sm" variant={sailMode === "comfort" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "comfort"} onClick={() => setSailMode("comfort")}>Comoda · 60°</Button>
+      </div>}
       {animated && points.length >= 2 && q.data && <WeatherTimeline key={`${from}-${to}-icon2i`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}</div>
       {voyage && points.length >= 2 && q.data && schedule.length >= 2 && <VoyagePlayer points={points} stops={schedule} forecasts={q.data} speedKn={Number(speed)} time={simTime} onTime={setVoyageTime} onShift={shiftDeparture} thresholds={t} />}
 
@@ -162,8 +168,8 @@ function PlanInner() {
         </div>
         {points.length >= 2 && <p className="text-sm text-muted-foreground">{lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · ` : ""}{points.length} tappe · orari stimati a velocità costante, senza soste. Percorso indicativo: esce dalle bocche di porto e gira attorno alla costa, ma non considera bassifondi o divieti.</p>}
         {sailing && <section className="space-y-1 border-b pb-3 text-sm" aria-label="Rotta a vela">
-          <h3 className="flex items-center gap-2 font-bold"><Sailboat className="h-4 w-4 text-primary" />Rotta a vela · {Number.isFinite(sailing.timeH) ? `${Math.floor(sailing.timeH)} h ${Math.round((sailing.timeH % 1) * 60)} min` : "non disponibile"}</h3>
-          {sailing.legs.map((l) => <p key={l.from} className="text-xs">Tratto {l.from + 1}→{l.from + 2}: {l.kind === "n/d" ? "vento non disponibile" : l.kind === "diretto" ? "rotta diretta" : l.kind === "bolina" ? "bordi di bolina (un cambio di mure)" : "strambata in poppa"} · VMC {l.vmc.toFixed(1)} kn{l.twd !== null ? ` · vento da ${Math.round(l.twd)}°` : ""}</p>)}
+          <h3 className="flex items-center gap-2 font-bold"><Sailboat className="h-4 w-4 text-primary" />Rotta a vela · {sailMode === "comfort" ? "Comoda (≥60° dal vento)" : "VMC massima"} · {Number.isFinite(sailing.timeH) ? `${Math.floor(sailing.timeH)} h ${Math.round((sailing.timeH % 1) * 60)} min` : "non disponibile"}</h3>
+          {sailing.legs.map((l) => <p key={l.from} className="text-xs">Tratto {l.from + 1}→{l.from + 2}: {l.kind === "n/d" ? l.twd === null ? "vento non disponibile" : "andatura non disponibile" : l.kind === "diretto" ? "rotta diretta" : l.kind === "bolina" ? "bordi di bolina (un cambio di mure)" : "strambata in poppa"} · VMC {l.vmc.toFixed(1)} kn{l.twd !== null ? ` · vento da ${Math.round(l.twd)}°` : ""}</p>)}
           <p className="text-xs text-muted-foreground">Polare indicativa basata sulla tua velocità media (zero sotto 38° dal vento). Linea punteggiata sulla mappa. Non evita terra o bassifondi.</p>
         </section>}
         {q.isLoading && <p className="text-muted-foreground">Carico previsioni…</p>}

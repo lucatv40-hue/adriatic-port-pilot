@@ -34,6 +34,7 @@
 - [x] Verifica velocità locale, contrasto chiaro/scuro e uso mobile; offline verificato in ambiente isolato
 
 ## Da fare (richiesta Giacomo)
+- [x] Scelta vela VMC massima / Comoda con bolina ≥60°; bordi e cambio andatura verificati con vento reale su cellulare e PC
 - [x] Vento tratta solo ICON-2I, senza modello automatico o ripiego; onde indipendenti da Open-Meteo Marine
 - [x] Modalità "Rotta": mirino al centro, pulsanti Waypoint/Arrivo, spezzata libera con meteo sui punti (Grafici/Animato/Viaggio)
 - [x] Pulsante "Vela": bordi con migliore VMG/VMC sul vento previsto
