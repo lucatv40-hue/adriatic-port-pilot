@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AvvisiRouteImport } from './routes/avvisi'
 import { Route as BarcaRouteImport } from './routes/barca'
+import { Route as CartaRouteImport } from './routes/carta'
 import { Route as CookieRouteImport } from './routes/cookie'
 import { Route as PreferitiRouteImport } from './routes/preferiti'
 import { Route as PrezziRouteImport } from './routes/prezzi'
@@ -55,6 +56,11 @@ const AvvisiRoute = AvvisiRouteImport.update({
 const BarcaRoute = BarcaRouteImport.update({
   id: '/barca',
   path: '/barca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartaRoute = CartaRouteImport.update({
+  id: '/carta',
+  path: '/carta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CookieRoute = CookieRouteImport.update({
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
+  '/carta': typeof CartaRoute
   '/cookie': typeof CookieRoute
   '/preferiti': typeof PreferitiRoute
   '/prezzi': typeof PrezziRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
+  '/carta': typeof CartaRoute
   '/cookie': typeof CookieRoute
   '/preferiti': typeof PreferitiRoute
   '/prezzi': typeof PrezziRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
+  '/carta': typeof CartaRoute
   '/cookie': typeof CookieRoute
   '/preferiti': typeof PreferitiRoute
   '/prezzi': typeof PrezziRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/avvisi'
     | '/barca'
+    | '/carta'
     | '/cookie'
     | '/preferiti'
     | '/prezzi'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/avvisi'
     | '/barca'
+    | '/carta'
     | '/cookie'
     | '/preferiti'
     | '/prezzi'
@@ -285,6 +296,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/avvisi'
     | '/barca'
+    | '/carta'
     | '/cookie'
     | '/preferiti'
     | '/prezzi'
@@ -311,6 +323,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   AvvisiRoute: typeof AvvisiRoute
   BarcaRoute: typeof BarcaRoute
+  CartaRoute: typeof CartaRoute
   CookieRoute: typeof CookieRoute
   PreferitiRoute: typeof PreferitiRoute
   PrezziRoute: typeof PrezziRoute
@@ -361,6 +374,13 @@ declare module '@tanstack/react-router' {
       path: '/barca'
       fullPath: '/barca'
       preLoaderRoute: typeof BarcaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/carta': {
+      id: '/carta'
+      path: '/carta'
+      fullPath: '/carta'
+      preLoaderRoute: typeof CartaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cookie': {
@@ -517,6 +537,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   AvvisiRoute: AvvisiRoute,
   BarcaRoute: BarcaRoute,
+  CartaRoute: CartaRoute,
   CookieRoute: CookieRoute,
   PreferitiRoute: PreferitiRoute,
   PrezziRoute: PrezziRoute,
