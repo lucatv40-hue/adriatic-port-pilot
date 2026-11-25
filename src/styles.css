@@ -117,8 +117,8 @@
   --forecast-wind: oklch(0.46 0.13 238);
   --forecast-gust: oklch(0.48 0.11 180);
   --forecast-wave: oklch(0.43 0.12 265);
-  --chart-label-background: oklch(0.25 0.08 255);
-  --chart-label-foreground: oklch(1 0 0);
+  --chart-label-background: oklch(1 0 0 / 0%);
+  --chart-label-foreground: oklch(0.3 0.09 255);
 }
 
 .dark {

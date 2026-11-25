@@ -4,6 +4,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { noticesQuery } from "@/lib/notices";
 import { useWindGrid } from "@/lib/wind-grid-loader";
 import { loadWaveGrid } from "@/lib/wave-grid";
+import { sampleWindGrid } from "@/lib/wind-grid";
 import { windFeatures, waveFeatures, currentFeatures, capeFeatures, noticeFeatures, type WaveGridX, type CurrentGrid, type CapeGrid } from "@/lib/map-layers";
 import type { ChartToggles } from "@/components/ChartMap";
 
@@ -37,11 +38,22 @@ function Carta() {
   useEffect(() => { void loadWaveGrid(BASE).then((g) => setWaves(g as WaveGridX | null)); void grid<CurrentGrid>("currents.json").then(setCur); void grid<CapeGrid>("cape.json").then(setCape); }, []);
   const frames = useWindGrid(BASE, time);
   const notices = useQuery(noticesQuery);
-  const layers = useMemo(() => ({
-    wind: windFeatures(frames.find((f) => Date.parse(f.validTime) === Date.parse(time)) ?? frames[0] ?? null),
-    waves: waveFeatures(waves, time), currents: currentFeatures(cur, time), cape: capeFeatures(cape, time),
-    notices: noticeFeatures((notices.data ?? []).map((n) => ({ ...n }))),
-  }), [frames, waves, cur, cape, notices.data, time]);
+  const layers = useMemo(() => {
+    const wind = frames.find((f) => Date.parse(f.validTime) === Date.parse(time)) ?? frames[0] ?? null;
+    const waveLayer = waveFeatures(waves, time);
+    // One label per wave cell: wind is sampled at that same location and forecast hour.
+    for (const feature of waveLayer.features) {
+      if (feature.geometry.type !== "Point") continue;
+      const [lon, lat] = feature.geometry.coordinates;
+      const localWind = wind ? sampleWindGrid(wind, lat, lon) : null;
+      feature.properties["kn"] = localWind ? Math.round(localWind.speedKn) : null;
+    }
+    return {
+      wind: windFeatures(wind), waves: waveLayer,
+      currents: currentFeatures(cur, time), cape: capeFeatures(cape, time),
+      notices: noticeFeatures((notices.data ?? []).map((n) => ({ ...n }))),
+    };
+  }, [frames, waves, cur, cape, notices.data, time]);
   const missing = (Object.keys(LABEL) as (keyof ChartToggles)[]).filter((k) => on[k] && k !== "seamarks" && layers[k as keyof typeof layers].features.length === 0).map((k) => LABEL[k]);
 
   return (
