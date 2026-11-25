@@ -12,7 +12,7 @@ import type { RouteSection } from "@/lib/route-risk";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null }: { hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null, legLabels = false }: { legLabels?: boolean; hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -133,6 +133,22 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
       .addTo(g);
     return () => { g.remove(); hazardLayer.current = null; };
   }, [hazard, instance]);
+
+  const legLayer = useRef<L.LayerGroup | null>(null);
+  useEffect(() => {
+    const m = map.current; if (!m) return;
+    legLayer.current?.remove(); legLayer.current = null;
+    if (!legLabels || points.length < 2) return;
+    const g = L.layerGroup().addTo(m); legLayer.current = g;
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1]!, b = points[i]!;
+      const r = Math.PI / 180, f1 = a.lat * r, f2 = b.lat * r, dl = (b.lon - a.lon) * r;
+      const brg = Math.round((Math.atan2(Math.sin(dl) * Math.cos(f2), Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl)) / r + 360) % 360);
+      const nm = 3440.065 * 2 * Math.asin(Math.sqrt(Math.sin((f2 - f1) / 2) ** 2 + Math.cos(f1) * Math.cos(f2) * Math.sin(dl / 2) ** 2));
+      L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], { interactive: false, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="leg-label">${String(brg).padStart(3, "0")}° · ${nm.toFixed(1).replace(".", ",")} NM</div>`, iconSize: [0, 0] }) }).addTo(g);
+    }
+    return () => { g.remove(); legLayer.current = null; };
+  }, [points, legLabels, instance]);
 
   const key = notices.map((n) => n.id + n.onRoute).join();
   useEffect(() => {

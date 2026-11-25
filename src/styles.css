@@ -303,3 +303,5 @@ button, a, input, label { touch-action: manipulation; }
 .wind-flow-legend { width: 168px; max-width: 100%; font-size: 10px; line-height: 1.1; background: var(--card); color: var(--card-foreground); padding: 3px 5px; border-radius: 4px; }
 .wind-flow-ramp { height: 5px; background: var(--wind-flow-scale); border-radius: 2px; }
 .wind-flow-ticks { display: flex; justify-content: space-between; padding-top: 2px; }
+
+.leg-label { transform: translate(-50%, -50%); width: max-content; color: var(--destructive); font-size: 0.75rem; font-weight: 700; text-shadow: 0 0 3px var(--background), 0 0 3px var(--background); pointer-events: none; }
