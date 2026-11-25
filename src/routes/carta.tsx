@@ -54,9 +54,25 @@ function Carta() {
           <button key={k} onClick={() => setOn((o) => ({ ...o, [k]: !o[k] }))} className={`rounded-full border px-2.5 py-1 text-xs font-medium shadow-sm ${on[k] ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background/90 text-foreground"}`}>{LABEL[k]}</button>
         ))}
       </div>
-      <div className="absolute bottom-2 left-2 right-14 z-10 rounded-lg bg-background/90 px-3 py-2 text-xs shadow">
-        <div className="flex items-center justify-between"><span className="font-medium">{new Date(time).toLocaleString("it-IT", { timeZone: "Europe/Rome", weekday: "short", hour: "2-digit", minute: "2-digit" })}</span><span className="text-muted-foreground">+{hourOffset} h</span></div>
-        <input type="range" min={0} max={47} value={hourOffset} onChange={(e) => setHourOffset(+e.target.value)} className="w-full accent-primary" aria-label="Ora previsione" />
+      <div className="absolute left-2 right-2 top-11 z-10 rounded-lg bg-background/90 px-2 py-1.5 text-xs shadow sm:right-auto sm:w-[28rem]">
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => setHourOffset((h) => Math.max(0, h - 1))} disabled={hourOffset === 0} className="rounded-md border bg-background px-2 py-1 font-semibold disabled:opacity-40" aria-label="Un'ora indietro">−1 h</button>
+          <div className="flex-1 text-center"><span className="font-medium">{new Date(time).toLocaleString("it-IT", { timeZone: "Europe/Rome", weekday: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span> <span className="text-muted-foreground">+{hourOffset} h</span></div>
+          <button onClick={() => setHourOffset((h) => Math.min(47, h + 1))} disabled={hourOffset === 47} className="rounded-md border bg-background px-2 py-1 font-semibold disabled:opacity-40" aria-label="Un'ora avanti">+1 h</button>
+        </div>
+        <div className="relative mt-1 h-7">
+          <div className="pointer-events-none absolute inset-x-[7px] bottom-0 h-3">
+            {Array.from({ length: 48 }, (_, i) => {
+              const d = new Date(now + i * 3_600_000);
+              const h = +d.toLocaleString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", hourCycle: "h23" });
+              const mid = h === 0;
+              return <div key={i} className={`absolute bottom-0 ${mid ? "h-5 w-0.5 bg-primary" : h % 6 === 0 ? "h-2.5 w-px bg-foreground/60" : "h-1.5 w-px bg-foreground/30"}`} style={{ left: `${(i / 47) * 100}%` }}>
+                {mid && <span className="absolute -top-3.5 left-1 whitespace-nowrap text-[10px] font-semibold text-primary">{d.toLocaleDateString("it-IT", { timeZone: "Europe/Rome", weekday: "short", day: "2-digit" })}</span>}
+              </div>;
+            })}
+          </div>
+          <input type="range" min={0} max={47} value={hourOffset} onChange={(e) => setHourOffset(+e.target.value)} className="absolute inset-x-0 bottom-0 w-full accent-primary" aria-label="Ora previsione" />
+        </div>
         {missing.length > 0 && <div className="text-muted-foreground">Non disponibile ora: {missing.join(", ")}</div>}
       </div>
     </div>
