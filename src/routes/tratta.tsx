@@ -185,8 +185,10 @@ function PlanInner() {
         {draft.length > 0 && <Button variant="secondary" className="h-9" onClick={finish}><Flag className="h-4 w-4" />Arrivo</Button>}
       </div>}
       <div className="weather-bar"><div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
-      {points.length >= 2 && q.data && <Button size="sm" className="h-7 min-h-0 bg-warning px-2 text-xs font-bold text-background shadow-float hover:bg-warning/90" onClick={() => setAdvice(true)}>Info Rotta</Button>}
-      {points.length >= 2 && <Button size="sm" variant="destructive" className="h-7 min-h-0 px-2 text-xs shadow-float" onClick={() => { if (window.confirm("Cancellare la rotta?")) reset(); }} aria-label="Cancella rotta"><Trash2 className="h-3.5 w-3.5" />Cancella</Button>}
+      {points.length >= 2 && <div className="flex items-center gap-0.5 rounded-md border bg-card p-0.5 shadow-float">
+        {q.data && <Button size="sm" className="h-7 min-h-0 bg-warning px-2 text-xs font-bold text-background hover:bg-warning/90" onClick={() => setAdvice(true)}>Info Rotta</Button>}
+        <Button size="icon" variant="destructive" className="h-7 w-7 min-h-0" onClick={() => { if (window.confirm("Cancellare la rotta?")) reset(); }} aria-label="Cancella rotta" title="Cancella rotta"><Trash2 className="h-3.5 w-3.5" /></Button>
+      </div>}
       {sail && points.length >= 2 && <div className="flex gap-0.5 rounded-md border bg-card p-0.5 shadow-float" role="group" aria-label="Andatura a vela">
         <Button size="sm" variant={sailMode === "vmc" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "vmc"} onClick={() => setSailMode("vmc")}>VMC massima</Button>
         <Button size="sm" variant={sailMode === "comfort" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "comfort"} onClick={() => setSailMode("comfort")}>Comoda · 60°</Button>
