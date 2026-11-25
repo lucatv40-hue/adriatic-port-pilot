@@ -8,11 +8,11 @@ function data(now: number, wind = 15) {
   return { latitude: point.lat, longitude: point.lon, hourly_units: { wind_speed_10m: "kn", wind_gusts_10m: "kn", wind_direction_10m: "°" }, hourly: { time, wind_speed_10m: time.map(() => wind), wind_gusts_10m: time.map(() => 20), wind_direction_10m: time.map(() => 90) } };
 }
 describe("ICON-2I route weather", () => {
-  it("covers 48 real hours from now, not 48 rows ending early", () => {
+  it("covers 72 real hours (oggi, domani, dopodomani)", () => {
     const now = Date.parse("2026-11-24T00:39:00Z"), w = forecastWindow(now);
     expect(w.start).toBe(Date.parse("2026-11-24T00:00:00Z"));
-    expect(w.end).toBe(Date.parse("2026-11-26T01:00:00Z"));
-    expect(w.end - now).toBeGreaterThanOrEqual(48 * 3_600_000);
+    expect(w.end).toBe(Date.parse("2026-11-27T01:00:00Z"));
+    expect(w.end - now).toBeGreaterThanOrEqual(72 * 3_600_000);
   });
   it("requires all three wind variables, hours, knots and a nearby grid", () => {
     const now = Date.parse("2026-11-25T00:00:00Z"), d = data(now);

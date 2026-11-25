@@ -29,7 +29,7 @@ function row(value: unknown): H | undefined {
 }
 export function forecastWindow(now: number) {
   const start = Math.floor(now / 3_600_000) * 3_600_000;
-  const end = Math.ceil((now + 48 * 3_600_000) / 3_600_000) * 3_600_000;
+  const end = Math.ceil((now + 72 * 3_600_000) / 3_600_000) * 3_600_000;
   const times = Array.from({ length: (end - start) / 3_600_000 + 1 }, (_, i) => (start + i * 3_600_000) / 1000);
   return { start, end, times };
 }

@@ -20,6 +20,7 @@ import { ShelteredBays } from "@/components/ShelteredBays";
 import { RouteCurtain } from "@/components/RouteCurtain";
 import { WeatherTimeline } from "@/components/WeatherTimeline";
 import { VoyagePlayer } from "@/components/VoyagePlayer";
+import { DepartureAdvice } from "@/components/DepartureAdvice";
 import { boatAt, alongSailLeg } from "@/lib/voyage";
 import { useWindGrid } from "@/lib/wind-grid-loader";
 import { routePlan, crossesLand, onLand, inLagoon } from "@/lib/sea-route";
@@ -58,6 +59,7 @@ function PlanInner() {
   const [freePoints, setFreePoints] = useState<{ lat: number; lon: number }[]>([]);
   const [sail, setSail] = useState(false);
   const [sailMode, setSailMode] = useState<SailMode>("vmc");
+  const [advice, setAdvice] = useState(false);
   const centerRef = useRef<(() => { lat: number; lon: number } | null) | null>(null);
   useEffect(() => {
     const nextHour = new Date();
@@ -147,11 +149,13 @@ function PlanInner() {
         {draft.length > 0 && <Button variant="secondary" className="h-9" onClick={finish}><Flag className="h-4 w-4" />Arrivo</Button>}
       </div>}
       <div className="weather-bar"><div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
+      {points.length >= 2 && q.data && <Button size="sm" variant="secondary" className="h-7 min-h-0 px-2 text-xs shadow-float" onClick={() => setAdvice(true)}>Quando partire</Button>}
       {sail && points.length >= 2 && <div className="flex gap-0.5 rounded-md border bg-card p-0.5 shadow-float" role="group" aria-label="Andatura a vela">
         <Button size="sm" variant={sailMode === "vmc" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "vmc"} onClick={() => setSailMode("vmc")}>VMC massima</Button>
         <Button size="sm" variant={sailMode === "comfort" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "comfort"} onClick={() => setSailMode("comfort")}>Comoda · 60°</Button>
       </div>}
       {animated && points.length >= 2 && q.data && <WeatherTimeline key={`${from}-${to}-icon2i`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}</div>
+      {advice && points.length >= 2 && q.data && <DepartureAdvice points={points} forecasts={q.data} speedKn={Number(speed)} thresholds={t} sailMode={sailMode} initial={sail ? "vela" : "motore"} onClose={() => setAdvice(false)} onUse={(d, m) => { setReference(null); setSelectedTime(null); setDeparture(localDepartureValue(new Date(d))); setSail(m === "vela"); setAdvice(false); }} />}
       {voyage && points.length >= 2 && q.data && schedule.length >= 2 && <VoyagePlayer points={points} stops={schedule} forecasts={q.data} speedKn={Number(speed)} time={simTime} onTime={setVoyageTime} onShift={shiftDeparture} thresholds={t} />}
 
       <RouteCurtain summary={lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · arrivo ${formatRouteTime(lastStop.arrival)}` : "Partenza, velocità e previsioni"}>
