@@ -3,7 +3,7 @@ import { Upgrade } from "@/components/Upgrade";
 import { createFileRoute, ClientOnly, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { RotateCcw, Navigation2, TriangleAlert, Crosshair, Flag, Plus, Undo2, Sailboat, Bookmark } from "lucide-react";
+import { RotateCcw, Navigation2, TriangleAlert, Crosshair, Flag, Plus, Undo2, Sailboat, Bookmark, Trash2 } from "lucide-react";
 import { sailRoute, type SailMode } from "@/lib/sailing";
 import { forecastAtArrival } from "@/lib/route-timing";
 import { getPort } from "@/lib/ports";
@@ -86,7 +86,17 @@ function PlanInner() {
   const routeKey = points.map((p) => `${p.lat},${p.lon}`).join(";");
   const q = useQuery({ queryKey: ["route48", routeKey, "icon2i-only"], queryFn: () => fetchRouteForecast(points), enabled: points.length >= 2, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
   useEffect(() => { if (animated && selectedTime === null && q.data?.[0]?.series.time[0]) setSelectedTime(q.data[0].series.time[0]); }, [animated, q.data, selectedTime]);
-  const pick = (id: string) => { if (free) return; setHazard(null); setAdvice(false); if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
+  const hasRoute = (from && to) || (free && freePoints.length >= 2);
+  const askClear = () => !hasRoute || window.confirm("Cancellare la rotta attuale e crearne una nuova?");
+  const pick = (id: string) => { if (free) return; if (from && to) { if (!askClear()) return; setHazard(null); setAdvice(false); setFrom(id); setTo(null); return; } setHazard(null); setAdvice(false); if (!from) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
+  // The drawn route survives switching to other footer panels until the captain clears it.
+  const restored = useRef(false);
+  useEffect(() => {
+    if (search.from || search.to) { restored.current = true; return; }
+    try { const r = JSON.parse(sessionStorage.getItem("ra-route") ?? "null"); if (r) { setFrom(r.from ?? null); setTo(r.to ?? null); setFree(!!r.free); setFreePoints(r.freePoints ?? []); setSail(!!r.sail); } } catch { /* ignore */ }
+    restored.current = true;
+  }, []);
+  useEffect(() => { if (restored.current) sessionStorage.setItem("ra-route", JSON.stringify({ from, to, free, freePoints, sail })); }, [from, to, free, freePoints, sail]);
   useEffect(() => { setSelectedPoint(0); setSelectedTime(null); setVoyageTime(null); setReference(null); setHazard(null); }, [routeKey]);
   useEffect(() => { setVoyageTime(null); setHazard(null); }, [departure, speed]);
   const shiftDeparture = (h: number) => { const t = departureTimestamp(departure); if (Number.isFinite(t)) { setReference(null); setDeparture(localDepartureValue(new Date(t + h * 3_600_000))); } };
@@ -125,7 +135,7 @@ function PlanInner() {
   const windBase = (import.meta.env["VITE_WIND_GRID_URL"] as string | undefined) ?? WIND_GRID_URL;
   const mapTime = voyage && simTime !== null ? new Date(simTime).toISOString() : chartTime;
   const windGrid = useWindGrid(windBase, animated || voyage ? mapTime : null);
-  const startFree = () => { setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); setHazard(null); setAdvice(false); };
+  const startFree = () => { if (!askClear()) return; setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); setHazard(null); setAdvice(false); };
   const addWaypoint = () => { const c = centerRef.current?.(); if (c) setDraft((d) => [...d, c]); };
   const finish = () => { const c = centerRef.current?.(); const pts = c && draft.length ? [...draft, c] : draft; if (pts.length >= 2) { setFreePoints(pts); setDraft([]); setDrawing(false); setHazard(null); } };
   const reset = () => { setFrom(null); setTo(null); setFree(false); setDrawing(false); setDraft([]); setFreePoints([]); setSail(false); setHazard(null); setAdvice(false); };
@@ -175,7 +185,8 @@ function PlanInner() {
         {draft.length > 0 && <Button variant="secondary" className="h-9" onClick={finish}><Flag className="h-4 w-4" />Arrivo</Button>}
       </div>}
       <div className="weather-bar"><div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
-      {points.length >= 2 && q.data && <Button size="sm" variant="secondary" className="h-7 min-h-0 px-2 text-xs shadow-float" onClick={() => setAdvice(true)}>Info Rotta</Button>}
+      {points.length >= 2 && q.data && <Button size="sm" className="h-7 min-h-0 bg-warning px-2 text-xs font-bold text-background shadow-float hover:bg-warning/90" onClick={() => setAdvice(true)}>Info Rotta</Button>}
+      {points.length >= 2 && <Button size="sm" variant="destructive" className="h-7 min-h-0 px-2 text-xs shadow-float" onClick={() => { if (window.confirm("Cancellare la rotta?")) reset(); }} aria-label="Cancella rotta"><Trash2 className="h-3.5 w-3.5" />Cancella</Button>}
       {sail && points.length >= 2 && <div className="flex gap-0.5 rounded-md border bg-card p-0.5 shadow-float" role="group" aria-label="Andatura a vela">
         <Button size="sm" variant={sailMode === "vmc" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "vmc"} onClick={() => setSailMode("vmc")}>VMC massima</Button>
         <Button size="sm" variant={sailMode === "comfort" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "comfort"} onClick={() => setSailMode("comfort")}>Comoda · 60°</Button>

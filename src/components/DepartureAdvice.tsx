@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Route, Star, X } from "lucide-react";
+import { Route, Star, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { bestDepartures, type Propulsion, type DepartureAdvice as Advice } from "@/lib/departure-advice";
 import { fetchRouteForecast } from "@/lib/weather";
@@ -29,6 +29,7 @@ function Stars({ n }: { n: number }) {
 export function DepartureAdvice({ points, departure, speedKn, thresholds, sailMode, initial, onUse, onHighlight, onClose }: Props) {
   const [mode, setMode] = useState<Propulsion>(initial);
   const [open, setOpen] = useState<Advice | null>(null);
+  const [lowered, setLowered] = useState(false);
   const [now] = useState(() => Date.now());
   const dense = useMemo(() => denseRoutePoints(points), [points]);
   const routeKey = dense.map((point) => `${point.lat},${point.lon}`).join(";");
@@ -38,11 +39,15 @@ export function DepartureAdvice({ points, departure, speedKn, thresholds, sailMo
   useEffect(() => { onHighlight(worst); }, [worst, onHighlight]);
 
   return (
-    <div className="compact-panel fixed inset-x-2 top-[5rem] z-[1100] mx-auto max-h-[78vh] max-w-md overflow-y-auto rounded-lg border bg-card p-3 text-card-foreground shadow-float" role="dialog" aria-label="Info Rotta">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="font-bold">Info Rotta · prossimi 3 giorni</h2>
-        <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Chiudi" onClick={onClose}><X className="h-4 w-4" /></Button>
+    <div className={`compact-panel fixed inset-x-2 z-[1100] mx-auto max-w-md overflow-y-auto rounded-lg border bg-card p-3 text-card-foreground shadow-float ${lowered ? "bottom-[calc(3.5rem+env(safe-area-inset-bottom))]" : "top-[5rem] max-h-[78vh]"}`} role="dialog" aria-label="Info Rotta">
+      <div className={`${lowered ? "" : "mb-2"} flex items-center justify-between gap-2`}>
+        <button type="button" className="flex min-w-0 flex-1 items-center gap-1 text-left" onClick={() => setLowered(!lowered)} aria-expanded={!lowered} aria-label={lowered ? "Rialza Info Rotta" : "Abbassa Info Rotta"}>
+          {lowered ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
+          <h2 className="truncate font-bold">Info Rotta · prossimi 3 giorni</h2>
+        </button>
+        <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Chiudi Info Rotta" onClick={onClose}><X className="h-4 w-4" /></Button>
       </div>
+      <div hidden={lowered}>
       <div className="mb-3 flex gap-1" role="group" aria-label="Propulsione">
         {(["motore", "vela"] as const).map((m) => <Button key={m} size="sm" className="h-8 flex-1" variant={mode === m ? "default" : "outline"} aria-pressed={mode === m} onClick={() => { setMode(m); setOpen(null); }}>{m === "motore" ? "Motore" : "Vela"}</Button>)}
       </div>
@@ -76,6 +81,7 @@ export function DepartureAdvice({ points, departure, speedKn, thresholds, sailMo
         ))}
       </ol>
       <p className="mt-2 text-xs text-muted-foreground">Analisi su {dense.length} punti, anche tra i waypoint. Giudizio indicativo da ICON-2I e Copernicus rispetto alle tue soglie; le ore senza copertura non sono valutate.</p>
+      </div>
     </div>
   );
 }
