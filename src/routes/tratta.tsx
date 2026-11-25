@@ -130,13 +130,13 @@ function PlanInner() {
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
           <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap track={free ? undefined : plan?.track} from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
-        <div className="absolute left-3 right-16 top-2 lg:right-[27rem] z-[500] flex items-center justify-between gap-1 rounded-md bg-card px-1.5 py-0.5 text-xs font-bold shadow-float">
-          <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="min-w-0 break-words">
+        <div className="absolute left-3 right-16 top-2 lg:right-[27rem] z-[500] flex h-7 items-center justify-between gap-1 overflow-hidden rounded-md bg-card px-1.5 text-xs font-bold shadow-float">
+          <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="min-w-0 truncate">
             {free ? (drawing ? (draft.length ? `Rotta libera · ${draft.length} punti · sposta la mappa` : "Porta la partenza sotto il mirino") : `Rotta libera · ${freePoints.length} punti`) : !a ? "Tocca il porto di partenza" : !b ? `${a.name} → tocca l'arrivo` : `${a.name} → ${b.name}`}</span></span>
           <span className="flex shrink-0 items-center gap-1">
-          {!free && <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={startFree}><Crosshair className="h-3.5 w-3.5" />Rotta</Button>}
-          {points.length >= 2 && <Button variant="outline" size="sm" className="h-7 px-2 text-xs" aria-label={sail ? "Passa a motore" : "Passa a vela"} onClick={() => setSail(!sail)}>{sail ? <><Navigation2 className="h-3.5 w-3.5" />Motore</> : <><Sailboat className="h-3.5 w-3.5" />Vela</>}</Button>}
-          {(a || free) && <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={reset} aria-label="Ricomincia"><RotateCcw className="h-4 w-4" /></Button>}
+          {!free && <Button variant="outline" size="sm" className="h-6 px-1.5 text-xs" onClick={startFree}><Crosshair className="h-3.5 w-3.5" />Rotta</Button>}
+          {points.length >= 2 && <Button variant="outline" size="sm" className="h-6 px-1.5 text-xs" aria-label={sail ? "Passa a motore" : "Passa a vela"} onClick={() => setSail(!sail)}>{sail ? <><Navigation2 className="h-3.5 w-3.5" />Motore</> : <><Sailboat className="h-3.5 w-3.5" />Vela</>}</Button>}
+          {(a || free) && <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={reset} aria-label="Ricomincia"><RotateCcw className="h-4 w-4" /></Button>}
           </span>
         </div>
       </div>
