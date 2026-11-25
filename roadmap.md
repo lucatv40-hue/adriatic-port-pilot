@@ -34,6 +34,9 @@
 - [x] Verifica velocità locale, contrasto chiaro/scuro e uso mobile; offline verificato in ambiente isolato
 
 ## Da fare (richiesta Giacomo)
+- [x] Rinominare «Quando partire» in «Info Rotta»
+- [x] Analisi ogni circa 4 miglia, anche tra i waypoint; tratto peggiore sulla mappa con ingresso/uscita, verificato su telefono
+- [x] Deviazione alternativa intorno alle criticità con nuovo controllo meteo; 165 test superati
 - [x] Scelta vela VMC massima / Comoda con bolina ≥60°; bordi e cambio andatura verificati con vento reale su cellulare e PC
 - [x] Vento tratta solo ICON-2I, senza modello automatico o ripiego; onde indipendenti da Open-Meteo Marine
 - [x] Modalità "Rotta": mirino al centro, pulsanti Waypoint/Arrivo, spezzata libera con meteo sui punti (Grafici/Animato/Viaggio)

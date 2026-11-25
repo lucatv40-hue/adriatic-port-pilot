@@ -7,10 +7,12 @@ import { WindFlowLayer } from "@/components/WindFlowLayer";
 import type { WindGrid } from "@/lib/wind-grid";
 import type { PointForecast } from "@/lib/weather";
 import { holdGesture } from "@/lib/hold-gesture";
+import { formatRouteTime } from "@/lib/route-timing";
+import type { RouteSection } from "@/lib/route-risk";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track }: { track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null }: { hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -119,6 +121,18 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     sailLayer.current?.remove(); sailLayer.current = null;
     if (sailPath.length > 1) sailLayer.current = L.polyline(sailPath.map((p) => [p.lat, p.lon] as L.LatLngTuple), { className: "sail-line", weight: 3 }).addTo(m);
   }, [sailPath, instance]);
+
+  const hazardLayer = useRef<L.LayerGroup | null>(null);
+  useEffect(() => {
+    const m = map.current; if (!m) return;
+    hazardLayer.current?.remove(); hazardLayer.current = null;
+    if (!hazard) return;
+    const g = L.layerGroup().addTo(m); hazardLayer.current = g;
+    L.polyline([[hazard.a.lat, hazard.a.lon], [hazard.b.lat, hazard.b.lon]], { className: `route-hazard${hazard.critical ? " critical" : ""}`, weight: 7 })
+      .bindTooltip(`<strong>Tratto peggiore</strong><br/>Ingresso ${formatRouteTime(hazard.entry)}<br/>Uscita ${formatRouteTime(hazard.exit)}`, { permanent: true, direction: "top", offset: [0, -8], className: `route-hazard-label${hazard.critical ? " critical" : ""}` })
+      .addTo(g);
+    return () => { g.remove(); hazardLayer.current = null; };
+  }, [hazard, instance]);
 
   const key = notices.map((n) => n.id + n.onRoute).join();
   useEffect(() => {

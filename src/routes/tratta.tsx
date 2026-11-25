@@ -24,6 +24,7 @@ import { DepartureAdvice } from "@/components/DepartureAdvice";
 import { boatAt, alongSailLeg } from "@/lib/voyage";
 import { useWindGrid } from "@/lib/wind-grid-loader";
 import { routePlan, crossesLand, onLand, inLagoon } from "@/lib/sea-route";
+import type { RoutePoint, RouteSection } from "@/lib/route-risk";
 
 /** Six-hourly ICON-2I grid published by the GitHub Actions workflow to GitHub Pages. */
 const WIND_GRID_URL = "https://lucatv40-hue.github.io/adriatic-port-pilot";
@@ -60,6 +61,8 @@ function PlanInner() {
   const [sail, setSail] = useState(false);
   const [sailMode, setSailMode] = useState<SailMode>("vmc");
   const [advice, setAdvice] = useState(false);
+  const [hazard, setHazard] = useState<RouteSection | null>(null);
+  const [alternative, setAlternative] = useState<RoutePoint[] | null>(null);
   const centerRef = useRef<(() => { lat: number; lon: number } | null) | null>(null);
   useEffect(() => {
     const nextHour = new Date();
@@ -70,13 +73,23 @@ function PlanInner() {
   const a = from ? getPort(from) : undefined, b = to ? getPort(to) : undefined;
   const plan = useMemo(() => (a && b ? routePlan(a, b, 5) : null), [a, b]);
   const portPoints = plan?.points ?? [];
-  const points = free ? freePoints : portPoints;
+  const points = alternative ?? (free ? freePoints : portPoints);
+  const routeTrack = useMemo(() => {
+    if (!alternative) return free ? undefined : plan?.track;
+    if (free || !plan?.track || portPoints.length < 2) return alternative;
+    const first = portPoints[0]!, last = portPoints.at(-1)!;
+    const same = (x: RoutePoint, y: RoutePoint) => Math.abs(x.lat - y.lat) < 0.00011 && Math.abs(x.lon - y.lon) < 0.00011;
+    const start = plan.track.findIndex((point) => same(point, first));
+    const end = plan.track.findIndex((point, i) => i > start && same(point, last));
+    if (start < 0 || end < 0) return alternative;
+    return [...plan.track.slice(0, start + 1), ...alternative.slice(1, -1), ...plan.track.slice(end)];
+  }, [alternative, free, plan, portPoints]);
   const routeKey = points.map((p) => `${p.lat},${p.lon}`).join(";");
   const q = useQuery({ queryKey: ["route48", routeKey, "icon2i-only"], queryFn: () => fetchRouteForecast(points), enabled: points.length >= 2, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
   useEffect(() => { if (animated && selectedTime === null && q.data?.[0]?.series.time[0]) setSelectedTime(q.data[0].series.time[0]); }, [animated, q.data, selectedTime]);
-  const pick = (id: string) => { if (free) return; if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
-  useEffect(() => { setSelectedPoint(0); setSelectedTime(null); setVoyageTime(null); setReference(null); }, [routeKey]);
-  useEffect(() => { setVoyageTime(null); }, [departure, speed]);
+  const pick = (id: string) => { if (free) return; setAlternative(null); setHazard(null); setAdvice(false); if (!from || (from && to)) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
+  useEffect(() => { setSelectedPoint(0); setSelectedTime(null); setVoyageTime(null); setReference(null); setHazard(null); }, [routeKey]);
+  useEffect(() => { setVoyageTime(null); setHazard(null); }, [departure, speed]);
   const shiftDeparture = (h: number) => { const t = departureTimestamp(departure); if (Number.isFinite(t)) { setReference(null); setDeparture(localDepartureValue(new Date(t + h * 3_600_000))); } };
   const schedule = useMemo(() => reference ? anchoredSchedule(points, Number(speed), reference.point, reference.time) : routeSchedule(points, departureTimestamp(departure), Number(speed)), [points, departure, speed, reference]);
   const passage = schedule[selectedPoint]?.arrival;
@@ -113,10 +126,10 @@ function PlanInner() {
   const windBase = (import.meta.env["VITE_WIND_GRID_URL"] as string | undefined) ?? WIND_GRID_URL;
   const mapTime = voyage && simTime !== null ? new Date(simTime).toISOString() : chartTime;
   const windGrid = useWindGrid(windBase, animated || voyage ? mapTime : null);
-  const startFree = () => { setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); };
+  const startFree = () => { setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); setAlternative(null); setHazard(null); setAdvice(false); };
   const addWaypoint = () => { const c = centerRef.current?.(); if (c) setDraft((d) => [...d, c]); };
-  const finish = () => { const c = centerRef.current?.(); const pts = c && draft.length ? [...draft, c] : draft; if (pts.length >= 2) { setFreePoints(pts); setDraft([]); setDrawing(false); } };
-  const reset = () => { setFrom(null); setTo(null); setFree(false); setDrawing(false); setDraft([]); setFreePoints([]); setSail(false); };
+  const finish = () => { const c = centerRef.current?.(); const pts = c && draft.length ? [...draft, c] : draft; if (pts.length >= 2) { setFreePoints(pts); setDraft([]); setDrawing(false); setAlternative(null); setHazard(null); } };
+  const reset = () => { setFrom(null); setTo(null); setFree(false); setDrawing(false); setDraft([]); setFreePoints([]); setSail(false); setAlternative(null); setHazard(null); setAdvice(false); };
   const nq = useQuery(noticesQuery);
   const sq = useQuery(sourcesQuery);
   const start = schedule[0]?.arrival ?? departureTimestamp(departure), end = lastStop?.arrival ?? start;
@@ -130,7 +143,7 @@ function PlanInner() {
     <div className="relative h-full min-h-0 overflow-hidden">
       <div className="absolute inset-0">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap track={free ? undefined : plan?.track} from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
+          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap track={routeTrack} hazard={hazard} from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
         <div className="absolute left-3 right-16 top-2 lg:right-[27rem] z-[500] flex h-7 items-center justify-between gap-1 overflow-hidden rounded-md bg-card px-1.5 text-xs font-bold shadow-float">
           <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="min-w-0 truncate">
@@ -149,13 +162,13 @@ function PlanInner() {
         {draft.length > 0 && <Button variant="secondary" className="h-9" onClick={finish}><Flag className="h-4 w-4" />Arrivo</Button>}
       </div>}
       <div className="weather-bar"><div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
-      {points.length >= 2 && q.data && <Button size="sm" variant="secondary" className="h-7 min-h-0 px-2 text-xs shadow-float" onClick={() => setAdvice(true)}>Quando partire</Button>}
+      {points.length >= 2 && q.data && <Button size="sm" variant="secondary" className="h-7 min-h-0 px-2 text-xs shadow-float" onClick={() => setAdvice(true)}>Info Rotta</Button>}
       {sail && points.length >= 2 && <div className="flex gap-0.5 rounded-md border bg-card p-0.5 shadow-float" role="group" aria-label="Andatura a vela">
         <Button size="sm" variant={sailMode === "vmc" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "vmc"} onClick={() => setSailMode("vmc")}>VMC massima</Button>
         <Button size="sm" variant={sailMode === "comfort" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "comfort"} onClick={() => setSailMode("comfort")}>Comoda · 60°</Button>
       </div>}
       {animated && points.length >= 2 && q.data && <WeatherTimeline key={`${from}-${to}-icon2i`} times={q.data[0]?.series.time ?? []} time={selectedTime} onTime={setSelectedTime} />}</div>
-      {advice && points.length >= 2 && q.data && <DepartureAdvice points={points} forecasts={q.data} speedKn={Number(speed)} thresholds={t} sailMode={sailMode} initial={sail ? "vela" : "motore"} onClose={() => setAdvice(false)} onUse={(d, m) => { setReference(null); setSelectedTime(null); setDeparture(localDepartureValue(new Date(d))); setSail(m === "vela"); setAdvice(false); }} />}
+      {advice && points.length >= 2 && q.data && <DepartureAdvice points={points} departure={start} speedKn={Number(speed)} thresholds={t} sailMode={sailMode} initial={sail ? "vela" : "motore"} onHighlight={setHazard} onAlternative={(route) => { setAlternative(route); setHazard(null); setReference(null); setSelectedTime(null); setVoyageTime(null); }} onClose={() => setAdvice(false)} onUse={(d, m) => { setReference(null); setSelectedTime(null); setDeparture(localDepartureValue(new Date(d))); setSail(m === "vela"); setAdvice(false); }} />}
       {voyage && points.length >= 2 && q.data && schedule.length >= 2 && <VoyagePlayer points={points} stops={schedule} forecasts={q.data} speedKn={Number(speed)} time={simTime} onTime={setVoyageTime} onShift={shiftDeparture} thresholds={t} />}
 
       <RouteCurtain summary={lastStop ? `${lastStop.distanceNm.toFixed(1)} Mn · arrivo ${formatRouteTime(lastStop.arrival)}` : "Partenza, velocità e previsioni"}>
