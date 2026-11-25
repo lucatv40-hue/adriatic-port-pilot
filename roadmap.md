@@ -8,6 +8,7 @@
 - [x] Colorare le scie del vento secondo l'intensità con scala stile Windy.
 - [x] Compattare tutti i pulsanti e le schede mantenendo le dimensioni dei caratteri.
 - [x] Schede della navigazione inferiore richiudibili con X e abbassabili/rialzabili con un tocco, mantenendo i dati inseriti; verificate su cellulare e PC.
+- [x] Agganciare waypoint dopo 0,5 secondi, trascinarli con le linee e ricalcolare meteo, tempi e dati al rilascio; verificato con dito su mobile e mouse su PC, conservazione tra schede inclusa.
 
 ## Aperto
 - (nessuno)

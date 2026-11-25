@@ -6,14 +6,15 @@ import { AnimatedWeatherLayer } from "@/components/AnimatedWeatherLayer";
 import { WindFlowLayer } from "@/components/WindFlowLayer";
 import type { WindGrid } from "@/lib/wind-grid";
 import type { PointForecast } from "@/lib/weather";
-import { holdGesture } from "@/lib/hold-gesture";
+import { moveWaypoint, waypointGesture } from "@/lib/waypoint-edit";
 import { formatRouteTime } from "@/lib/route-timing";
 import type { RouteSection } from "@/lib/route-risk";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onAnchor, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null, legLabels = false }: { legLabels?: boolean; hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; onAnchor?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onMovePoint, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null, legLabels = false }: { onMovePoint?: (index: number, point: P) => void; legLabels?: boolean; hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
+  const [moving, setMoving] = useState(false);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const ports = useRef<L.LayerGroup | null>(null);
@@ -21,7 +22,8 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
   const warn = useRef<L.LayerGroup | null>(null);
   const pick = useRef(onPick); pick.current = onPick;
   const pointPick = useRef(onPoint); pointPick.current = onPoint;
-  const pointAnchor = useRef(onAnchor); pointAnchor.current = onAnchor;
+  const pointMove = useRef(onMovePoint); pointMove.current = onMovePoint;
+  const keepView = useRef(false);
   const waypoints = useRef<L.Marker[]>([]);
 
   useEffect(() => {
@@ -54,26 +56,58 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     if (points.length < 2) return;
     const ll = points.map((p) => [p.lat, p.lon] as L.LatLngTuple);
     const line = track && track.length > 1 ? track.map((p) => [p.lat, p.lon] as L.LatLngTuple) : ll;
-    L.polyline(line, { className: "route-line", weight: 4, dashArray: "8 8" }).addTo(g);
+    const polyline = L.polyline(line, { className: "route-line", weight: 4, dashArray: "8 8" }).addTo(g);
     const abort = new AbortController();
-    const holds: ReturnType<typeof holdGesture>[] = [];
+    const cleanups: (() => void)[] = [];
     waypoints.current = ll.map((x, i) => {
-      const hold = holdGesture(() => pointAnchor.current?.(i), () => {}); holds.push(hold);
+      let next: P | null = null;
+      let restoreMap = () => {};
+      const restore = () => {
+        marker.setLatLng(x); marker.getElement()?.querySelector(".wp")?.classList.remove("dragging");
+        polyline.setLatLngs(line); setMoving(false); restoreMap(); restoreMap = () => {};
+      };
+      const hold = waypointGesture(() => {
+        if (!pointMove.current) return;
+        marker.getElement()?.querySelector(".wp")?.classList.add("dragging");
+        setMoving(true);
+      }, (cx, cy) => {
+        if (!pointMove.current) return;
+        const p = m.mouseEventToLatLng({ clientX: cx, clientY: cy } as MouseEvent);
+        next = { lat: +p.lat.toFixed(5), lon: +p.lng.toFixed(5) };
+        marker.setLatLng(p);
+        const preview = moveWaypoint(points, track, i, next, false);
+        if (preview) polyline.setLatLngs(preview.track.map(p => [p.lat, p.lon] as L.LatLngTuple));
+      }, () => {
+        const destination = next;
+        restore();
+        if (destination) { keepView.current = true; pointMove.current?.(i, destination); }
+      });
       const marker = L.marker(x, { title: `Punto meteo ${i + 1}`, rotateWithView: true, zIndexOffset: 1500, icon: L.divIcon({ className: "", html: `<div class="wp">${i + 1}</div>`, iconSize: [27, 27], iconAnchor: [14, 14] }) }).on("click", () => { if (!hold.activated()) pointPick.current?.(i); }).addTo(g);
       const element = marker.getElement();
       if (element) {
         const options = { signal: abort.signal };
-        element.addEventListener("pointerdown", event => { if (event.isPrimary && event.button === 0) { element.setPointerCapture(event.pointerId); hold.start(event.clientX, event.clientY); } }, options);
-        element.addEventListener("pointermove", event => hold.move(event.clientX, event.clientY), options);
-        element.addEventListener("pointerup", hold.end, options);
-        element.addEventListener("pointercancel", hold.end, options);
-        element.addEventListener("lostpointercapture", hold.end, options);
+        element.style.touchAction = "none";
+        element.addEventListener("pointerdown", event => {
+          if (!event.isPrimary || event.button !== 0) return;
+          event.stopPropagation(); next = null;
+          const pan = m.dragging.enabled(), zoom = m.touchZoom.enabled();
+          m.dragging.disable(); m.touchZoom.disable();
+          restoreMap = () => { if (pan) m.dragging.enable(); if (zoom) m.touchZoom.enable(); };
+          element.setPointerCapture(event.pointerId); hold.start(event.clientX, event.clientY);
+        }, options);
+        element.addEventListener("pointermove", event => { event.stopPropagation(); hold.move(event.clientX, event.clientY); }, options);
+        element.addEventListener("pointerup", event => { event.stopPropagation(); hold.end(); restore(); }, options);
+        const cancel = () => { hold.cancel(); restore(); };
+        element.addEventListener("pointercancel", cancel, options);
+        element.addEventListener("lostpointercapture", cancel, options);
         element.addEventListener("contextmenu", event => event.preventDefault(), options);
       }
+      cleanups.push(() => { hold.cancel(); restoreMap(); });
       return marker;
     });
-    if (!drawing) m.fitBounds(L.latLngBounds(line), { animate: false, paddingTopLeft: [65, 150], paddingBottomRight: [window.matchMedia("(min-width: 1024px)").matches ? 450 : 65, 240] });
-    return () => { abort.abort(); holds.forEach(hold => hold.end()); };
+    if (!drawing && !keepView.current) m.fitBounds(L.latLngBounds(line), { animate: false, paddingTopLeft: [65, 150], paddingBottomRight: [window.matchMedia("(min-width: 1024px)").matches ? 450 : 65, 240] });
+    keepView.current = false;
+    return () => { abort.abort(); cleanups.forEach(clean => clean()); };
   }, [points, drawing, track]);
 
   useEffect(() => {
@@ -119,36 +153,37 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
   useEffect(() => {
     const m = map.current; if (!m) return;
     sailLayer.current?.remove(); sailLayer.current = null;
-    if (sailPath.length > 1) sailLayer.current = L.polyline(sailPath.map((p) => [p.lat, p.lon] as L.LatLngTuple), { className: "sail-line", weight: 3 }).addTo(m);
-  }, [sailPath, instance]);
+    if (!moving && sailPath.length > 1) sailLayer.current = L.polyline(sailPath.map((p) => [p.lat, p.lon] as L.LatLngTuple), { className: "sail-line", weight: 3 }).addTo(m);
+  }, [sailPath, instance, moving]);
 
   const hazardLayer = useRef<L.LayerGroup | null>(null);
   useEffect(() => {
     const m = map.current; if (!m) return;
     hazardLayer.current?.remove(); hazardLayer.current = null;
-    if (!hazard) return;
+    if (!hazard || moving) return;
     const g = L.layerGroup().addTo(m); hazardLayer.current = g;
     L.polyline([[hazard.a.lat, hazard.a.lon], [hazard.b.lat, hazard.b.lon]], { className: `route-hazard${hazard.critical ? " critical" : ""}`, weight: 7 })
       .bindTooltip(`<strong>Tratto peggiore</strong><br/>Ingresso ${formatRouteTime(hazard.entry)}<br/>Uscita ${formatRouteTime(hazard.exit)}`, { permanent: true, direction: "top", offset: [0, -8], className: `route-hazard-label${hazard.critical ? " critical" : ""}` })
       .addTo(g);
     return () => { g.remove(); hazardLayer.current = null; };
-  }, [hazard, instance]);
+  }, [hazard, instance, moving]);
 
   const legLayer = useRef<L.LayerGroup | null>(null);
   useEffect(() => {
     const m = map.current; if (!m) return;
     legLayer.current?.remove(); legLayer.current = null;
-    if (!legLabels || points.length < 2) return;
+    if (!legLabels || points.length < 2 || moving) return;
     const g = L.layerGroup().addTo(m); legLayer.current = g;
     for (let i = 1; i < points.length; i++) {
-      const a = points[i - 1]!, b = points[i]!;
+      const a = points[i - 1], b = points[i];
+      if (!a || !b) continue;
       const r = Math.PI / 180, f1 = a.lat * r, f2 = b.lat * r, dl = (b.lon - a.lon) * r;
       const brg = Math.round((Math.atan2(Math.sin(dl) * Math.cos(f2), Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl)) / r + 360) % 360);
       const nm = 3440.065 * 2 * Math.asin(Math.sqrt(Math.sin((f2 - f1) / 2) ** 2 + Math.cos(f1) * Math.cos(f2) * Math.sin(dl / 2) ** 2));
       L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], { interactive: false, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="leg-label">${String(brg).padStart(3, "0")}° · ${nm.toFixed(1).replace(".", ",")} NM</div>`, iconSize: [0, 0] }) }).addTo(g);
     }
     return () => { g.remove(); legLayer.current = null; };
-  }, [points, legLabels, instance]);
+  }, [points, legLabels, instance, moving]);
 
   const key = notices.map((n) => n.id + n.onRoute).join();
   useEffect(() => {
@@ -157,5 +192,5 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return <><div ref={el} className="route-map h-full w-full" />{drawing && <div className="crosshair" aria-hidden="true" />}{windGrid.length > 0 && <WindFlowLayer map={instance} frames={windGrid} time={time} />}{animated && <AnimatedWeatherLayer map={instance} forecasts={forecasts} time={time} thresholds={thresholds} />}</>;
+  return <><div ref={el} className="route-map h-full w-full" />{drawing && <div className="crosshair" aria-hidden="true" />}{windGrid.length > 0 && <WindFlowLayer map={instance} frames={windGrid} time={time} />}{animated && !moving && <AnimatedWeatherLayer map={instance} forecasts={forecasts} time={time} thresholds={thresholds} />}</>;
 }

@@ -27,6 +27,7 @@ import { useWindGrid } from "@/lib/wind-grid-loader";
 import { routePlan, crossesLand, onLand, inLagoon } from "@/lib/sea-route";
 import { saveRoute } from "@/lib/saved-routes.functions";
 import type { RouteSection } from "@/lib/route-risk";
+import { moveWaypoint, type EditedRoute } from "@/lib/waypoint-edit";
 
 /** Six-hourly ICON-2I grid published by the GitHub Actions workflow to GitHub Pages. */
 const WIND_GRID_URL = "https://lucatv40-hue.github.io/adriatic-port-pilot";
@@ -68,6 +69,7 @@ function PlanInner() {
   const [drawing, setDrawing] = useState(false);
   const [draft, setDraft] = useState<{ lat: number; lon: number }[]>([]);
   const [freePoints, setFreePoints] = useState<{ lat: number; lon: number }[]>([]);
+  const [editedRoute, setEditedRoute] = useState<EditedRoute | null>(null);
   const [sail, setSail] = useState(false);
   const [sailMode, setSailMode] = useState<SailMode>("vmc");
   const [advice, setAdvice] = useState(false);
@@ -82,22 +84,37 @@ function PlanInner() {
   const a = from ? getPort(from) : undefined, b = to ? getPort(to) : undefined;
   const plan = useMemo(() => (a && b ? routePlan(a, b, 5) : null), [a, b]);
   const portPoints = plan?.points ?? [];
-  const points = free ? freePoints : portPoints;
-  const routeTrack = free ? undefined : plan?.track;
+  const points = editedRoute?.points ?? (free ? freePoints : portPoints);
+  const routeTrack = editedRoute?.track ?? (free ? undefined : plan?.track);
   const routeKey = points.map((p) => `${p.lat},${p.lon}`).join(";");
   const q = useQuery({ queryKey: ["route48", routeKey, "icon2i-only"], queryFn: () => fetchRouteForecast(points), enabled: points.length >= 2, staleTime: 15 * 60_000, refetchInterval: 15 * 60_000 });
   useEffect(() => { if (animated && selectedTime === null && q.data?.[0]?.series.time[0]) setSelectedTime(q.data[0].series.time[0]); }, [animated, q.data, selectedTime]);
   const hasRoute = (from && to) || (free && freePoints.length >= 2);
   const askClear = () => !hasRoute || window.confirm("Cancellare la rotta attuale e crearne una nuova?");
-  const pick = (id: string) => { if (free) return; if (from && to) { if (!askClear()) return; setHazard(null); setAdvice(false); setFrom(id); setTo(null); return; } setHazard(null); setAdvice(false); if (!from) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
+  const pick = (id: string) => { if (free) return; if (from && to) { if (!askClear()) return; setEditedRoute(null); setHazard(null); setAdvice(false); setFrom(id); setTo(null); return; } setHazard(null); setAdvice(false); if (!from) { setFrom(id); setTo(null); } else if (id !== from) setTo(id); };
   // The drawn route survives switching to other footer panels until the captain clears it.
   const restored = useRef(false);
+  const initialPersistence = useRef(true);
   useEffect(() => {
-    if (search.from || search.to) { restored.current = true; return; }
-    try { const r = JSON.parse(sessionStorage.getItem("ra-route") ?? "null"); if (r) { setFrom(r.from ?? null); setTo(r.to ?? null); setFree(!!r.free); setFreePoints(r.freePoints ?? []); setSail(!!r.sail); } } catch { /* ignore */ }
+    try {
+      const r = JSON.parse(sessionStorage.getItem("ra-route") ?? "null");
+      const explicit = search.from || search.to;
+      if (r && (!explicit || (r.from === search.from && r.to === search.to))) {
+        setFrom(r.from ?? null); setTo(r.to ?? null); setFree(!!r.free); setFreePoints(r.freePoints ?? []); setEditedRoute(r.editedRoute ?? null); setSail(!!r.sail);
+      }
+    } catch { /* ignore */ }
     restored.current = true;
   }, []);
-  useEffect(() => { if (restored.current) sessionStorage.setItem("ra-route", JSON.stringify({ from, to, free, freePoints, sail })); }, [from, to, free, freePoints, sail]);
+  useEffect(() => {
+    if (initialPersistence.current) { initialPersistence.current = false; return; }
+    if (restored.current) sessionStorage.setItem("ra-route", JSON.stringify({ from, to, free, freePoints, editedRoute, sail }));
+  }, [from, to, free, freePoints, editedRoute, sail]);
+  const movePoint = (index: number, point: { lat: number; lon: number }) => {
+    const updated = moveWaypoint(points, routeTrack, index, point);
+    if (!updated) { window.alert("Punto non spostato: la nuova posizione o il collegamento attraversano la terraferma."); return; }
+    setEditedRoute(updated); setReference(null); setSelectedTime(null); setVoyageTime(null); setHazard(null); setAdvice(false);
+    storeRoute.reset();
+  };
   useEffect(() => { setSelectedPoint(0); setSelectedTime(null); setVoyageTime(null); setReference(null); setHazard(null); }, [routeKey]);
   useEffect(() => { setVoyageTime(null); setHazard(null); }, [departure, speed]);
   const shiftDeparture = (h: number) => { const t = departureTimestamp(departure); if (Number.isFinite(t)) { setReference(null); setDeparture(localDepartureValue(new Date(t + h * 3_600_000))); } };
@@ -131,15 +148,16 @@ function PlanInner() {
     return { ...r, legs, path: Number.isFinite(r.timeH) ? path : [] };
   }, [sail, q.data, points, twds, speed, sailMode]);
   const rawBoat = voyage && simTime !== null ? boatAt(points, schedule, simTime) : null;
-  const boat = rawBoat && sailing ? alongSailLeg(rawBoat, points[rawBoat.segment]!, sailing.legs[rawBoat.segment]?.tack ?? null, points[rawBoat.segment + 1]!) : rawBoat;
+  const boatStart = rawBoat ? points[rawBoat.segment] : undefined, boatEnd = rawBoat ? points[rawBoat.segment + 1] : undefined;
+  const boat = rawBoat && sailing && boatStart && boatEnd ? alongSailLeg(rawBoat, boatStart, sailing.legs[rawBoat.segment]?.tack ?? null, boatEnd) : rawBoat;
   // A local grid snapshot is a development preview only; the published app waits for a live source.
   const windBase = (import.meta.env["VITE_WIND_GRID_URL"] as string | undefined) ?? WIND_GRID_URL;
   const mapTime = voyage && simTime !== null ? new Date(simTime).toISOString() : chartTime;
   const windGrid = useWindGrid(windBase, animated || voyage ? mapTime : null);
-  const startFree = () => { if (!askClear()) return; setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); setHazard(null); setAdvice(false); };
+  const startFree = () => { if (!askClear()) return; setEditedRoute(null); setFree(true); setFrom(null); setTo(null); setFreePoints([]); setDraft([]); setDrawing(true); setSail(false); setHazard(null); setAdvice(false); };
   const addWaypoint = () => { const c = centerRef.current?.(); if (c) setDraft((d) => [...d, c]); };
   const finish = () => { const c = centerRef.current?.(); const pts = c && draft.length ? [...draft, c] : draft; if (pts.length >= 2) { setFreePoints(pts); setDraft([]); setDrawing(false); setHazard(null); } };
-  const reset = () => { setFrom(null); setTo(null); setFree(false); setDrawing(false); setDraft([]); setFreePoints([]); setSail(false); setHazard(null); setAdvice(false); };
+  const reset = () => { setEditedRoute(null); setFrom(null); setTo(null); setFree(false); setDrawing(false); setDraft([]); setFreePoints([]); setSail(false); setHazard(null); setAdvice(false); };
   const nq = useQuery(noticesQuery);
   const sq = useQuery(sourcesQuery);
   const start = schedule[0]?.arrival ?? departureTimestamp(departure), end = lastStop?.arrival ?? start;
@@ -167,7 +185,7 @@ function PlanInner() {
     <div className="relative h-full min-h-0 overflow-hidden">
       <div className="absolute inset-0">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap track={routeTrack} hazard={hazard} from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onAnchor={anchorPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage || weatherTags} legLabels={!weatherTags && !animated && !voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
+          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap track={routeTrack} hazard={hazard} from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onMovePoint={movePoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage || weatherTags} legLabels={!weatherTags && !animated && !voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
         <div className="absolute left-3 right-16 top-2 lg:right-[27rem] z-[500] flex h-7 items-center justify-between gap-1 overflow-hidden rounded-md bg-card px-1.5 text-xs font-bold shadow-float">
           <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="min-w-0 truncate">

@@ -199,6 +199,8 @@
 .route-hazard-label::before { display: none; }
 .wp { display:grid; place-items:center; width:27px; height:27px; border-radius:9999px; background: var(--color-card); color: var(--color-forecast-wind); border:2px solid var(--color-forecast-wind); font-size:11px; font-weight:700; box-shadow: var(--shadow-float); }
 .wp.selected { background: var(--color-forecast-wind); color: var(--color-primary-foreground); outline: 3px solid var(--color-card); }
+.wp { touch-action: none; user-select: none; }
+.wp.dragging { background: var(--color-warning); color: var(--color-background); border-color: var(--color-warning); outline: 3px solid var(--color-card); cursor: grabbing; }
 .notice-zone { fill: var(--color-warning); fill-opacity: .2; stroke: var(--color-warning); stroke-width: 2; }
 .notice-zone.focus { fill: var(--color-destructive); stroke: var(--color-destructive); fill-opacity: .3; }
 .notice-dot { fill: var(--color-warning); fill-opacity: 1; stroke: var(--color-card); }
