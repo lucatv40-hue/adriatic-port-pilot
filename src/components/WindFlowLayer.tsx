@@ -63,7 +63,7 @@ export function WindFlowLayer({ map, frames, time }: { map: L.Map | null; frames
       };
       const box = map.getBounds();
       const view = { west: box.getWest(), south: box.getSouth(), east: box.getEast(), north: box.getNorth() };
-      const target = Math.max(120, Math.min(900, Math.round(width * height / 2600)));
+      const target = Math.max(420, Math.min(2200, Math.round(width * height / 900)));
       if (particles.length > target) particles.length = target;
       while (particles.length < target) {
         const seeded = seedParticle(data, at, Math.random, view);
@@ -90,7 +90,7 @@ export function WindFlowLayer({ map, frames, time }: { map: L.Map | null; frames
         const to = map.latLngToContainerPoint([moved.lat, moved.lon]);
         ctx.lineCap = "round";
         ctx.strokeStyle = windColor(wind.speedKn);
-        ctx.lineWidth = wind.speedKn >= 35 ? 1.8 : wind.speedKn >= 20 ? 1.4 : 1.2;
+        ctx.lineWidth = wind.speedKn >= 35 ? 3.4 : wind.speedKn >= 20 ? 2.8 : 2.2;
         ctx.globalAlpha = 1;
         ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
         ctx.globalAlpha = 1;
