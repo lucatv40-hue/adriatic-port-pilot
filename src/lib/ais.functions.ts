@@ -1,10 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { AisTarget } from "@/lib/ais";
 
-/** Collects ~8 s of live AIS positions for the northern Adriatic from aisstream.io. */
+/** Collects ~15 s of live AIS positions for the northern Adriatic from aisstream.io. */
 export const fetchAisTargets = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
   .handler(async (): Promise<{ targets: AisTarget[]; error: string | null }> => {
     const key = process.env["AISSTREAM_API_KEY"];
     if (!key) return { targets: [], error: "Rete AIS web non ancora configurata" };
@@ -12,7 +10,7 @@ export const fetchAisTargets = createServerFn({ method: "GET" })
     try {
       await new Promise<void>((resolve) => {
         const ws = new WebSocket("wss://stream.aisstream.io/v0/stream");
-        const stop = setTimeout(() => { try { ws.close(); } catch { /* closed */ } resolve(); }, 8000);
+        const stop = setTimeout(() => { try { ws.close(); } catch { /* closed */ } resolve(); }, 15000);
         ws.addEventListener("open", () => ws.send(JSON.stringify({ APIKey: key, BoundingBoxes: [[[40.0, 12.0], [46.0, 20.0]]], FilterMessageTypes: ["PositionReport", "StandardClassBPositionReport"] })));
         ws.addEventListener("message", async (ev) => {
           try {
