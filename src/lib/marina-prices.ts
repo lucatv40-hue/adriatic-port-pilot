@@ -1,3 +1,5 @@
+import italianPrices from "@/data/italian-marina-prices.json";
+import italianCoverage from "@/data/italian-marina-coverage.json";
 /** Transito in mare: trascrizione verificata dei listini, non prezzi a terra. */
 export interface PublishedTariff {
   sourceUrl: string;
@@ -6,9 +8,13 @@ export interface PublishedTariff {
   lowLabel: string;
   highLabel: string;
   notes: string;
-  rows: { length: number; beam?: number; low: number; high: number }[];
+  validFrom?: string;
+  validUntil?: string;
+  lowAvailable?: boolean;
+  rows: { length: number; beam?: number; low: number; medium?: number; high: number }[];
 }
 export const MARINA_PRICES: Record<string, PublishedTariff> = {
+  ...italianPrices,
   marinauno: {
     sourceUrl: "https://www.marinauno.com/assets/pdf/tariffe-ormeggi-2026-it.pdf",
     edition: "2026–2027", checkedAt: "2026-11-24", lowLabel: "Min. listino", highLabel: "Max. listino",
@@ -56,3 +62,19 @@ export const MARINA_PRICES: Record<string, PublishedTariff> = {
     ],
   },
 };
+
+export const ITALIAN_PRICE_COVERAGE: Record<string, { checkedAt: string; status: string; sourceUrl?: string; note: string }> = italianCoverage;
+
+/** No interpolation: choose the smallest published berth that fits both dimensions. */
+export function tariffFor(tariff: PublishedTariff, length: number, beam?: number) {
+  if (!Number.isFinite(length) || length <= 0 || (beam !== undefined && (!Number.isFinite(beam) || beam <= 0))) return null;
+  return [...tariff.rows].sort((a, b) => a.length - b.length || (a.beam ?? 0) - (b.beam ?? 0))
+    .find(row => row.length >= length && (beam === undefined || row.beam === undefined || row.beam >= beam)) ?? null;
+}
+
+export function publishedPrice(id: string, season: "bassa" | "alta", length: number, beam?: number, day = new Date().toISOString().slice(0, 10)) {
+  const tariff = MARINA_PRICES[id];
+  if (!tariff || (tariff.validFrom && day < tariff.validFrom) || (tariff.validUntil && day > tariff.validUntil) || (season === "bassa" && tariff.lowAvailable === false)) return null;
+  const row = tariffFor(tariff, length, beam);
+  return row ? (season === "alta" ? row.high : row.low) : null;
+}

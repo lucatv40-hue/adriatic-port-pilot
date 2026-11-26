@@ -11,6 +11,7 @@ import { PortAerial } from "@/components/PortAerial";
 import { portAerial } from "@/lib/port-aerial";
 import { MARINA_PRICES } from "@/lib/marina-prices";
 import { PublishedPrices } from "@/components/PublishedPrices";
+import { MarinaPriceSummary } from "@/components/MarinaPriceSummary";
 import { checkFit, fitLevel, type Port, type Service, type Boat } from "@/lib/ports";
 export const SERVICE_ICON: Record<Service, LucideIcon> = { acqua: Droplets, corrente: Plug, carburante: Fuel, wifi: Wifi, docce: ShowerHead, gru: Construction, ristorante: Utensils, cantiere: Wrench };
 
@@ -40,12 +41,8 @@ export function PortSheet({ port: base, boat, onClose }: { port: Port | undefine
             {boat && fit && (fit.ok
               ? <p className="mt-3 flex items-center gap-2 rounded-xl bg-success/15 p-3 text-sm font-bold text-success"><CheckCircle2 className="h-5 w-5" /> Adatto alla tua barca</p>
               : <p className={`mt-3 flex items-center gap-2 rounded-xl p-3 text-sm font-bold ${fitLevel(port, boat) === "size" ? "bg-muted text-muted-foreground" : "bg-warning/15 text-warning"}`}><AlertTriangle className="h-5 w-5" /> {fit.reasons.join(" · ")}</p>)}
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-xl bg-muted p-2"><p className="text-xs text-muted-foreground">Fondale</p><p className="text-lg font-bold">{port.depth} m</p></div>
-              <div className="rounded-xl bg-muted p-2"><p className="text-xs text-muted-foreground">{tariff?.lowLabel ?? "Bassa st."}</p><p className="text-lg font-bold">€{port.rateLow}</p></div>
-              <div className="rounded-xl bg-muted p-2"><p className="text-xs text-muted-foreground">{tariff?.highLabel ?? "Alta st."}</p><p className="text-lg font-bold">€{port.rateHigh}</p></div>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">€/notte per 12 m · max {port.maxLength}×{port.maxBeam} m · disponibilità {port.availability}</p>
+            <p className="mt-3 text-sm">Fondale <strong>{port.depth} m</strong> · max {port.maxLength}×{port.maxBeam} m · disponibilità {port.availability}</p>
+            <MarinaPriceSummary port={port} boat={boat} managed={!!listing?.rates.length} />
             {tariff && <div className="mt-3"><PublishedPrices tariff={tariff} compact /></div>}
             <div className="mt-4 grid grid-cols-4 gap-2">
               {port.services.map((s) => { const I = SERVICE_ICON[s]; return (

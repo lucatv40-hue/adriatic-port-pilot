@@ -1,0 +1,214 @@
+{
+  "certosa": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://www.veneziacertosamarina.it/it/le-nostre-tariffe/",
+    "note": "Listino giornaliero verificato."
+  },
+  "santelena": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.marinasantelena.com/servizi.html",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "lido": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "note": "Identità del gestore/listino non verificata; nessuna tariffa di un altro marina è stata attribuita."
+  },
+  "saline": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://www.darsenalesaline.com/wp-content/uploads/2026/02/LE-SALINE_listino-transiti-2026-2027.pdf",
+    "note": "Listino giornaliero verificato."
+  },
+  "isolaunione": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://marinadichioggia.com/servizi/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "sottomarina": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "note": "Identità del gestore/listino non verificata; nessuna tariffa di un altro marina è stata attribuita."
+  },
+  "marina4": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.marina4.com/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "orologio": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.cnsm.org/wp-content/uploads/2026/02/convenzioni-darsene_2026-1.pdf",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "santamargherita": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://portosantamargherita.it/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "sangiusto": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://marinasangiusto.it/wp-content/uploads/2026/09/Tariffe_2026_aggiornamento-IVA.pdf",
+    "note": "Listino giornaliero verificato."
+  },
+  "lepanto": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://www.marinalepanto.it/media/1188/listino-marina-lepanto-resort-2026.pdf",
+    "note": "Listino giornaliero verificato."
+  },
+  "sanrocco": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://d1vp8nomjxwyf1.cloudfront.net/wp-content/uploads/sites/258/2017/10/24140342/Listino-2026_ITA.pdf",
+    "note": "Listino giornaliero verificato."
+  },
+  "jesolo": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.portoturistico.it/download-documentazioni/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "cortellazzo": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://marinadicortellazzo.it/darsena/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "fiorita": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://marinafiorita.com/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "puntafaro": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.d-marin.com/it/d-marin/punta-faro/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "marinauno": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://www.marinauno.com/assets/pdf/tariffe-ormeggi-2026-it.pdf",
+    "note": "Listino giornaliero verificato."
+  },
+  "santandrea": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://marinasantandrea.it/wp-content/uploads/2025/11/Listino-Ormeggi-2025-ITA.pdf",
+    "note": "Listino giornaliero verificato."
+  },
+  "primero": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.marinaprimero.com/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "monfalcone": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://marinamonfalcone-assets.imgix.net/MM_ListinoOrmeggi_24-25_IT.pdf",
+    "note": "Trovato solo listino scaduto (2024–2025 o 2023–2024): non importato come prezzo attuale."
+  },
+  "portopiccolo": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://marinaportopiccolo.com/pages/i-listini",
+    "note": "Listino giornaliero 2027 verificato, futuro e non utilizzato come prezzo odierno."
+  },
+  "marinara": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.marinara.it/en/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "cvravennate": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.lniravenna.it/ormeggi-e-convenzioni/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "garibaldi": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "note": "Identità del gestore/listino non verificata; nessuna tariffa di un altro marina è stata attribuita."
+  },
+  "estensi": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.marinaestensi.it/ormeggi/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "goro": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://www.lamarinadigoro.it/listini/",
+    "note": "Listino giornaliero verificato."
+  },
+  "albarella": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.albarella.it/it/territorio/il-porto/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "portolevante": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.marinadiportolevante.it/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "brondolo": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "note": "Identità del gestore/listino non verificata; nessuna tariffa di un altro marina è stata attribuita."
+  },
+  "sanfelice": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "http://portosanfelice.it/it/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "mosella": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.darsenamosella.it/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "aprilia": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://www.apriliamarittima.com/it/marina",
+    "note": "Listino giornaliero verificato."
+  },
+  "gabbiani": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.puntagabbiani.it/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  },
+  "caponord": {
+    "checkedAt": "2026-11-26",
+    "status": "importato",
+    "sourceUrl": "https://www.apriliamarittima.com/it/marina",
+    "note": "Listino giornaliero verificato."
+  },
+  "portovecchio": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://lignanosabbiadoro.it/media/allegati_strutture/2023_ITA_TUTTO.pdf",
+    "note": "Trovato solo listino scaduto (2024–2025 o 2023–2024): non importato come prezzo attuale."
+  },
+  "sanvito": {
+    "checkedAt": "2026-11-26",
+    "status": "non-verificabile",
+    "sourceUrl": "https://www.portosanvito.it/",
+    "note": "Nessun listino giornaliero attuale verificabile trovato; richiedere preventivo."
+  }
+}

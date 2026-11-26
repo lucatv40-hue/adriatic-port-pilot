@@ -12,6 +12,7 @@
 - [x] Inserire un waypoint premendo un segmento per almeno 0,5 secondi: punti rinumerati, traccia conservata, tempi e meteo ricalcolati; verificato con dito su mobile e mouse su PC, anche dopo ricaricamento.
 
 ## Aperto
-- (nessuno)
+- [x] Ricerca dei 36 porti italiani della mappa: 11 listini dettagliati disponibili (10 aggiunti, inclusi 3 futuri), 25 senza listino attuale verificabile; niente prezzi inventati o di altri marina.
+- [x] Tariffe ufficiali selezionate per lunghezza e larghezza della barca; fonti, validità e prezzi non disponibili espliciti. Verifica su mobile/PC e test.
 
 - AIS anticollisione: web (aisstream, in attesa chiave) + bordo Signal K/NMEA via wss, CPA/TCPA — fatto

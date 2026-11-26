@@ -12,6 +12,7 @@ import { PortAerial } from "@/components/PortAerial";
 import { portAerial } from "@/lib/port-aerial";
 import { MARINA_PRICES } from "@/lib/marina-prices";
 import { PublishedPrices } from "@/components/PublishedPrices";
+import { MarinaPriceSummary } from "@/components/MarinaPriceSummary";
 
 export const Route = createFileRoute("/porto/$id")({
   loader: ({ params }) => { const port = getPort(params.id); if (!port) throw notFound(); return { port }; },
@@ -61,7 +62,7 @@ function PortPage() {
         <h2 className="mb-1 font-display text-xl">Ormeggio</h2>
         {row("Fondale", `${p.depth} m`)}{row("Lunghezza max", `${p.maxLength} m`)}{row("Larghezza max", `${p.maxBeam} m`)}
         {row("Posti barca", String(p.berths))}{row("Disponibilità", p.availability)}
-        {row(`${tariff?.lowLabel ?? "Bassa stagione"} (12 m)`, `€${p.rateLow}/notte`)}{tariff?.lowLabel !== tariff?.highLabel || !tariff ? row(`${tariff?.highLabel ?? "Alta stagione"} (12 m)`, `€${p.rateHigh}/notte`) : null}{row("Fonte prezzi", tariff ? `Listino ufficiale ${tariff.edition}` : p.verified ? "Gestore verificato" : p.priceSource === "ufficiale" ? "Listino ufficiale" : "Indicativa")}
+        <MarinaPriceSummary port={p} boat={boat} managed={!!listing?.rates.length} />
       </section>
       {tariff && <PublishedPrices tariff={tariff} />}
       <section className="rounded-2xl border bg-card p-4">
