@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import L from "@/lib/leaflet-rotated";
 import "leaflet/dist/leaflet.css";
 import { PORTS } from "@/lib/ports";
@@ -157,16 +160,24 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
   }, [sailPath, instance, moving]);
 
   const hazardLayer = useRef<L.LayerGroup | null>(null);
+  const [dismissedHazard, setDismissedHazard] = useState<RouteSection | null>(null);
+  const [hazardLabel, setHazardLabel] = useState<{ element: HTMLDivElement; section: RouteSection } | null>(null);
   useEffect(() => {
     const m = map.current; if (!m) return;
     hazardLayer.current?.remove(); hazardLayer.current = null;
+    setHazardLabel(null);
     if (!hazard || moving) return;
     const g = L.layerGroup().addTo(m); hazardLayer.current = g;
-    L.polyline([[hazard.a.lat, hazard.a.lon], [hazard.b.lat, hazard.b.lon]], { className: `route-hazard${hazard.critical ? " critical" : ""}`, weight: 7 })
-      .bindTooltip(`<strong>Tratto peggiore</strong><br/>Ingresso ${formatRouteTime(hazard.entry)}<br/>Uscita ${formatRouteTime(hazard.exit)}`, { permanent: true, direction: "top", offset: [0, -8], className: `route-hazard-label${hazard.critical ? " critical" : ""}` })
-      .addTo(g);
+    const line = L.polyline([[hazard.a.lat, hazard.a.lon], [hazard.b.lat, hazard.b.lon]], { className: `route-hazard${hazard.critical ? " critical" : ""}`, weight: 7 }).addTo(g);
+    if (dismissedHazard !== hazard) {
+      const element = document.createElement("div");
+      L.DomEvent.disableClickPropagation(element);
+      L.DomEvent.disableScrollPropagation(element);
+      line.bindTooltip(element, { permanent: true, interactive: true, direction: "top", offset: [0, -8], className: `route-hazard-label${hazard.critical ? " critical" : ""}` });
+      setHazardLabel({ element, section: hazard });
+    }
     return () => { g.remove(); hazardLayer.current = null; };
-  }, [hazard, instance, moving]);
+  }, [hazard, instance, moving, dismissedHazard]);
 
   const legLayer = useRef<L.LayerGroup | null>(null);
   useEffect(() => {
@@ -197,5 +208,12 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return <><div ref={el} className="route-map h-full w-full" />{drawing && <div className="crosshair" aria-hidden="true" />}{windGrid.length > 0 && <WindFlowLayer map={instance} frames={windGrid} time={time} />}{animated && !moving && <AnimatedWeatherLayer map={instance} forecasts={forecasts} time={time} thresholds={thresholds} />}</>;
+  return <><div ref={el} className="route-map h-full w-full" />{hazardLabel && createPortal(<>
+    <div className="flex items-center justify-between gap-2">
+      <strong>Tratto peggiore</strong>
+      <Button type="button" variant="ghost" size="icon" className="h-6 w-6 min-h-0 shrink-0" aria-label="Chiudi etichetta tratto peggiore" title="Chiudi etichetta" onClick={() => setDismissedHazard(hazardLabel.section)}><X className="h-4 w-4" /></Button>
+    </div>
+    <div>Ingresso {formatRouteTime(hazardLabel.section.entry)}</div>
+    <div>Uscita {formatRouteTime(hazardLabel.section.exit)}</div>
+  </>, hazardLabel.element)}{drawing && <div className="crosshair" aria-hidden="true" />}{windGrid.length > 0 && <WindFlowLayer map={instance} frames={windGrid} time={time} />}{animated && !moving && <AnimatedWeatherLayer map={instance} forecasts={forecasts} time={time} thresholds={thresholds} />}</>;
 }
