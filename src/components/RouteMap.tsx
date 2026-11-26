@@ -15,7 +15,7 @@ import type { RouteSection } from "@/lib/route-risk";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onMovePoint, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null, legLabels = false }: { onMovePoint?: (index: number, point: P) => void; legLabels?: boolean; hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onMovePoint, onInsertPoint, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null, legLabels = false }: { onInsertPoint?: (point: P) => void; onMovePoint?: (index: number, point: P) => void; legLabels?: boolean; hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
   const [moving, setMoving] = useState(false);
   const el = useRef<HTMLDivElement>(null);
@@ -26,6 +26,7 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
   const pick = useRef(onPick); pick.current = onPick;
   const pointPick = useRef(onPoint); pointPick.current = onPoint;
   const pointMove = useRef(onMovePoint); pointMove.current = onMovePoint;
+  const pointInsert = useRef(onInsertPoint); pointInsert.current = onInsertPoint;
   const keepView = useRef(false);
   const waypoints = useRef<L.Marker[]>([]);
 
@@ -62,6 +63,37 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     const polyline = L.polyline(line, { className: "route-line", weight: 4, dashArray: "8 8" }).addTo(g);
     const abort = new AbortController();
     const cleanups: (() => void)[] = [];
+    if (!drawing) {
+      const hit = L.polyline(line, { className: "route-insert-hit", weight: 24, opacity: 0, bubblingMouseEvents: false }).addTo(g);
+      const element = hit.getElement();
+      if (element instanceof SVGElement) {
+        let position: P | null = null;
+        let restoreMap = () => {};
+        const hold = waypointGesture(() => {}, () => {}, () => {
+          restoreMap();
+          if (position) { keepView.current = true; pointInsert.current?.(position); }
+        });
+        const options = { signal: abort.signal };
+        element.style.touchAction = "none";
+        element.addEventListener("pointerdown", event => {
+          if (!event.isPrimary || event.button !== 0 || !pointInsert.current) return;
+          event.stopPropagation();
+          const p = m.mouseEventToLatLng(event);
+          position = { lat: p.lat, lon: p.lng };
+          const pan = m.dragging.enabled(), zoom = m.touchZoom.enabled();
+          m.dragging.disable(); m.touchZoom.disable();
+          restoreMap = () => { if (pan) m.dragging.enable(); if (zoom) m.touchZoom.enable(); };
+          element.setPointerCapture(event.pointerId); hold.start(event.clientX, event.clientY);
+        }, options);
+        element.addEventListener("pointermove", event => { hold.move(event.clientX, event.clientY); }, options);
+        element.addEventListener("pointerup", event => { event.stopPropagation(); hold.end(); restoreMap(); }, options);
+        const cancel = () => { hold.cancel(); restoreMap(); };
+        element.addEventListener("pointercancel", cancel, options);
+        element.addEventListener("lostpointercapture", cancel, options);
+        element.addEventListener("contextmenu", event => event.preventDefault(), options);
+        cleanups.push(cancel);
+      }
+    }
     waypoints.current = ll.map((x, i) => {
       let next: P | null = null;
       let restoreMap = () => {};

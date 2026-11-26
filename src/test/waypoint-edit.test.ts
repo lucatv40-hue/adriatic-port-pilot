@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { moveWaypoint, waypointGesture } from "@/lib/waypoint-edit";
+import { insertWaypoint, moveWaypoint, waypointGesture } from "@/lib/waypoint-edit";
 import { routeSchedule } from "@/lib/route-timing";
 
 afterEach(() => vi.useRealTimers());
@@ -46,5 +46,28 @@ describe("edited route", () => {
   });
   it("rejects a waypoint dropped on the mainland", () => {
     expect(moveWaypoint(points, undefined, 1, { lat: 46, lon: 12 })).toBeNull();
+  });
+  it("inserts between the correct controls and recalculates every passage", () => {
+    const r = insertWaypoint(points, undefined, { lat: 45, lon: 13.1 });
+    expect(r?.points).toEqual([points[0], { lat: 45, lon: 13.1 }, points[1], points[2]]);
+    const stops = routeSchedule(r?.points ?? [], 0, 6);
+    expect(stops).toHaveLength(4);
+    expect(stops[1]?.arrival ?? 0).toBeGreaterThan(0);
+    expect(stops[2]?.arrival ?? 0).toBeGreaterThan(stops[1]?.arrival ?? Infinity);
+    expect(points).toHaveLength(3);
+  });
+  it("snaps onto a bent track and preserves its channel vertices", () => {
+    const bend = { lat: 45.1, lon: 13.1 };
+    const track = [points[0], bend, points[1], points[2]].filter((p): p is { lat: number; lon: number } => !!p);
+    const r = insertWaypoint(points, track, { lat: 45.05, lon: 13.05 });
+    expect(r?.points[1]?.lat).toBeCloseTo(45.05);
+    expect(r?.points[1]?.lon).toBeCloseTo(13.05);
+    expect(r?.track).toContainEqual(bend);
+    expect(r?.points).toHaveLength(4);
+    expect(track).toHaveLength(4);
+  });
+  it("does not duplicate an existing waypoint or accept a land segment", () => {
+    expect(insertWaypoint(points, undefined, { lat: 45, lon: 13.2 })).toBeNull();
+    expect(insertWaypoint([{ lat: 46, lon: 12 }, { lat: 46, lon: 12.2 }], undefined, { lat: 46, lon: 12.1 })).toBeNull();
   });
 });
