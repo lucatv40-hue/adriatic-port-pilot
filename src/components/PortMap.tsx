@@ -42,7 +42,7 @@ export default function PortMap({ ports, levels, onSelect }: { ports: Port[]; le
     g.clearLayers();
     g.addLayers(ports.map((p) => {
       const lv = levels.get(p.id) ?? "ok";
-      const icon = L.divIcon({ className: "", html: `<div class="port-pin ${lv}"><span>${lv === "ok" ? p.kind[0] : "!"}</span></div>`, iconSize: [15, 15], iconAnchor: [8, 15] });
+      const icon = L.divIcon({ className: "", html: `<div class="port-pin ${lv}"><span>${lv === "ok" ? p.kind[0] : "!"}</span></div>`, iconSize: [30, 30], iconAnchor: [16, 30] });
       return L.marker([p.lat, p.lon], { icon, title: p.name, rotateWithView: true }).on("click", () => sel.current(p.id));
     }));
   }, [ports, levels]);

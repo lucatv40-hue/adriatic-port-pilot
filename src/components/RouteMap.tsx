@@ -51,7 +51,7 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     if (hasRoute) return;
     PORTS.forEach((p) => {
       const role = p.id === from ? "A" : p.id === to ? "B" : "";
-      const icon = L.divIcon({ className: "", html: `<div class="port-pin ${role ? "warn" : "ok"}"><span>${role || p.kind[0]}</span></div>`, iconSize: [15, 15], iconAnchor: [8, 15] });
+      const icon = L.divIcon({ className: "", html: `<div class="port-pin ${role ? "warn" : "ok"}"><span>${role || p.kind[0]}</span></div>`, iconSize: [30, 30], iconAnchor: [16, 30] });
       L.marker([p.lat, p.lon], { icon, title: p.name, rotateWithView: true, zIndexOffset: role ? 1000 : 0 }).on("click", () => pick.current(p.id)).addTo(g);
     });
   }, [from, to, hasRoute]);

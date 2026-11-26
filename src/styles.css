@@ -182,8 +182,8 @@
 .dark .leaflet-tile-pane { filter: brightness(0.7) invert(1) hue-rotate(200deg) saturate(0.6); }
 .dark .leaflet-tile-pane .seamark { filter: none; }
 .leaflet-container { font-family: var(--font-sans); background: var(--color-muted); }
-.port-pin { display:grid; place-items:center; width:15px; height:15px; border-radius:50% 50% 50% 0; transform: rotate(-45deg); border:1px solid var(--color-card); box-shadow: var(--shadow-float); }
-.port-pin span { transform: rotate(45deg); font-size:8px; font-weight:700; color: var(--color-primary-foreground); line-height:1; }
+.port-pin { display:grid; place-items:center; width:30px; height:30px; border-radius:50% 50% 50% 0; transform: rotate(-45deg); border:2px solid var(--color-card); box-shadow: var(--shadow-float); }
+.port-pin span { transform: rotate(45deg); font-size:16px; font-weight:700; color: var(--color-primary-foreground); line-height:1; }
 .port-pin.ok { background: var(--color-primary); }
 .port-pin.warn { background: var(--color-destructive); }
 .port-pin.depth { background: var(--color-warning); }
