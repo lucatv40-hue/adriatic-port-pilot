@@ -27,6 +27,8 @@ import { useWindGrid } from "@/lib/wind-grid-loader";
 import { routePlan, crossesLand, onLand, inLagoon } from "@/lib/sea-route";
 import { saveRoute } from "@/lib/saved-routes.functions";
 import type { RouteSection } from "@/lib/route-risk";
+import { useAis, AIS_URL_KEY } from "@/lib/use-ais";
+import { cpa, risk } from "@/lib/ais";
 import { insertWaypoint, moveWaypoint, type EditedRoute } from "@/lib/waypoint-edit";
 
 /** Six-hourly ICON-2I grid published by the GitHub Actions workflow to GitHub Pages. */
@@ -74,6 +76,11 @@ function PlanInner() {
   const [sail, setSail] = useState(false);
   const [sailMode, setSailMode] = useState<SailMode>("vmc");
   const [advice, setAdvice] = useState(false);
+  const [aisOn, setAisOn] = useState(false);
+  const [aisUrl, setAisUrl] = useState("");
+  useEffect(() => { setAisUrl(localStorage.getItem(AIS_URL_KEY) ?? ""); }, []);
+  const ais = useAis(aisOn, aisUrl);
+  const aisAlerts = useMemo(() => ais.own ? ais.targets.map((t) => ({ t, c: cpa(ais.own!, t) })).filter((x) => risk(x.c) !== "nessuno").sort((a, b) => a.c.tcpa - b.c.tcpa) : [], [ais.targets, ais.own]);
   const [hazard, setHazard] = useState<RouteSection | null>(null);
   const centerRef = useRef<(() => { lat: number; lon: number } | null) | null>(null);
   useEffect(() => {
@@ -192,7 +199,7 @@ function PlanInner() {
     <div className="relative h-full min-h-0 overflow-hidden">
       <div className="absolute inset-0">
         <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap track={routeTrack} hazard={hazard} from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onMovePoint={movePoint} onInsertPoint={insertPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage || weatherTags} legLabels={legs && !animated && !voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
+          <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><RouteMap track={routeTrack} hazard={hazard} from={from} to={to} points={points} onPick={pick} selectedPoint={selectedPoint} onPoint={selectPoint} onMovePoint={movePoint} onInsertPoint={insertPoint} drawing={drawing} draft={draft} centerRef={centerRef} sailPath={sailing?.path ?? []} animated={animated || voyage || weatherTags} legLabels={legs && !animated && !voyage} forecasts={q.data ?? []} time={mapTime} boat={boat} sailAvatar={sail} onBoatClick={() => setSail(!sail)} windGrid={windGrid} thresholds={t} ais={ais.targets} aisOwn={ais.own} notices={notices.map(({ n, m }) => ({ id: n.id, lat: n.lat, lon: n.lon, radius_km: n.radius_km, title: n.title, onRoute: m.kind === "sulla-rotta" }))} /></Suspense>
         </ClientOnly>
         <div className="absolute left-3 right-16 top-2 lg:right-[27rem] z-[500] flex h-7 items-center justify-between gap-1 overflow-hidden rounded-md bg-card px-1.5 text-xs font-bold shadow-float">
           <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="min-w-0 truncate">
@@ -213,7 +220,19 @@ function PlanInner() {
         <button type="button" className="pill-btn" aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</button>
         <button type="button" className="pill-btn" aria-pressed={animated} onClick={() => { setAnimated(!animated); setVoyage(false); }}>Animato</button>
         <button type="button" className="pill-btn" aria-pressed={voyage} onClick={() => { setVoyage(!voyage); setAnimated(false); }}>Viaggio</button>
+        <button type="button" className="pill-btn" aria-pressed={aisOn} onClick={() => setAisOn(!aisOn)}>AIS</button>
       </div>
+      {aisOn && <div className="ais-panel" role="region" aria-label="AIS anticollisione">
+        <div className="flex items-center justify-between gap-2"><b>AIS anticollisione</b><button type="button" aria-label="Chiudi AIS" onClick={() => setAisOn(false)}>✕</button></div>
+        <p>{ais.status.web || "Cerco navi in rete…"}{ais.status.bordo ? ` · ${ais.status.bordo}` : ""}</p>
+        {!ais.own && <p>Posizione tua non nota: attiva il GPS o l’AIS di bordo per il rischio collisione.</p>}
+        {aisAlerts.slice(0, 3).map(({ t, c }) => <p key={t.mmsi} className={risk(c) === "pericolo" ? "ais-alert-danger" : "ais-alert-caution"}>{t.name ?? `MMSI ${t.mmsi}`}: CPA {c.cpa.toFixed(1).replace(".", ",")} NM fra {Math.round(c.tcpa)} min</p>)}
+        <form className="flex gap-1" onSubmit={(e) => { e.preventDefault(); const v = String(new FormData(e.currentTarget).get("url") ?? "").trim(); localStorage.setItem(AIS_URL_KEY, v); setAisUrl(v); }}>
+          <Input name="url" defaultValue={aisUrl} placeholder="wss://… AIS di bordo (Signal K)" className="h-7 text-xs" />
+          <Button type="submit" size="sm" className="h-7 min-h-0 px-2 text-xs">Collega</Button>
+        </form>
+        <p className="text-[10px] opacity-70">Solo aiuto alla vista: non sostituisce guardia, radar e AIS certificato.</p>
+      </div>}
       <div className="weather-bar">
         {!free && <button type="button" className="pill-btn" onClick={startFree}>Rotta</button>}
         {points.length >= 2 && q.data && <button type="button" className="pill-btn" aria-pressed={advice} onClick={() => setAdvice(!advice)}>Info<br />Rotta</button>}

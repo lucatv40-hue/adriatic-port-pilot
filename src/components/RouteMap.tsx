@@ -12,10 +12,11 @@ import type { PointForecast } from "@/lib/weather";
 import { moveWaypoint, waypointGesture } from "@/lib/waypoint-edit";
 import { formatRouteTime } from "@/lib/route-timing";
 import type { RouteSection } from "@/lib/route-risk";
+import { cpa, risk, type AisTarget, type Own } from "@/lib/ais";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onMovePoint, onInsertPoint, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null, legLabels = false }: { onInsertPoint?: (point: P) => void; onMovePoint?: (index: number, point: P) => void; legLabels?: boolean; hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
+export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onMovePoint, onInsertPoint, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null, legLabels = false, ais = [], aisOwn = null }: { ais?: AisTarget[]; aisOwn?: Own | null; onInsertPoint?: (point: P) => void; onMovePoint?: (index: number, point: P) => void; legLabels?: boolean; hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
   const [moving, setMoving] = useState(false);
   const el = useRef<HTMLDivElement>(null);
@@ -151,6 +152,21 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
       marker.setZIndexOffset(i === selectedPoint ? 2000 : 1500);
     });
   }, [points, selectedPoint]);
+
+  const aisLayer = useRef<L.LayerGroup | null>(null);
+  useEffect(() => {
+    const m = map.current; if (!m) return;
+    aisLayer.current?.remove(); aisLayer.current = null;
+    if (!ais.length) return;
+    const g = L.layerGroup().addTo(m); aisLayer.current = g;
+    for (const t of ais) {
+      const c = aisOwn ? cpa(aisOwn, t) : null; const r = c ? risk(c) : "nessuno";
+      const html = `<div class="ais-ship ais-${r}"><svg viewBox="0 0 20 20" width="18" height="18" style="transform:rotate(${t.heading ?? t.cog}deg)"><path d="M10 1 L16 18 L10 14 L4 18 Z"/></svg></div>`;
+      const info = `<b>${t.name ?? "MMSI " + t.mmsi}</b><br>${t.sog.toFixed(1).replace(".", ",")} kn · ${Math.round(t.cog)}°<br>${c ? `CPA ${c.cpa.toFixed(1).replace(".", ",")} NM fra ${Math.round(c.tcpa)} min` : "Posizione tua non nota: niente CPA"}<br><small>AIS ${t.source === "web" ? "rete web" : "di bordo"}</small>`;
+      L.marker([t.lat, t.lon], { rotateWithView: true, zIndexOffset: r === "pericolo" ? 2500 : 2000, icon: L.divIcon({ className: "", html, iconSize: [18, 18], iconAnchor: [9, 9] }) }).bindPopup(info).addTo(g);
+      if (r !== "nessuno" && t.sog > 0.5) { const k = Math.cos((t.lat * Math.PI) / 180), d = (t.sog * Math.min(c!.tcpa, 60)) / 60 / 60, a = (t.cog * Math.PI) / 180; L.polyline([[t.lat, t.lon], [t.lat + d * Math.cos(a), t.lon + (d * Math.sin(a)) / k]], { color: r === "pericolo" ? "#dc2626" : "#f59e0b", weight: 2, dashArray: "4 4", interactive: false }).addTo(g); }
+    }
+  }, [ais, aisOwn, instance]);
 
   const boatMarker = useRef<L.Marker | null>(null);
   useEffect(() => {
