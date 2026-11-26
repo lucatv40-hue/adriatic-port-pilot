@@ -13,3 +13,5 @@
 
 ## Aperto
 - (nessuno)
+
+- AIS anticollisione: web (aisstream, in attesa chiave) + bordo Signal K/NMEA via wss, CPA/TCPA — fatto
