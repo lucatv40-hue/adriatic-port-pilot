@@ -191,8 +191,6 @@ function PlanInner() {
           <span className="flex min-w-0 items-center gap-1"><Navigation2 className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="min-w-0 truncate">
             {free ? (drawing ? (draft.length ? `Rotta libera · ${draft.length} punti · sposta la mappa` : "Porta la partenza sotto il mirino") : `Rotta libera · ${freePoints.length} punti`) : !a ? "Tocca il porto di partenza" : !b ? `${a.name} → tocca l'arrivo` : `${a.name} → ${b.name}`}</span></span>
           <span className="flex shrink-0 items-center gap-1">
-          {!free && <Button variant="outline" size="sm" className="h-6 px-1.5 text-xs" onClick={startFree}><Crosshair className="h-3.5 w-3.5" />Rotta</Button>}
-          {points.length >= 2 && <Button variant="outline" size="sm" className="h-6 px-1.5 text-xs" aria-label={sail ? "Passa a motore" : "Passa a vela"} onClick={() => setSail(!sail)}>{sail ? <><Navigation2 className="h-3.5 w-3.5" />Motore</> : <><Sailboat className="h-3.5 w-3.5" />Vela</>}</Button>}
           {(a || free) && <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={reset} aria-label="Ricomincia"><RotateCcw className="h-4 w-4" /></Button>}
           </span>
         </div>
@@ -203,12 +201,17 @@ function PlanInner() {
         {draft.length > 0 && <Button variant="outline" className="h-9" onClick={() => setDraft((d) => d.slice(0, -1))} aria-label="Annulla ultimo punto"><Undo2 className="h-4 w-4" /></Button>}
         {draft.length > 0 && <Button variant="secondary" className="h-9" onClick={finish}><Flag className="h-4 w-4" />Arrivo</Button>}
       </div>}
-      <div className="weather-bar"><div className="weather-mode" role="group" aria-label="Visualizzazione meteo"><Button variant={animated || voyage ? "ghost" : "default"} aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</Button><Button variant={animated ? "default" : "ghost"} aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</Button><Button variant={voyage ? "default" : "ghost"} aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</Button></div>
-      {points.length >= 2 && <div className="flex items-center gap-0.5 rounded-md border bg-card p-0.5 shadow-float">
-        {q.data && <Button size="sm" className="h-7 min-h-0 bg-warning px-2 text-xs font-bold text-background hover:bg-warning/90" onClick={() => setAdvice(true)}>Info Rotta</Button>}
-        <Button size="sm" variant="outline" className="h-7 min-h-0 px-2 text-xs" onClick={() => setWeatherTags(!weatherTags)} aria-pressed={weatherTags}>{weatherTags ? "Miglia e gradi" : "Vento e onda"}</Button>
-        <Button size="icon" variant="destructive" className="h-7 w-7 min-h-0" onClick={() => { if (window.confirm("Cancellare la rotta?")) reset(); }} aria-label="Cancella rotta" title="Cancella rotta"><Trash2 className="h-3.5 w-3.5" /></Button>
-      </div>}
+      <div className="side-pills" role="group" aria-label="Modalità">
+        {points.length >= 2 && <button type="button" className="pill-btn" aria-label={sail ? "Passa a motore" : "Passa a vela"} onClick={() => setSail(!sail)}>{sail ? "Motore" : "Vela"}</button>}
+        <button type="button" className="pill-btn" aria-pressed={!animated && !voyage} onClick={() => { setAnimated(false); setVoyage(false); }}>Grafici</button>
+        <button type="button" className="pill-btn" aria-pressed={animated} onClick={() => { setAnimated(true); setVoyage(false); }}>Animato</button>
+        <button type="button" className="pill-btn" aria-pressed={voyage} onClick={() => { setVoyage(true); setAnimated(false); }}>Viaggio</button>
+      </div>
+      <div className="weather-bar">
+        {!free && <button type="button" className="pill-btn" onClick={startFree}>Rotta</button>}
+        {points.length >= 2 && q.data && <button type="button" className="pill-btn" onClick={() => setAdvice(true)}>Info<br />Rotta</button>}
+        {points.length >= 2 && <button type="button" className="pill-btn" onClick={() => setWeatherTags(!weatherTags)} aria-pressed={weatherTags}>{weatherTags ? <>Miglia<br />e gradi</> : <>Vento<br />e onda</>}</button>}
+        {points.length >= 2 && <button type="button" className="pill-btn pill-danger" onClick={() => { if (window.confirm("Cancellare la rotta?")) reset(); }} aria-label="Cancella rotta" title="Cancella rotta"><Trash2 className="h-4 w-4" /></button>}
       {sail && points.length >= 2 && <div className="flex gap-0.5 rounded-md border bg-card p-0.5 shadow-float" role="group" aria-label="Andatura a vela">
         <Button size="sm" variant={sailMode === "vmc" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "vmc"} onClick={() => setSailMode("vmc")}>VMC massima</Button>
         <Button size="sm" variant={sailMode === "comfort" ? "default" : "ghost"} className="h-7 min-h-0 px-2 text-xs" aria-pressed={sailMode === "comfort"} onClick={() => setSailMode("comfort")}>Comoda · 60°</Button>

@@ -174,15 +174,20 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     legLayer.current?.remove(); legLayer.current = null;
     if (!legLabels || points.length < 2 || moving) return;
     const g = L.layerGroup().addTo(m); legLayer.current = g;
+    const draw = () => { g.clearLayers(); const shown: L.Point[] = [];
     for (let i = 1; i < points.length; i++) {
       const a = points[i - 1], b = points[i];
       if (!a || !b) continue;
       const r = Math.PI / 180, f1 = a.lat * r, f2 = b.lat * r, dl = (b.lon - a.lon) * r;
       const brg = Math.round((Math.atan2(Math.sin(dl) * Math.cos(f2), Math.cos(f1) * Math.sin(f2) - Math.sin(f1) * Math.cos(f2) * Math.cos(dl)) / r + 360) % 360);
       const nm = 3440.065 * 2 * Math.asin(Math.sqrt(Math.sin((f2 - f1) / 2) ** 2 + Math.cos(f1) * Math.cos(f2) * Math.sin(dl / 2) ** 2));
-      L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], { interactive: false, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="leg-label">${String(brg).padStart(3, "0")}° · ${nm.toFixed(1).replace(".", ",")} NM</div>`, iconSize: [0, 0] }) }).addTo(g);
+      const mid = L.latLng((a.lat + b.lat) / 2, (a.lon + b.lon) / 2), px = m.latLngToContainerPoint(mid);
+      if (m.latLngToContainerPoint([a.lat, a.lon]).distanceTo(m.latLngToContainerPoint([b.lat, b.lon])) < 60 || shown.some((q) => Math.abs(q.x - px.x) < 110 && Math.abs(q.y - px.y) < 26)) continue;
+      shown.push(px);
+      L.marker(mid, { interactive: false, rotateWithView: true, icon: L.divIcon({ className: "", html: `<div class="leg-label">${String(brg).padStart(3, "0")}° · ${nm.toFixed(1).replace(".", ",")} NM</div>`, iconSize: [0, 0] }) }).addTo(g);
     }
-    return () => { g.remove(); legLayer.current = null; };
+    }; draw(); m.on("zoomend", draw);
+    return () => { m.off("zoomend", draw); g.remove(); legLayer.current = null; };
   }, [points, legLabels, instance, moving]);
 
   const key = notices.map((n) => n.id + n.onRoute).join();
