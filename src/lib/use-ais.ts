@@ -32,7 +32,7 @@ export function useAis(enabled: boolean, onboardUrl: string) {
         for (const t of r.targets) { const prev = store.current.get(t.mmsi); if (prev?.source !== "bordo" || now() - (prev.at ?? 0) > 60000) store.current.set(t.mmsi, t); }
         setStatus((s) => ({ ...s, web: r.error ?? `${r.targets.length} navi dalla rete` }));
         flush();
-      } catch { if (alive) setStatus((s) => ({ ...s, web: "Rete AIS web non raggiungibile" })); }
+      } catch { if (alive) setStatus((s) => ({ ...s, web: "Accedi per vedere le navi AIS dalla rete" })); }
     };
     const now = () => Date.now();
     void web(); const wi = setInterval(web, 60000); const fi = setInterval(flush, 2000);

@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { AisTarget } from "@/lib/ais";
 
 /** Collects ~15 s of live AIS positions for the northern Adriatic from aisstream.io. */
 export const fetchAisTargets = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
   .handler(async (): Promise<{ targets: AisTarget[]; error: string | null }> => {
     const key = process.env["AISSTREAM_API_KEY"];
     if (!key) return { targets: [], error: "Rete AIS web non ancora configurata" };
