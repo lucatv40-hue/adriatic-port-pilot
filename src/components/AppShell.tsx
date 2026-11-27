@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Anchor, Map, Navigation, Ship, Table2, Moon, Sun, Megaphone, Layers, Bookmark } from "lucide-react";
+import { Anchor, Map, Navigation, Ship, Table2, Moon, Sun, Megaphone, Layers, Bookmark, BellRing } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
         <div className="flex items-center gap-1">
         <Button asChild variant="ghost" className="hidden sm:inline-flex"><Link to="/prezzi">Piani</Link></Button>
+        <Button asChild variant="ghost" size="icon" title="Allarmi di bordo" aria-label="Allarmi di bordo" className="rounded-full hover:bg-background/10"><Link to="/allarmi"><BellRing className="h-5 w-5" /></Link></Button>
         <Button variant="ghost" size="icon" onClick={toggle} title="Cambia tema" aria-label="Cambia tema" className="rounded-full hover:bg-background/10">
           {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>

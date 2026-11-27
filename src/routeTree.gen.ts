@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AllarmiRouteImport } from './routes/allarmi'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AvvisiRouteImport } from './routes/avvisi'
 import { Route as BarcaRouteImport } from './routes/barca'
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AllarmiRoute = AllarmiRouteImport.update({
+  id: '/allarmi',
+  path: '/allarmi',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -176,6 +182,7 @@ const LovableEmailTransactionalPreviewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/allarmi': typeof AllarmiRoute
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/allarmi': typeof AllarmiRoute
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/allarmi': typeof AllarmiRoute
   '/auth': typeof AuthRoute
   '/avvisi': typeof AvvisiRoute
   '/barca': typeof BarcaRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/allarmi'
     | '/auth'
     | '/avvisi'
     | '/barca'
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/allarmi'
     | '/auth'
     | '/avvisi'
     | '/barca'
@@ -316,6 +327,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/allarmi'
     | '/auth'
     | '/avvisi'
     | '/barca'
@@ -345,6 +357,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AllarmiRoute: typeof AllarmiRoute
   AuthRoute: typeof AuthRoute
   AvvisiRoute: typeof AvvisiRoute
   BarcaRoute: typeof BarcaRoute
@@ -380,6 +393,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/allarmi': {
+      id: '/allarmi'
+      path: '/allarmi'
+      fullPath: '/allarmi'
+      preLoaderRoute: typeof AllarmiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -575,6 +595,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AllarmiRoute: AllarmiRoute,
   AuthRoute: AuthRoute,
   AvvisiRoute: AvvisiRoute,
   BarcaRoute: BarcaRoute,

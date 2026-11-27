@@ -6,3 +6,4 @@
 - waypoint-edit.ts owns the tested 500 ms map gestures and immutable point/track updates; inserted controls snap to the actual track in traversal order, preserving channel vertices and rejecting land-crossing edits. Tratta persists the edited track with its controls and keys forecasts by their new coordinates so inserts and moves recalculate the route.
 
 - ais.ts: pure tested AIS decoding (NMEA 1/2/3/18, Signal K) and CPA/TCPA risk (danger <1 NM in 30 min, caution <2 NM in 60 min); web targets via authenticated fetchAisTargets (aisstream, 15 s sample; login required to protect the free aisstream key quota), onboard via browser WebSocket so it must be wss on https.
+- onboard-alarms.ts: pure tested anchor-drag (metres > radius) and wind-shift (wrapped angle > tolerance) rules; /allarmi uses browser GPS watch, Web Audio siren and Screen Wake Lock, client-only, no storage.
