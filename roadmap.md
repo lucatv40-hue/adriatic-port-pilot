@@ -12,6 +12,7 @@
 - [x] Inserire un waypoint premendo un segmento per almeno 0,5 secondi: punti rinumerati, traccia conservata, tempi e meteo ricalcolati; verificato con dito su mobile e mouse su PC, anche dopo ricaricamento.
 
 ## Aperto
+- [x] Pulsante Radar meteo in Carta e Tratta: Radar-DPC SRI, ultime 2 ore a passi di 5 minuti, colori pioggia, play/pausa e chiusura; futuro non disponibile dalla fonte pubblica.
 - [x] Ricerca dei 36 porti italiani della mappa: 11 listini dettagliati disponibili (10 aggiunti, inclusi 3 futuri), 25 senza listino attuale verificabile; niente prezzi inventati o di altri marina.
 - [x] Tariffe ufficiali selezionate per lunghezza e larghezza della barca; fonti, validità e prezzi non disponibili espliciti. Verifica su mobile/PC e test.
 

@@ -3,6 +3,8 @@ import * as maplibregl from "maplibre-gl";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FC } from "@/lib/map-layers";
+import { radarCanvas } from "@/lib/radar-raster";
+import { RADAR_ATTRIBUTION, type RadarFrame } from "@/lib/radar";
 
 export type ChartLayers = { wind: FC; waves: FC; currents: FC; cape: FC; notices: FC };
 export type ChartToggles = Record<keyof ChartLayers | "seamarks", boolean>;
@@ -30,13 +32,20 @@ function labelColor(container: HTMLElement) {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-export default function ChartMap({ layers, on }: { layers: ChartLayers; on: ChartToggles }) {
+export default function ChartMap({ layers, on, radarFrame = null }: { layers: ChartLayers; on: ChartToggles; radarFrame?: RadarFrame | null }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!el.current) return;
+    maplibregl.addProtocol("dpc-radar", async (request, abort) => {
+      const [time, z, x, y] = request.url.replace("dpc-radar://", "").split("/").map(Number);
+      if (time === undefined || z === undefined || x === undefined || y === undefined) throw new Error("Radar non disponibile");
+      const c = await radarCanvas(time, z, x, y, abort.signal);
+      const blob = await new Promise<Blob>((resolve, reject) => c.toBlob(b => b ? resolve(b) : reject(new Error("Radar non disponibile")), "image/png"));
+      return { data: await blob.arrayBuffer() };
+    });
     const m = new maplibregl.Map({
       container: el.current, center: [13.2, 45.1], zoom: 7.3, maxPitch: 0, attributionControl: { compact: true },
       style: {
@@ -77,8 +86,24 @@ export default function ChartMap({ layers, on }: { layers: ChartLayers; on: Char
       setReady(true);
     });
     map.current = m;
-    return () => { m.remove(); map.current = null; };
+    return () => { m.remove(); map.current = null; maplibregl.removeProtocol("dpc-radar"); };
   }, []);
+
+  useEffect(() => {
+    const m = map.current; if (!m || !ready) return;
+    if (!radarFrame) {
+      if (m.getLayer("radar")) m.removeLayer("radar");
+      if (m.getSource("radar")) m.removeSource("radar");
+      return;
+    }
+    const tiles = [`dpc-radar://${radarFrame.time}/{z}/{x}/{y}`];
+    const source = m.getSource("radar") as maplibregl.RasterTileSource | undefined;
+    if (source) source.setTiles(tiles);
+    else {
+      m.addSource("radar", { type: "raster", tiles, tileSize: 256, minzoom: 5, maxzoom: 7, bounds: [6, 35.9, 18.7, 47.6], attribution: RADAR_ATTRIBUTION });
+      m.addLayer({ id: "radar", type: "raster", source: "radar", paint: { "raster-fade-duration": 0 } }, "seamark");
+    }
+  }, [radarFrame?.time, ready]);
 
   useEffect(() => {
     const m = map.current; if (!m || !ready) return;

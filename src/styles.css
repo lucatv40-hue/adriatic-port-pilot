@@ -11,6 +11,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+:root {
+  --radar-0: oklch(0.55 0.12 235);
+  --radar-1: oklch(0.61 0.14 160);
+  --radar-2: oklch(0.84 0.17 98);
+  --radar-3: oklch(0.71 0.18 55);
+  --radar-4: oklch(0.58 0.22 20);
+  --radar-5: oklch(0.49 0.24 315);
+}
+.radar-scale { background: linear-gradient(to right, var(--radar-0), var(--radar-1), var(--radar-2), var(--radar-3), var(--radar-4), var(--radar-5)); }
+
 /*
  * Design system definition.
  *

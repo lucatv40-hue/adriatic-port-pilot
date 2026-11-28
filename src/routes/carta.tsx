@@ -7,6 +7,9 @@ import { loadWaveGrid } from "@/lib/wave-grid";
 import { sampleWindGrid } from "@/lib/wind-grid";
 import { windFeatures, waveFeatures, currentFeatures, capeFeatures, noticeFeatures, type WaveGridX, type CurrentGrid, type CapeGrid } from "@/lib/map-layers";
 import type { ChartToggles } from "@/components/ChartMap";
+import { Button } from "@/components/ui/button";
+import { useRadar } from "@/lib/use-radar";
+import { RadarControls } from "@/components/RadarControls";
 
 const ChartMap = lazy(() => import("@/components/ChartMap"));
 const BASE = (import.meta.env["VITE_WIND_GRID_URL"] as string | undefined) ?? "https://lucatv40-hue.github.io/adriatic-port-pilot";
@@ -28,6 +31,8 @@ async function grid<T>(file: string): Promise<T | null> {
 const LABEL: Record<keyof ChartToggles, string> = { seamarks: "Segnali", wind: "Vento", waves: "Onde·Tp", currents: "Correnti", cape: "Temporali", notices: "Avvisi" };
 
 function Carta() {
+  const [radarOn, setRadarOn] = useState(false);
+  const radar = useRadar(radarOn);
   const [hourOffset, setHourOffset] = useState(0);
   const [now] = useState(() => Math.floor(Date.now() / 3_600_000) * 3_600_000);
   const time = new Date(now + hourOffset * 3_600_000).toISOString().replace(".000", "");
@@ -59,14 +64,16 @@ function Carta() {
   return (
     <div className="relative h-[calc(100dvh-7.5rem)] w-full">
       <ClientOnly fallback={<div className="h-full animate-pulse bg-muted" />}>
-        <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><ChartMap layers={layers} on={on} /></Suspense>
+        <Suspense fallback={<div className="h-full animate-pulse bg-muted" />}><ChartMap layers={layers} on={on} radarFrame={radar.frame} /></Suspense>
       </ClientOnly>
-      <div className="absolute left-2 right-2 top-2 z-10 flex flex-wrap gap-1">
+      <div className="absolute left-2 right-2 top-2 z-10 flex flex-col items-start gap-1">
+      <div className="flex flex-wrap gap-1">
         {(Object.keys(LABEL) as (keyof ChartToggles)[]).map((k) => (
           <button key={k} onClick={() => setOn((o) => ({ ...o, [k]: !o[k] }))} className={`rounded-full border px-2.5 py-1 text-xs font-medium shadow-sm ${on[k] ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background/90 text-foreground"}`}>{LABEL[k]}</button>
         ))}
+        <Button variant="ghost" className="pill-btn" aria-pressed={radarOn} onClick={() => setRadarOn(!radarOn)}>Radar meteo</Button>
       </div>
-      <div className="absolute left-2 right-2 top-11 z-10 rounded-lg bg-background/90 px-2 py-1.5 text-xs shadow sm:right-auto sm:w-[28rem]">
+      {radarOn ? <RadarControls radar={radar} onClose={() => setRadarOn(false)} /> : <div className="w-full rounded-lg bg-background/90 px-2 py-1.5 text-xs shadow sm:w-[28rem]">
         <div className="flex items-center gap-1.5">
           <button onClick={() => setHourOffset((h) => Math.max(0, h - 1))} disabled={hourOffset === 0} className="rounded-md border bg-background px-2 py-1 font-semibold disabled:opacity-40" aria-label="Un'ora indietro">−1 h</button>
           <div className="flex-1 text-center"><span className="font-medium">{new Date(time).toLocaleString("it-IT", { timeZone: "Europe/Rome", weekday: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</span> <span className="text-muted-foreground">+{hourOffset} h</span></div>
@@ -86,6 +93,7 @@ function Carta() {
           <input type="range" min={0} max={47} value={hourOffset} onChange={(e) => setHourOffset(+e.target.value)} className="absolute inset-x-0 bottom-0 w-full accent-primary" aria-label="Ora previsione" />
         </div>
         {missing.length > 0 && <div className="text-muted-foreground">Non disponibile ora: {missing.join(", ")}</div>}
+      </div>}
       </div>
     </div>
   );

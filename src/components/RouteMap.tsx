@@ -7,6 +7,8 @@ import "leaflet/dist/leaflet.css";
 import { PORTS } from "@/lib/ports";
 import { AnimatedWeatherLayer } from "@/components/AnimatedWeatherLayer";
 import { WindFlowLayer } from "@/components/WindFlowLayer";
+import { RadarLeafletLayer } from "@/components/RadarLeafletLayer";
+import type { RadarFrame } from "@/lib/radar";
 import type { WindGrid } from "@/lib/wind-grid";
 import type { PointForecast } from "@/lib/weather";
 import { moveWaypoint, waypointGesture } from "@/lib/waypoint-edit";
@@ -16,7 +18,7 @@ import { cpa, risk, type AisTarget, type Own } from "@/lib/ais";
 
 type P = { lat: number; lon: number };
 type N = { id: string; lat: number; lon: number; radius_km: number; title: string; onRoute: boolean };
-export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, onPoint, onMovePoint, onInsertPoint, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null, legLabels = false, ais = [], aisOwn = null }: { ais?: AisTarget[]; aisOwn?: Own | null; onInsertPoint?: (point: P) => void; onMovePoint?: (index: number, point: P) => void; legLabels?: boolean; hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
+export default function RouteMap({ radarFrame = null, from, to, points, onPick, selectedPoint = 0, onPoint, onMovePoint, onInsertPoint, notices = [], animated = false, forecasts = [], time = null, thresholds = { wind: 20, wave: 1.5 }, boat = null, drawing = false, draft = [], centerRef, sailPath = [], windGrid = [], sailAvatar = false, onBoatClick, track, hazard = null, legLabels = false, ais = [], aisOwn = null }: { radarFrame?: RadarFrame | null; ais?: AisTarget[]; aisOwn?: Own | null; onInsertPoint?: (point: P) => void; onMovePoint?: (index: number, point: P) => void; legLabels?: boolean; hazard?: RouteSection | null; track?: P[] | undefined; sailAvatar?: boolean; onBoatClick?: () => void; drawing?: boolean; draft?: P[]; centerRef?: { current: (() => P | null) | null }; sailPath?: P[]; boat?: { lat: number; lon: number; heading: number } | null; from: string | null; to: string | null; points: P[]; onPick: (id: string) => void; selectedPoint?: number; onPoint?: (point: number) => void; notices?: N[]; animated?: boolean; forecasts?: PointForecast[]; time?: string | null; thresholds?: { wind: number; wave: number }; windGrid?: WindGrid[] }) {
   const [instance, setInstance] = useState<L.Map | null>(null);
   const [moving, setMoving] = useState(false);
   const el = useRef<HTMLDivElement>(null);
@@ -256,7 +258,7 @@ export default function RouteMap({ from, to, points, onPick, selectedPoint = 0, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  return <><div ref={el} className="route-map h-full w-full" />{hazardLabel && createPortal(<>
+  return <><div ref={el} className="route-map h-full w-full" /><RadarLeafletLayer map={instance} frame={radarFrame} />{hazardLabel && createPortal(<>
     <div className="flex items-center justify-between gap-2">
       <strong>Tratto peggiore</strong>
       <Button type="button" variant="ghost" size="icon" className="h-6 w-6 min-h-0 shrink-0" aria-label="Chiudi etichetta tratto peggiore" title="Chiudi etichetta" onClick={() => setDismissedHazard(hazardLabel.section)}><X className="h-4 w-4" /></Button>
